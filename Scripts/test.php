@@ -5,6 +5,7 @@ include_once(HOME_PATH.'WebbotsSpidersScreenScraper_Libraries_REV2_0/sweetfuncti
 
 echo "HI"."\n";
 echo "Does this work";
+echo 'testing testing 123';
 //send_email('test', 'test');
 
 ?>
