@@ -1,0 +1,15 @@
+ 
+ SCRIPT, 1411252241, exe_sql, sql query, SELECT min(substr(game_id,8,4)) as start,
+            max(substr(game_id,8,4)) as end,
+            season
+        FROM events
+        WHERE season = '1962'
+        GROUP BY season 
+ SCRIPT, 1411252242, exe_sql, sql query, SELECT * 
+        FROM retrosheet_historical_batting 
+        WHERE season = '1961' 
+        AND ds = '1961-10-10' 
+ SCRIPT, 1411252242, exe_sql, sql query, SELECT * 
+        FROM retrosheet_historical_batting_career 
+        WHERE season = '1961' 
+        AND ds = '1961-10-10'

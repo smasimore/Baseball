@@ -1,0 +1,70 @@
+# RESTART MYSQL
+# we were getting 'MySQL server has gone away' errors when trying to have two sql instances
+# open at the same time (including 2 scripts at once or two users)
+#
+# ERROR 2013 (HY000): Lost connection to MySQL server at 'sending authentication information', system error: 32
+#
+# authentication information', system error: 32
+# 'stop' and 'stop' will also work at the end
+sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart
+
+# ADD MYSQL TABLE
+mysql -u root -p baseball < create_table.sql
+
+# COPY FILE FROM OFF DEVSERVER
+scp testimport2.csv baseball@24.5.82.91:~/Desktop/Baseball
+
+# BACKUP BASEBALL ONTO LOCAL
+scp -r baseball@24.5.82.91:/Users/baseball/Desktop/Baseball/ ~/Desktop/
+
+# IMPORT CSV
+# Note: use .tsv (.txt on a Mac) for JSONS (displayed below)
+# Enter this while IN MySQL
+load data local infile 'schedules_scores_2013.txt' into table schedule_scores_2013 fields terminated by '\t' lines terminated by '\r';
+
+# CRONTAB -E WON'T SAVE
+# Run this command in cl and try again
+export EDITOR=vim
+
+# Backfill Command
+php backfill.php 2014-04-01 2014-05-27 Simulation sql_to_csv.php sim_nomagic_2014 main.py csv_to_sql.php
+
+# MySQL config
+sudo vim /etc/my.cnf
+
+# Restart mail server
+sudo postfix start
+
+# Tail mail error logs
+tail f /var/log/mail.log
+
+# Fix gmail email post
+https://rtcamp.com/tutorials/linux/ubuntu-postfix-gmail-smtp/
+
+# Monitor processes (not exactly sure what these do... but useful
+# to kill a process, e.g. daily.php)
+ps ef 
+ps aux # I think this is what's currently running
+
+# kill a process (get pid from above ps commands)
+kill <pid>
+
+# MySQL super fucked up and won't restart?
+ps aux | grep mysql
+# kill the processes for mysql
+sudo kill -9 <pid>
+# start mysql - this command is better than one at top because it shows
+# you an error message
+sudo /usr/local/mysql/support-files/mysql.server start
+
+# MySQL info
+SHOW VARIABLES;
+SHOW STATUS;
+SHOW PROCESSLIST;
+
+# MySQL server gone away fix attempts
+launchctl limit # shows maxfiles limit (osx default is 256, possibly causing issue)
+launchctl limit maxfiles 2048 2048 # changes limit (possibly just in session.. cleared when restarted?)
+
+# Socket errors
+/var/mysql/mysql.sock is symbolically synced to /tmp/mysql.sock
