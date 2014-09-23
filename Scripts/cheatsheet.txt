@@ -26,6 +26,9 @@ load data local infile 'schedules_scores_2013.txt' into table schedule_scores_20
 # Run this command in cl and try again
 export EDITOR=vim
 
+# Check for non UTF-8 Chars
+~/Phabricator/libphutil/scripts/utils/utf8.php *
+
 # Backfill Command
 php backfill.php 2014-04-01 2014-05-27 Simulation sql_to_csv.php sim_nomagic_2014 main.py csv_to_sql.php
 
