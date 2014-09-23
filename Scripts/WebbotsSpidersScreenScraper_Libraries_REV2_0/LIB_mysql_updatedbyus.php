@@ -10,8 +10,6 @@ Copyright 2007, Michael Schrenk
    This software is designed for use with the book,
    "Webbots, Spiders, and Screen Scarpers", Michael Schrenk, 2007 No Starch Press, San Francisco CA
 
-W3C® SOFTWARE NOTICE AND LICENSE
-
 This work (and included software, documentation such as READMEs, or other
 related items) is being provided by the copyright holders under the following license.
  By obtaining, using and/or copying this work, you (the licensee) agree that you have read,
@@ -192,9 +190,7 @@ function multi_insert($database, $table, $data_array, $colheads) {
 
 	# Connect to MySQL server and select database
 	$attempts = 0;
-
 	$mysql_connect = connect_to_database();
-
 	echo '========'."\n";
 	while ($attempts < 10 && mysqli_connect_errno()) {
 		$mysql_connect = connect_to_database();
@@ -210,7 +206,6 @@ function multi_insert($database, $table, $data_array, $colheads) {
 		email("RESTART MYSQL", "sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart");
 		return false;
 	}
-
 	mysqli_select_db($mysql_connect, $database);
 
 	// Create INSERT statement based on colheads
@@ -244,15 +239,14 @@ function multi_insert($database, $table, $data_array, $colheads) {
 
     # Report SQL error, if one occured, otherwise return result
     if (mysqli_error($mysql_connect)) {
-		echo mysqli_error($mysql_connect);
-     // smas trying to fix mysql server went away error - added 09/14/14
-     mysqli_close($mysql_connect);
+		echo mysqli_error($mysql_connect)."\n";
+     	// smas trying to fix mysql server went away error - added 09/14/14
+     	mysqli_close($mysql_connect);
 		return false;
         $result = "";
     } else {
-     // smas trying to fix mysql server went away error - added 09/14/14
+     	// smas trying to fix mysql server went away error - added 09/14/14
      	mysqli_close($mysql_connect);
-		# return $result;
 		return true;
 	}
 }
