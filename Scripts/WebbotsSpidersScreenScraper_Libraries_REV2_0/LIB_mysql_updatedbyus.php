@@ -181,6 +181,77 @@ function insert($database, $table, $data_array)
 	}
 
 /***********************************************************************
+multi_insert($database, $table, $data_array, $col_heads)
+************************************************************************/
+
+function multi_insert($database, $table, $data_array, $colheads) {
+    // LOGGING
+	debug_log('multi_insert', $table, count($data_array));
+
+	# Connect to MySQL server and select database
+	$attempts = 0;
+	$mysql_connect = connect_to_database();
+	echo '========'."\n";
+	while ($attempts < 10 && mysqli_connect_errno()) {
+		$mysql_connect = connect_to_database();
+		$attempts ++;
+	}
+	if ($attempts == 10) {
+		debug_log('FAILED', 'FAILED', 'FAILED');
+		printf("Connect failed: %s\n", mysqli_connect_error());
+		echo '////////////////////////////////////////////////'."\n";
+		echo 'THIS FAILED 10 TIMES!!'."\n";
+		echo 'sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart'."\n";
+		echo '////////////////////////////////////////////////'."\n";
+		email("RESTART MYSQL", "sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart");
+		return false;
+	}
+	mysqli_select_db($mysql_connect, $database);
+
+	// Create INSERT statement based on colheads
+	if (!in_array('ds', $colheads)) {
+		exit('INSERT FAILED: Cannot use multi_insert unless you add ds to your data/colheads'."\n");
+	}
+	$colheads_insert = implode(',', $colheads);
+	$sql = array(); 
+	foreach ($data_array as $row) {
+		$insert_row = array();
+		foreach ($colheads as $col) {
+			$insert_data = null;
+			$insert_data = $row[$col];
+			if (!$insert_data) {
+				$insert_row[] = 'NULL';
+			} else if (mb_detect_encoding($insert_data) !== 'ASCII') {
+            	$insert_row[] = 'NULL';
+            	echo 'There is a foreign charactar check LIB_mysql_updatedbyus to turn off this error message'."\n".
+                	'Currently this is defaulted to NULL'."\n";
+            	send_email("Foreign Character", "You can turn this off in LIB_mysql_updatedbyus.php", "d");
+        	} else {
+				$insert_row[] = "'$insert_data'";
+			}
+		}
+		$sql[] = '('.implode(',', $insert_row).')';
+	}
+
+    # Create and execute SQL command
+    $final_sql = "INSERT INTO $table ($colheads_insert) VALUES ".implode(',', $sql);
+	$result = mysqli_query($mysql_connect, $final_sql);
+
+    # Report SQL error, if one occured, otherwise return result
+    if (mysqli_error($mysql_connect)) {
+		echo mysqli_error($mysql_connect)."\n";
+     	// smas trying to fix mysql server went away error - added 09/14/14
+     	mysqli_close($mysql_connect);
+		return false;
+        $result = "";
+    } else {
+     	// smas trying to fix mysql server went away error - added 09/14/14
+     	mysqli_close($mysql_connect);
+		return true;
+	}
+}
+
+/***********************************************************************
 update($database, $table, $data_array, $key_column, $id)
 -------------------------------------------------------------
 DESCRIPTION:
