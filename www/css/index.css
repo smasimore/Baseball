@@ -1,0 +1,138 @@
+/* list */
+ul {
+  list-style: none;
+  padding: 5px;
+  margin: 0;  
+}
+
+li {
+  list-style-type: none;
+}
+
+/* form */
+div.fieldset {
+  padding: 10px;
+  width: 300px;
+}
+
+fieldset {
+  padding: 20px 30px;
+}
+
+form { 
+  margin: 0 auto; 
+  width:250px;
+}
+
+/* background-color added bc div was overlapping */
+table {
+  width: 100%;
+  height: 100%;
+  margin-bottom: 10px;
+  border-spacing: 0px;
+  border: 1px solid #535353;
+  border-left: 2px solid #535353;
+  border-right: 2px solid #535353;
+  background-color: transparent;
+  text-align: center; 
+  table-layout: fixed;
+}
+
+table th {
+    padding:10px 10px 10px 10px;
+    border-top:1px solid #ccc;
+    border-bottom:1px solid #ccc;
+    background: #e4e4e4;
+    text-align: center; 
+}  
+
+table th:hover {
+  cursor: pointer;
+}
+
+table tr {
+  text-align: center;
+}
+
+table td {
+    padding:10px;
+    border-bottom:1px solid #ccc;
+    background: #fafafa;
+    text-align: center; 
+}  
+
+/* General page stuff */
+.page {
+  background-color: #c9c9c9;
+}
+
+.page_header {
+  width: 100%;
+  height: 50px;
+  margin-bottom: 10px;
+  border: 1px solid #041E42;
+  background-color: #003DA5;
+  float:left;
+  overflow: hidden;
+}
+
+.page_header .title {
+  margin: 10px;
+}
+
+/* Error formatting */
+.error {
+  color: red;
+  text-align: center;
+  font-family: verdana;
+  font-size: 16pt;
+  margin: 0;
+}
+
+/* Games page */
+.games_container {
+  background-color: white;
+  overflow: hidden;
+  margin-top: 10px;
+  padding: 10px;
+  width: auto;
+  height: auto;
+} 
+
+.game_section {
+  background-color: #579c57;
+  border: 1px solid #213a21;
+  overflow: hidden;
+  margin-top: 10px;
+  margin-bottom: 20px;
+  padding: 10px;
+  width: auto;
+  height: auto;
+  box-shadow: 2px 2px 2px #888888;
+}
+
+/* Errors.php */
+.even_list {
+  background-color: white;
+}
+
+.selected_list {
+    background-color: yellow;
+}
+
+/* AnalysisPage.php */
+.analysis_page_table {
+  table-layout:auto;
+  border: 0px;
+  background: #c9c9c9;
+  padding-bottom: 25px;
+}
+
+.analysis_page_cell {
+  background: #c9c9c9;
+  vertical-align: top;
+}
+
+.analysis_page_form_table {
+  background: #6495ed;
+}
