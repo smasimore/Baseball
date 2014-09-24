@@ -71,3 +71,17 @@ launchctl limit maxfiles 2048 2048 # changes limit (possibly just in session.. c
 
 # Socket errors
 /var/mysql/mysql.sock is symbolically synced to /tmp/mysql.sock
+
+##### Apache #####
+# config
+/etc/apache2/httpd.conf
+# virtual hosts
+/private/etc/apache2/extra/httpd-vhosts.conf
+# error log
+/var/log/apache2/error_log
+# restart
+sudo apachectl -k restart
+
+##### GIT #####
+# mass stage removed files
+git rm $(git ls-files --deleted)  
