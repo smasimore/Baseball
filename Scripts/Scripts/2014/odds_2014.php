@@ -81,7 +81,7 @@ function pullCasinoOdds($source_code, $stats_stg, $start, $end, $home_abbr, $awa
 				$game_day = trim(return_between($game_date, " ", ",", EXCL));
 				$game_date = "2014-$game_month-$game_day";
 				$game_time = trim(split_string(return_between($source_code, "Game Time:",  "</TD>", EXCL), "p;&nbsp;&nbsp;", AFTER, EXCL));
-				$game_ampm = format_header(substr($game_time, -2));
+				$game_ampm = format_for_mysql(substr($game_time, -2));
                 $game_hour = trim(split_string($game_time, ":", BEFORE, EXCL));
                 $game_minute = trim(return_between($game_time, ":", $game_ampm, EXCL));
                 if ($game_ampm == 'pm' && $game_hour != 12) {
@@ -126,7 +126,7 @@ function pullCasinoOdds($source_code, $stats_stg, $start, $end, $home_abbr, $awa
                             $stats_date += 12;
                             break;
 						case ($i == $stats_time):
-							$ampm = format_header(substr($data, -2));
+							$ampm = format_for_mysql(substr($data, -2));
 							$hour = split_string($data, ":", BEFORE, EXCL);
 							$minute = return_between($data, ":", $ampm, EXCL);
 							if ($ampm == 'pm' && $hour != 12) {

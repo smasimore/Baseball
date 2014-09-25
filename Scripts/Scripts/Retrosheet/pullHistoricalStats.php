@@ -22,7 +22,7 @@ function initializePlayerArray($game_stat, $split) {
     global $player_daily, $player_career;
     $player_id = $game_stat['player_id'];
     $player_daily[$player_id][$split]['player_id'] = $player_id;
-    $player_daily[$player_id][$split]['player_name'] = format_header($game_stat['player_name']);
+    $player_daily[$player_id][$split]['player_name'] = format_for_mysql($game_stat['player_name']);
     $player_daily[$player_id][$split]['season'] = $game_stat['season'];
     //$player_daily[$player_id][$split]['ds'] = $game_stat['ds'];
     $player_daily[$player_id][$split]['split'] = $split;
@@ -36,7 +36,7 @@ function initializePlayerArray($game_stat, $split) {
     $player_daily[$player_id][$split]['fly_outs'] += 0;
     $player_daily[$player_id][$split]['plate_appearances'] += 0;
     $player_career[$player_id][$split]['player_id'] = $player_id;
-    $player_career[$player_id][$split]['player_name'] = format_header($game_stat['player_name']);
+    $player_career[$player_id][$split]['player_name'] = format_for_mysql($game_stat['player_name']);
     $player_career[$player_id][$split]['season'] = $game_stat['season'];
     //$player_career[$player_id][$split]['ds'] = $game_stat['ds'];
     $player_career[$player_id][$split]['split'] = $split;

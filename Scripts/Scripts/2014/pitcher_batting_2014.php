@@ -73,7 +73,7 @@ foreach ($all_players as $player) {
 		$colheads_end = "\">";
 		$colheads_stg = parse_array_clean($source_code, $colheads_start, $colheads_end);
 		foreach ($colheads_stg as $head) {
-			$head = format_header($head);
+			$head = format_for_mysql($head);
   	  		$head = str_replace("ops_=_obp_+_slg", "ops", $head);
  	 	    //if (in_array($head, $colheads)) {
  	  	 	//    continue;

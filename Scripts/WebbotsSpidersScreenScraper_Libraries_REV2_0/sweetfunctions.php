@@ -476,7 +476,7 @@ function getBattingColheads($source_code, $exclude = 'batting_average', $dupe = 
         $colheads_end = "\">";
         $colheads_stg = parse_array_clean($source_code, $colheads_start, $colheads_end);
         foreach ($colheads_stg as $head) {
-            $head = format_header($head);
+            $head = format_for_mysql($head);
             $head = str_replace("ops_=_obp_+_slg", "ops", $head);
             $head = str_replace("/", "_", $head);
             $head = str_replace("(per_start)", "per_start", $head);
@@ -585,7 +585,7 @@ function export_sql_to_csv($csv_name, $rows) {
     export_csv($csv_name, $data);
 }
 
-function format_header($header) {
+function format_for_mysql($header) {
     $header = strtolower(str_replace(" ", "_", $header));
     $header = str_replace("-", "_", $header);
     $header = str_replace("'", "_", $header);

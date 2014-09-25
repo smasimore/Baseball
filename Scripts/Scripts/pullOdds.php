@@ -98,7 +98,7 @@ foreach ($times as $i => $time) {
 	$month = split_string($game_date, "/", BEFORE, EXCL);
 	$day = split_string($game_date, "/", AFTER, EXCL);
 	$game_time = split_string($time, "  ", AFTER, EXCL);
-	$game_ampm = format_header(substr($game_time, -2));
+	$game_ampm = format_for_mysql(substr($game_time, -2));
     $game_hour = trim(split_string($game_time, ":", BEFORE, EXCL));
     $game_minute = trim(return_between($game_time, ":", $game_ampm, EXCL));
     if ($game_ampm == 'pm' && $game_hour != 12) {

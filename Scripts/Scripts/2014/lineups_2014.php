@@ -55,7 +55,7 @@ function pullLineups() {
 		$time_start = 'time';
 		$time_end = '</div>';
 		$time_staging = parse_array_clean($game, $time_start, $time_end);
-		$time = format_header(substr($time_staging[0], 2));
+		$time = format_for_mysql(substr($time_staging[0], 2));
 		$ampm = trim(return_between($time, "_", "_", EXCL));
 		$hour = trim(split_string($time, ":", BEFORE, EXCL));
 		$minute = trim(return_between($time, ":", "_", EXCL));
@@ -126,12 +126,12 @@ function pullLineups() {
 		$game_info[$day][$game_num]['time_est'] = $time;
 		$game_info[$day][$game_num]['away'] = $away_team;
 		$game_info[$day][$game_num]['home'] = $home_team;
-		$game_info[$day][$game_num]['away_pitcher_first'] = format_header($away_pitcher_data['first_name']);
-		$game_info[$day][$game_num]['away_pitcher_last'] = format_header($away_pitcher_data['last_name']);
-		$game_info[$day][$game_num]['home_pitcher_first'] = format_header($home_pitcher_data['first_name']);
-		$game_info[$day][$game_num]['home_pitcher_last'] = format_header($home_pitcher_data['last_name']);
-		$game_info[$day][$game_num]['away_handedness'] = format_header($away_pitcher_data['handedness']);
-		$game_info[$day][$game_num]['home_handedness'] = format_header($home_pitcher_data['handedness']);
+		$game_info[$day][$game_num]['away_pitcher_first'] = format_for_mysql($away_pitcher_data['first_name']);
+		$game_info[$day][$game_num]['away_pitcher_last'] = format_for_mysql($away_pitcher_data['last_name']);
+		$game_info[$day][$game_num]['home_pitcher_first'] = format_for_mysql($home_pitcher_data['first_name']);
+		$game_info[$day][$game_num]['home_pitcher_last'] = format_for_mysql($home_pitcher_data['last_name']);
+		$game_info[$day][$game_num]['away_handedness'] = format_for_mysql($away_pitcher_data['handedness']);
+		$game_info[$day][$game_num]['home_handedness'] = format_for_mysql($home_pitcher_data['handedness']);
 
 
 		$lineups_start = '"players">';
@@ -178,15 +178,15 @@ function pullLineups() {
 				$l_num = "L$num";
 				if ($j == 0) {
 					$lineups[$day][$time][$away_team][$l_num] = array(
-						'name' => format_header($batter),
-						'position' => format_header($position),
-						'batting' => format_header($batting),
+						'name' => format_for_mysql($batter),
+						'position' => format_for_mysql($position),
+						'batting' => format_for_mysql($batting),
 					);
 				} else {
 					$lineups[$day][$time][$home_team][$l_num] = array(
-                        'name' => format_header($batter),
-                        'position' => format_header($position),
-                        'batting' => format_header($batting),
+                        'name' => format_for_mysql($batter),
+                        'position' => format_for_mysql($position),
+                        'batting' => format_for_mysql($batting),
 					);
 				}
 			}

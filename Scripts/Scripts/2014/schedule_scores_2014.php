@@ -186,7 +186,7 @@ function pullLineups() {
                 for ($xx=0; $xx<9; $xx++) {
                     //parse out name v. position v. hitting style (R/L/S)
                     $lineup_order = $xx+1;
-                    $player_name = format_header(split_string($lineup[$xx], " (", BEFORE, EXCL));
+                    $player_name = format_for_mysql(split_string($lineup[$xx], " (", BEFORE, EXCL));
                     $player_position = split_string($lineup[$xx], ") ", AFTER, EXCL);
                     $player_batting = return_between($lineup[$xx], "(", ")", EXCL);
 

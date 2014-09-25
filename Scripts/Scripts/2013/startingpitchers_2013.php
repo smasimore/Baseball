@@ -71,7 +71,7 @@ foreach ($teams as $team) {
 					if (strpos($pitcher, "<")) {
 						$pitcher = split_string($pitcher, "<", BEFORE, EXCL);
 					}
-					$pitcher = format_header($pitcher);
+					$pitcher = format_for_mysql($pitcher);
 					array_push($pitchers, $pitcher);
 				}
 				$error_check = count($pitchers);

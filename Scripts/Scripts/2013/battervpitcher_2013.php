@@ -58,7 +58,7 @@ foreach ($all_players as $player) {
 			$colheads_end = "\">";
 			$colheads_stg = parse_array_clean($source_code, $colheads_start, $colheads_end);
 			foreach ($colheads_stg as $head) {
-				$head = format_header($head);
+				$head = format_for_mysql($head);
   	  			$head = str_replace("ops_=_obp_+_slg", "ops", $head);
  	 		    if (in_array($head, $colheads)) {
  	  		 	    continue;
@@ -76,7 +76,7 @@ foreach ($all_players as $player) {
 		$numcols = 0;
 		for ($i=0; $i<count($rowheads); $i++) {
 			$clean_row = split_string($rowheads[$i], "\">", AFTER, EXCL);
-			$clean_row = format_header($clean_row);
+			$clean_row = format_for_mysql($clean_row);
 			$row = array($id, $name, $clean_row, $team_abbr);
 			for ($k = $numcols; $k < $numcols + 12; $k++) {
 				array_push($row, $stats[$k]);

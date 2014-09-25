@@ -64,7 +64,7 @@ for ($id = 1; $id < 2500; $id += 30) {
 		if (strpos($team, "/")) {
 			$team = split_string($team, "/", BEFORE, EXCL);
 		}
-		$player_name = format_header($clean_row);
+		$player_name = format_for_mysql($clean_row);
 		$player_name = checkDuplicatePlayers($player_name, $team, $duplicate_names);
 		$regular_row = array($player_name, $team);
 		$expanded_row = array();

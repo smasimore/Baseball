@@ -29,7 +29,7 @@ for ($xx=0; $xx<count($masterplayers); $xx++) {
 	$id = return_between($masterplayers[$xx], "id/", "/", EXCL);
 	$start  = "id/".$id."/";
 	$unixname = return_between($masterplayers[$xx], $start, "\"", EXCL);
-	$unixname = format_header($unixname);
+	$unixname = format_for_mysql($unixname);
 	$unixname = checkDuplicatePlayers($unixname, $id, $duplicate_names);
 	if (isset($players[$id])) {
 		continue;

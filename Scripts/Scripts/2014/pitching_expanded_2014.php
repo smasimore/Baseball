@@ -64,7 +64,7 @@ for ($id = 1; $id < 2500; $id += 30) {
 
 	for ($i=0; $i<count($rowheads); $i++) {
 		$clean_row = split_string($rowheads[$i], "\">", AFTER, EXCL);
-		$player_name = format_header($clean_row);
+		$player_name = format_for_mysql($clean_row);
 		$regular_row = array($player_name);
 		$expanded_row = array();
 		$expanded2_row = array();
