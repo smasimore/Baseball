@@ -11,10 +11,15 @@ ini_set('mysqli.connect_timeout', -1);
 ini_set('mysqli.reconnect', '1');
 include(HOME_PATH.'WebbotsSpidersScreenScraper_Libraries_REV2_0/LIB_http.php');
 include(HOME_PATH.'WebbotsSpidersScreenScraper_Libraries_REV2_0/LIB_parse.php');
-include(HOME_PATH.'WebbotsSpidersScreenScraper_Libraries_REV2_0/LIB_mysql_updatedbyus.php');
+include(
+    HOME_PATH.'WebbotsSpidersScreenScraper_Libraries_REV2_0/LIB_mysql_updatedbyus.php'
+);
+// Leaving this in until I can test whether we need it or not.
 date_default_timezone_set('America/Los_Angeles');
 $date = date('Y-m-d');
 $ts = date("Y-m-d H:i:s");
+
+$database = 'baseball';
 
 $team_mapping = array(
     'Atlanta' => 'ATL',
@@ -290,9 +295,21 @@ $duplicate_names = array(
     )
 );
 
-$splits = array('Total', 'Home', 'Away', 'VsLeft', 'VsRight', 'NoneOn', 'RunnersOn', 'ScoringPos', 'ScoringPos2Out', 'BasesLoaded', 25, 50, 75, 100); //, 125);
-
-$database = 'baseball';
+$splits = array('Total',
+    'Home', 
+    'Away', 
+    'VsLeft', 
+    'VsRight', 
+    'NoneOn', 
+    'RunnersOn', 
+    'ScoringPos', 
+    'ScoringPos2Out', 
+    'BasesLoaded', 
+    25, 
+    50, 
+    75, 
+    100
+);
 
 function checkDuplicatePlayers($name, $team, $duplicate_names) {
     if (!in_array($name, array_keys($duplicate_names))) {
@@ -590,24 +607,6 @@ function format_for_mysql($header) {
     $header = str_replace("-", "_", $header);
     $header = str_replace("'", "_", $header);
     return $header;
-}
-
-# DONT USE THIS ANYMORE!!!!
-function find_pitcher($pitcher_first, $pitcher_last, $team, $date) {
-    $first = trim(strtolower($pitcher_first));
-    $last = trim(strtolower($pitcher_last));
-    $team = strtoupper($team);
-    $sql = 
-        'SELECT player_name
-        FROM fielding_2014
-        WHERE ds = "'.$date.'"
-        AND player_name LIKE "%'.$last.'%"
-        AND player_name LIKE "'.$first.'%"
-        AND team  = "'.$team.'"';
-    $full_name = exe_sql('baseball',
-        $sql);
-
-    return $full_name['player_name'];
 }
 
 function send_email($subject, $body, $people = "a") {
