@@ -129,7 +129,8 @@ $data['batting_a'] = createBattingJson(
         'ScoringPos2Out',
         'BasesLoaded',
         'ERA25',
-        'ERA75'
+        'ERA75',
+        'Stadium'
     )
 );
 
