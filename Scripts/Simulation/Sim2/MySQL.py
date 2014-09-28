@@ -92,8 +92,10 @@ def read(query):
         db = MySQLdb.connect("localhost", USERNAME, PASSWORD, DATABASE)
         cursor = db.cursor()
         cursor.execute(query)
+        columns = cursor.description
         data = cursor.fetchall()
-        return data
+        return [{columns[index][0]:column for index, column in
+            enumerate(value)} for value in data][0]
     except MySQLdb.Error, e:
         db.close()
         return {'query' : query, 'error' : e}

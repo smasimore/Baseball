@@ -6,5 +6,6 @@ weights = {
 }
 
 test = Simulation(weights, 2014, 'current', 'basic')
-test.setAnalysisRuns(1000)
-print test.analysisRuns
+test.setTestRun(True)
+test.setGameDate('2014-03-31')
+test.run()

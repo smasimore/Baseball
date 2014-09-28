@@ -1,4 +1,4 @@
-import MySQL, time, datetime
+import MySQL, time, datetime, json
 
 class Simulation:
 
@@ -113,13 +113,51 @@ class Simulation:
                                      # data rather than MySQL.
 
 
-    # def run():
+    def run(self):
+        self.fetchInputData()
         # if test run, call runTest() --- fetches test data, runs, returns
         # test results
         # fetchData() --- queries SQL, formats data
         # runGames() --- does parallelization, calls Game class
         # exportResults() --- formats results, exports to SQL. Logs
         # params, data, results, and one example game to sim_log
+
+
+    def fetchInputData(self):
+        table = 'sim_input' if self.testRun is False else 'sim_input_test'
+        query = (
+            """SELECT *
+            FROM %s
+            WHERE
+                stats_type = '%s' AND
+                stats_year = '%s' AND
+                season = %d"""
+            % (
+                table,
+                self.statsType,
+                self.statsYear,
+                self.season
+            )
+        );
+
+        # If gameDate set, only pull one day of data.
+        if self.gameDate:
+            query = query + " AND game_date = '%s'" % self.gameDate
+
+        results = MySQL.read(query)
+
+        # Convert jsons to dicts.
+        for key, value in results.items():
+            if isinstance(value, str):
+                # Try/catch because value might not be json.
+                try:
+                    results[key] = json.loads(value)
+                except ValueError, e:
+                    results[key] = value
+
+        self.inputStats = results
+        print self.inputStats
+
 
 
     ########## EXTRA PARAM FUNCTIONS ##########
@@ -144,7 +182,7 @@ class Simulation:
         self.validateInList(default_type, self.DEFAULT_TYPES)
         self.defaultType = default_type
 
-    ########## VALIDATION FUNCTIONS ##########
+    ########## PARAM VALIDATION FUNCTIONS ##########
 
     def validateWeights(self, weights, stats_type):
         # Check if param is dictionary.
