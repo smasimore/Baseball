@@ -1,6 +1,8 @@
 <?php 
 include('/Users/constants.php'); 
-include(HOME_PATH.'WebbotsSpidersScreenScraper_Libraries_REV2_0/sweetfunctions.php');
+include(
+    HOME_PATH.'WebbotsSpidersScreenScraper_Libraries_REV2_0/sweetfunctions.php'
+);
 
 $data = array(
     'gameid' => '2014033107smas',
@@ -134,6 +136,6 @@ $data['batting_a'] = createBattingJson(
     )
 );
 
-insert('baseball', 'test_sim2_input', $data);
+insert('baseball', 'sim_input_test', $data);
 
 ?>

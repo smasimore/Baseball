@@ -1,32 +1,31 @@
 # MySQL util functions
 
-import MySQLdb
+import MySQLdb, imp
 from warnings import filterwarnings, resetwarnings
 
-USERNAME = "root"
-PASSWORD = "baseball"
-DATABASE = "BASEBALL"
+constants = imp.load_source('constants', '/Users/constants.py')
 
+def __connectToDatabase():
+    return MySQLdb.connect(
+        "localhost",
+        constants.DB_USER,
+        constants.DB_PASSWORD,
+        constants.BB_DATABASE
+    )
 
-
-# create('test_python_integration3', {'name' : 'varchar(20)', 'id' : 'int', 'dou' : 'float'})
+# create(
+#   'test_python_integration3',
+#   {'name' : 'varchar(20)', 'id' : 'int', 'dou' : 'float'}
+# )
 def create(table_name, column_data):
-    formatted_column_data = ''
-    counter = 1
-    for name in column_data:
-        # For last column, don't add comma after
-        if counter == len(column_data):
-            formatted_column_data = (formatted_column_data + name + ' ' +
-                column_data[name])
-        else:
-            formatted_column_data = (formatted_column_data + name + ' ' +
-                column_data[name] + ', ')
-        counter += 1
+    formatted_column_data = ', '.join(
+        [' '.join([key, val]) for key, val in column_data.items()]
+    )
 
     query = ("CREATE TABLE %s (%s)" % (table_name, formatted_column_data))
 
     try:
-        db = MySQLdb.connect("localhost", USERNAME, PASSWORD, DATABASE)
+        db = __connectToDatabase()
         cursor = db.cursor()
         cursor.execute(query)
         db.close()
@@ -48,7 +47,7 @@ def insert(table_name, column_names, data):
             % ('%s', dynamic_sub)) % ','.join(column_names)
 
     try:
-        db = MySQLdb.connect("localhost", USERNAME, PASSWORD, DATABASE)
+        db = __connectToDatabase()
         cursor = db.cursor()
         # execute SQL insert query using execute() and commit() methods.
         cursor.executemany(query, data)
@@ -66,11 +65,11 @@ def insert(table_name, column_names, data):
 # delete("DROP TABLE if exists test_python_integration4")
 def delete(query):
     try:
-        db = MySQLdb.connect("localhost", USERNAME, PASSWORD, DATABASE)
+        db = __connectToDatabase()
         cursor = db.cursor()
 
         # Filtering out warnings here (e.g. if use 'if exists' and
-        # table doesn't exist throws warning
+        # table doesn't exist throws warning.
         filterwarnings('ignore', category = MySQLdb.Warning)
         # execute SQL insert query using execute() and commit() methods.
         cursor.execute(query)
@@ -89,13 +88,13 @@ def delete(query):
 # mysql_read('SELECT * FROM test_python_integration')
 def read(query):
     try:
-        db = MySQLdb.connect("localhost", USERNAME, PASSWORD, DATABASE)
+        db = __connectToDatabase()
         cursor = db.cursor()
         cursor.execute(query)
         columns = cursor.description
         data = cursor.fetchall()
         return [{columns[index][0]:column for index, column in
-            enumerate(value)} for value in data][0]
+            enumerate(value)} for value in data]
     except MySQLdb.Error, e:
         db.close()
         return {'query' : query, 'error' : e}

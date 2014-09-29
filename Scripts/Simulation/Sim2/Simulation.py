@@ -1,4 +1,5 @@
 import MySQL, time, datetime, json
+from multiprocessing import Process, Manager
 
 class Simulation:
 
@@ -48,9 +49,14 @@ class Simulation:
 
     '''
 
+    ########## PRIVATE VARS ##########
+    __TABLE = 'sim_input'
+    __TEST_TABLE = 'sim_input_test'
+    __THREADS = 10
 
 
-    # VALIDATION LISTS - used to make sure params are acceptable.
+
+    ########## PARAM VALIDATION LISTS ##########
     DATA_TYPES = [
         'basic',
         'magic',
@@ -76,7 +82,7 @@ class Simulation:
 
 
 
-    # DEFAULT PARAMS - these can be set using setter functions.
+    ########## DEFAULT PARAMS - use setter functions to override. ##########
     ANALYSIS_RUNS = 2000
     GAME_DATE = None # Set a date to run a specific day of games.
                      # Timespan not currently available.
@@ -86,10 +92,9 @@ class Simulation:
 
 
 
-
     def __init__(self,
         weights,
-        season = time.strftime("%Y"),     # What season of games to run on
+        season = time.strftime("%Y"),
         stats_year = 'current',
         stats_type = 'basic'):
 
@@ -115,16 +120,52 @@ class Simulation:
 
     def run(self):
         self.fetchInputData()
-        # if test run, call runTest() --- fetches test data, runs, returns
-        # test results
-        # fetchData() --- queries SQL, formats data
-        # runGames() --- does parallelization, calls Game class
+        self.runGames()
         # exportResults() --- formats results, exports to SQL. Logs
         # params, data, results, and one example game to sim_log
 
 
+    def __runGame(self, row_number, sim_results):
+        print row_number
+        # [NEXT] Call GameSimulation class here.
+
+    # Multiprocessing method that calls runGame.
+    def runGames(self):
+        # Create shared memory dict.
+        manager = Manager()
+        sim_results = manager.list()
+
+        rows = len(self.inputData)
+        rows_completed = 0
+        while rows_completed < len(self.inputData):
+            # For last run through, make sure you're not creating more threads
+            # than necessary. E.g. if there's only 1 game, only have 1 thread.
+            threads = (
+                    self.__THREADS
+                    if rows_completed + self.__THREADS < rows
+                    else rows - rows_completed
+            )
+            processes = {}
+            range(threads)
+            for t in range(threads):
+                row_number = rows_completed + t
+                processes[t] = Process(
+                    target=self.__runGame,
+                    args=(
+                        row_number,
+                        sim_results
+                    )
+                )
+            for t in range(threads):
+                processes[t].start()
+            for t in range (threads):
+                processes[t].join()
+            rows_completed = rows_completed + threads
+
+        self.simResults = sim_results
+
     def fetchInputData(self):
-        table = 'sim_input' if self.testRun is False else 'sim_input_test'
+        table = self.__TABLE if self.testRun is False else self.__TEST_TABLE
         query = (
             """SELECT *
             FROM %s
@@ -147,16 +188,19 @@ class Simulation:
         results = MySQL.read(query)
 
         # Convert jsons to dicts.
-        for key, value in results.items():
-            if isinstance(value, str):
-                # Try/catch because value might not be json.
-                try:
-                    results[key] = json.loads(value)
-                except ValueError, e:
-                    results[key] = value
+        formatted_results = []
+        for row in results:
+            formatted_row = {}
+            for key, value in row.items():
+                if isinstance(value, str):
+                    # Try/catch because value might not be json.
+                    try:
+                        formatted_row[key] = json.loads(value)
+                    except ValueError, e:
+                        formatted_row[key] = value
+            formatted_results.append(formatted_row)
 
-        self.inputStats = results
-        print self.inputStats
+        self.inputData = formatted_results
 
 
 
@@ -181,6 +225,8 @@ class Simulation:
     def setDefaultType(self, default_type):
         self.validateInList(default_type, self.DEFAULT_TYPES)
         self.defaultType = default_type
+
+
 
     ########## PARAM VALIDATION FUNCTIONS ##########
 
