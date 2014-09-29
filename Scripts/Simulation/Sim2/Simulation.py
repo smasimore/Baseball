@@ -1,4 +1,5 @@
 import MySQL, time, datetime, json
+from Game import Game
 from multiprocessing import Process, Manager
 
 class Simulation:
@@ -42,14 +43,13 @@ class Simulation:
         stats_year (previous, current, career)
         analysis_runs
         default_threshold
-        default_type
 
         %_win
         results (s/d/t/h/f/gb/so/steals/...)
 
     '''
 
-    ########## PRIVATE VARS ##########
+    ########## PRIVATE CONSTANTS ##########
     __TABLE = 'sim_input'
     __TEST_TABLE = 'sim_input_test'
     __THREADS = 10
@@ -57,7 +57,7 @@ class Simulation:
 
 
     ########## PARAM VALIDATION LISTS ##########
-    DATA_TYPES = [
+    STATS_TYPES = [
         'basic',
         'magic',
     ]
@@ -65,6 +65,10 @@ class Simulation:
     STATS = [
         'total',
         'home_away',
+        'pitcher_handedness',
+        'pitcher_era_band',
+        'pitcher_vs_batter',
+        'situation'
     ]
 
     STATS_YEAR = [
@@ -87,7 +91,6 @@ class Simulation:
     GAME_DATE = None # Set a date to run a specific day of games.
                      # Timespan not currently available.
     DEFAULT_THRESHOLD = 9 # Number of at bats required to no longer default.
-    DEFAULT_TYPE = 'season'
     TEST_RUN = False
 
 
@@ -100,8 +103,8 @@ class Simulation:
 
         self.validateWeights(weights, stats_type)
         self.validateSeasonYear(season)
+        self.validateInList(stats_type, self.STATS_TYPES)
         self.validateInList(stats_year, self.STATS_YEAR)
-        self.validateInList(stats_type, self.DATA_TYPES)
 
         self.weights = weights
         self.season = season
@@ -112,7 +115,6 @@ class Simulation:
         self.analysisRuns = self.ANALYSIS_RUNS
         self.gameDate = self.GAME_DATE
         self.defaultThreshold = self.DEFAULT_THRESHOLD
-        self.defaultType = self.DEFAULT_TYPE
         self.testRun = self.TEST_RUN # Use this in conjunction with setting a
                                      # file with test data. Sim will use test
                                      # data rather than MySQL.
@@ -126,8 +128,7 @@ class Simulation:
 
 
     def __runGame(self, row_number, sim_results):
-        print row_number
-        # [NEXT] Call GameSimulation class here.
+        game = Game(self.weights, self.inputData[row_number])
 
     # Multiprocessing method that calls runGame.
     def runGames(self):
@@ -221,10 +222,6 @@ class Simulation:
     def setDefaultThreshold(self, threshold):
         self.validateDefaultThreshold(threshold)
         self.defaultThreshold = threshold
-
-    def setDefaultType(self, default_type):
-        self.validateInList(default_type, self.DEFAULT_TYPES)
-        self.defaultType = default_type
 
 
 
