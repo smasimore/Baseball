@@ -1,5 +1,5 @@
 import MySQL, time, datetime, json
-from Game import Game
+from Game import Game, StatCategories
 from multiprocessing import Process, Manager
 
 class Simulation:
@@ -63,12 +63,13 @@ class Simulation:
     ]
 
     STATS = [
-        'total',
-        'home_away',
-        'pitcher_handedness',
-        'pitcher_era_band',
-        'pitcher_vs_batter',
-        'situation'
+        StatCategories.TOTAL,
+        StatCategories.HOME_AWAY,
+        StatCategories.PITCHER_HANDEDNESS,
+        StatCategories.PITCHER_ERA_BAND,
+        StatCategories.PITCHER_VS_BATTER,
+        StatCategories.SITUATION,
+        StatCategories.STADIUM,
     ]
 
     STATS_YEAR = [
@@ -235,9 +236,13 @@ class Simulation:
         # Check if stats in STATS.
         for stat in weights:
             self.validateInList(stat, self.STATS)
+            if type(weights[stat]) is not float:
+                raise ValueError('Weight value needs to be a float. %s is not.'
+                    % weights[stat])
         # If stats_type is basic, make sure weights add to 1.
         if stats_type == 'basic':
-            if sum(weights.values()) != 1:
+            # Rounding to 3 decimals due to Python float precision issues.
+            if  round(sum(weights.values()), 3) != 1:
                 raise ValueError(
                     "Weights must add to 1 (not %s) for basic stats_type."
                     % sum(weights.values()))
