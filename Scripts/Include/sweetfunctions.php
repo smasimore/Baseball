@@ -9,11 +9,9 @@ ini_set('default_socket_timeout', -1);
 ini_set('max_execution_time', -1);
 ini_set('mysqli.connect_timeout', -1);
 ini_set('mysqli.reconnect', '1');
-include(HOME_PATH.'WebbotsSpidersScreenScraper_Libraries_REV2_0/LIB_http.php');
-include(HOME_PATH.'WebbotsSpidersScreenScraper_Libraries_REV2_0/LIB_parse.php');
-include(
-    HOME_PATH.'WebbotsSpidersScreenScraper_Libraries_REV2_0/LIB_mysql_updatedbyus.php'
-);
+include(HOME_PATH.'Include/http.php');
+include(HOME_PATH.'Include/parse.php');
+include(HOME_PATH.'Include/mysql.php');
 // Leaving this in until I can test whether we need it or not.
 date_default_timezone_set('America/Los_Angeles');
 $date = date('Y-m-d');

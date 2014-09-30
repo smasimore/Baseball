@@ -1,8 +1,6 @@
 <?php 
 include('/Users/constants.php'); 
-include(
-    HOME_PATH.'WebbotsSpidersScreenScraper_Libraries_REV2_0/sweetfunctions.php'
-);
+include(HOME_PATH.'Include/sweetfunctions.php');
 
 $data = array(
     'gameid' => '2014033107smas',

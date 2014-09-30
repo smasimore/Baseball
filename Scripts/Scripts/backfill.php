@@ -7,7 +7,7 @@ ini_set('max_execution_time', -1);
 ini_set('mysqli.connect_timeout', -1);
 ini_set('mysqli.reconnect', '1');
 include('/Users/constants.php');
-include(HOME_PATH.'WebbotsSpidersScreenScraper_Libraries_REV2_0/sweetfunctions.php');
+include(HOME_PATH.'Include/sweetfunctions.php');
 
 # Input 1 = Start Date
 # Input 2 = End Date

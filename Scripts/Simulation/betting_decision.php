@@ -6,7 +6,8 @@ ini_set('mysqli.reconnect', '1');
 ini_set('mysqli.connect_timeout', '-1');
 ini_set('default_socket_timeout', '-1');
 ini_set('max_execution_time', '-1');
-include('/Users/constants.php'); include(HOME_PATH.'WebbotsSpidersScreenScraper_Libraries_REV2_0/sweetfunctions.php');
+include('/Users/constants.php'); 
+include(HOME_PATH.'Include/sweetfunctions.php');
 
 CONST BET_AMOUNT = 100;
 CONST KELLY_DIVIDE = 10;

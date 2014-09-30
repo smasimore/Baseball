@@ -149,7 +149,7 @@ function insert($database, $table, $data_array)
 			$value = 0;
 			echo 'There is a foreign charactar check LIB_mysql_updatedbyus to turn off this error message'."\n".
 				'Currently this is defaulted to 0'."\n";
-			send_email("Foreign Character", "You can turn this off in LIB_mysql_updatedbyus.php", "d");
+			send_email("Foreign Character", "You can turn this off in LIB_mysql.php", "d");
 		}
 		$tmp_dat[] = "'$value'";
 	}
@@ -237,7 +237,7 @@ function multi_insert($database, $table, $data_array, $colheads) {
                     Currently this is defaulted to NULL \n";
                 send_email(
                     "Foreign Character in $table", 
-                    "You can turn this off in LIB_mysql_updatedbyus.php",
+                    "You can turn this off in LIB_mysql.php",
                     "d"
                 );
             } else {

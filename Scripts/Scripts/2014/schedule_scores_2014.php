@@ -6,10 +6,8 @@ ini_set('mysqli.reconnect', '1');
 ini_set('mysqli.connect_timeout', '-1');
 ini_set('default_socket_timeout', '-1');
 ini_set('max_execution_time', '-1');
-//include('/Users/constants.php'); include(HOME_PATH.'WebbotsSpidersScreenScraper_Libraries_REV2_0/LIB_http.php');
-//include('/Users/constants.php'); include(HOME_PATH.'WebbotsSpidersScreenScraper_Libraries_REV2_0/LIB_parse.php');
-//include('/Users/constants.php'); include(HOME_PATH.'WebbotsSpidersScreenScraper_Libraries_REV2_0/LIB_mysql_updatedbyus.php');
-include('/Users/constants.php'); include(HOME_PATH.'WebbotsSpidersScreenScraper_Libraries_REV2_0/sweetfunctions.php');
+include('/Users/constants.php'); 
+include(HOME_PATH.'Include/sweetfunctions.php');
 $database = 'baseball';
 
 //global variables
