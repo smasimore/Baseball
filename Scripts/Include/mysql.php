@@ -75,24 +75,17 @@ define("FAILURE", false);             // Failed operation flag
 if(strlen(MYSQL_ADDRESS) + strlen(MYSQL_USERNAME) + strlen(MYSQL_PASSWORD) + strlen(MYSQL_ADDRESS) + strlen(DATABASE) == 0)
     echo "WARNING: MySQL not configured.<br>\n";
 
-// Logging for debugging
-function debug_log($function, $table, $data_length) {
+function format_log_data($function, $table, $data_length) {
 	$time = time();
-	$log_data = " \n SCRIPT, $time, $function, $table, $data_length"; 
-	file_put_contents(
-		HOME_PATH.'Scripts/Logging/mysql_log.txt',
-		$log_data, 
-		FILE_APPEND
-	);
+	return " \n SCRIPT, $time, $function, $table, $data_length"; 
 }
 
 /***********************************************************************
 Database connection routine (only used by routines in this library
 ----------------------------------------------------------------------*/
-function connect_to_database()
-	{
+function connect_to_database() {
 	return(mysqli_connect(MYSQL_ADDRESS, MYSQL_USERNAME, MYSQL_PASSWORD));
-	}
+}
 
 /***********************************************************************
 insert($database, $table, $data_array)
@@ -107,11 +100,13 @@ INPUT:
 RETURNS
         SUCCESS or FAILURE
 ***********************************************************************/
-function insert($database, $table, $data_array)
-	{
+function insert($database, $table, $data_array) {
 
-    // LOGGING
-	debug_log('insert', $table, count($data_array));
+	error_log(
+		format_log_data('insert', $table, count($data_array)), 
+		3, 
+		'/Users/Logs/MySQL_requests.log'
+	);
 
 	# Connect to MySQL server and select database
 	$attempts = 0;
@@ -124,7 +119,11 @@ function insert($database, $table, $data_array)
 		$attempts ++;
 	}
 	if ($attempts == 10) {
-		debug_log('FAILED', 'FAILED', 'FAILED');
+		error_log(
+			format_log_data('FAILED', 'FAILED', 'FAILED'),
+            3,
+            '/Users/Logs/MySQL_requests.log'
+		);
 		printf("Connect failed: %s\n", mysqli_connect_error());
 		echo '////////////////////////////////////////////////'."\n";
 		echo 'THIS FAILED 10 TIMES!!'."\n";
@@ -185,8 +184,11 @@ multi_insert($database, $table, $data_array, $col_heads)
 ************************************************************************/
 
 function multi_insert($database, $table, $data_array, $colheads) {
-    // LOGGING
-    debug_log('multi_insert', $table, count($data_array));
+    error_log(
+        format_log_data('multi_insert', $table, count($data_array)),
+        3,
+        '/Users/Logs/MySQL_requests.log'
+    );
 
     # Connect to MySQL server and select database
     $attempts = 0;
@@ -197,7 +199,11 @@ function multi_insert($database, $table, $data_array, $colheads) {
         $attempts ++;
     }
     if ($attempts == 10) {
-        debug_log('FAILED', 'FAILED', 'FAILED');
+        error_log(
+            format_log_data('FAILED', 'FAILED', 'FAILED'),
+            3,
+            '/Users/Logs/MySQL_requests.log'
+        );
         printf("Connect failed: %s\n", mysqli_connect_error());
         echo '////////////////////////////////////////////////'."\n";
         echo 'THIS FAILED 10 TIMES!!'."\n";
@@ -281,10 +287,23 @@ INPUT:
 RETURNS
         SUCCESS or FAILURE
 ***********************************************************************/
-function update($database, $table, $data_array, $key_column, $id, $second_where = null, $second_value = null, $third_where = null, $third_value = null) {
+function update(
+	$database, 
+	$table, 
+	$data_array, 
+	$key_column, 
+	$id, 
+	$second_where = null, 
+	$second_value = null, 
+	$third_where = null, 
+	$third_value = null
+) {
 
-	// LOGGING
-	debug_log('update', $table, count($data_array));
+    error_log(
+        format_log_data('update', $table, count($data_array)),
+        3,
+        '/Users/Logs/MySQL_requests.log'
+    );
 
     # Connect to MySQL server and select database
 	$mysql_connect = connect_to_database();
@@ -295,7 +314,11 @@ function update($database, $table, $data_array, $key_column, $id, $second_where 
         $attempts++;
     }
     if ($attempts == 10) {
-		debug_log('FAILED', 'FAILED', 'FAILED');
+        error_log(
+            format_log_data('FAILED', 'FAILED', 'FAILED'),
+            3,
+            '/Users/Logs/MySQL_requests.log'
+        );
         echo '////////////////////////////////////////////////'."\n";
         echo 'THIS FAILED 10 TIMES!!'."\n";
         echo 'sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart'."\n";
@@ -348,11 +371,12 @@ INPUT:
 RETURNS
         An array containing the results of sql operation
 ***********************************************************************/
-function exe_sql($database, $sql, $delete = null)
-	{
-
-	// LOGGING
-	debug_log('exe_sql', 'sql query', $sql);
+function exe_sql($database, $sql, $delete = null) {
+    error_log(
+        format_log_data('exe_sql', 'sql query', $sql),
+        3,
+        '/Users/Logs/MySQL_requests.log'
+    );
 
 	# Connect to MySQL server and select database
 	$attempts = 0;
@@ -363,7 +387,11 @@ function exe_sql($database, $sql, $delete = null)
 		$attempts++;
 	}
 	if ($attempts == 10) {
-		debug_log('FAILED', 'FAILED', 'FAILED');
+        error_log(
+            format_log_data('FAILED', 'FAILED', 'FAILED'),
+            3,
+	        '/Users/Logs/MySQL_requests.log'
+        );
 		echo '////////////////////////////////////////////////'."\n";
 		echo 'THIS FAILED 10 TIMES!!'."\n";
 		echo 'sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart'."\n";
