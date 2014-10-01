@@ -411,30 +411,24 @@ function exe_sql($database, $sql, $delete = null) {
 	    return true;
     }
 
-    # Report SQL error, if one occured
-    if(mysqli_error ($mysql_connect))
-        {
+	# Report SQL error, if one occured
+	$result_set = array();
+    if (mysqli_error($mysql_connect)) {
         echo "MySQL ERROR: ".mysqli_error($mysql_connect);
-        $result_set = "";
-        }
-    else
-        {
+        return false;
+    } else {
         # Fetch every row in the result set
-        for ($xx=0; $xx<mysqli_num_rows($result); $xx++)
-    	    {
+        for ($xx=0; $xx<mysqli_num_rows($result); $xx++) {
 		    $result_set[$xx] = mysqli_fetch_assoc($result);
-    	    }
-
+    	}
         # If the result set has only one row, return a single dimension array
-        if(sizeof($result_set)==1)
-            $result_set=$result_set[0];
-
-        }
-     // smas trying to fix mysql server went away error - added 09/14/14
-     mysqli_close($mysql_connect);
-    
+        if (sizeof($result_set) == 1) {
+			$result_set = $result_set[0];
+		}
+    }
+    mysqli_close($mysql_connect);
 	return $result_set;
-	}
+}
 
 function email($subject, $body) {
     $cmd = 'mail -s "' .$subject .
