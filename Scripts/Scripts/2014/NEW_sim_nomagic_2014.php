@@ -7,7 +7,7 @@ ini_set('max_execution_time', -1);
 ini_set('mysqli.connect_timeout', -1);
 ini_set('mysqli.reconnect', '1');
 include('/Users/constants.php');
-include(HOME_PATH.'Include/sweetfunctions.php');
+include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
 
 const DEFAULT_BIN = 75;
 // Using this for website debugging (actual ERA is not used in model now)

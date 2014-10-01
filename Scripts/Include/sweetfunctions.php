@@ -9,9 +9,9 @@ ini_set('default_socket_timeout', -1);
 ini_set('max_execution_time', -1);
 ini_set('mysqli.connect_timeout', -1);
 ini_set('mysqli.reconnect', '1');
-include(HOME_PATH.'Include/http.php');
-include(HOME_PATH.'Include/parse.php');
-include(HOME_PATH.'Include/mysql.php');
+include(HOME_PATH.'Scripts/Include/http.php');
+include(HOME_PATH.'Scripts/Include/parse.php');
+include(HOME_PATH.'Scripts/Include/mysql.php');
 // Leaving this in until I can test whether we need it or not.
 date_default_timezone_set('America/Los_Angeles');
 $date = date('Y-m-d');

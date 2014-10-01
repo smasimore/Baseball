@@ -7,7 +7,7 @@ ini_set('max_execution_time', -1);
 ini_set('mysqli.connect_timeout', -1);
 ini_set('mysqli.reconnect', '1');
 include('/Users/constants.php'); 
-include(HOME_PATH.'Include/sweetfunctions.php');
+include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
 
 function get_html($url) {
     $ch = curl_init();

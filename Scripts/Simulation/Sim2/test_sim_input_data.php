@@ -1,6 +1,6 @@
 <?php 
 include('/Users/constants.php'); 
-include(HOME_PATH.'Include/sweetfunctions.php');
+include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
 
 $data = array(
     'gameid' => '2014033107smas',

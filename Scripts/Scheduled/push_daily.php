@@ -6,7 +6,7 @@ ini_set('mysqli.connect_timeout', '-1');
 ini_set('default_socket_timeout', '-1');
 ini_set('max_execution_time', '-1');
 include_once('/Users/constants.php');
-include(HOME_PATH.'Include/sweetfunctions.php');
+include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
 
 shell_exec("git pull");
 

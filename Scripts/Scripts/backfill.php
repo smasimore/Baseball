@@ -7,7 +7,7 @@ ini_set('max_execution_time', -1);
 ini_set('mysqli.connect_timeout', -1);
 ini_set('mysqli.reconnect', '1');
 include('/Users/constants.php');
-include(HOME_PATH.'Include/sweetfunctions.php');
+include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
 
 # Input 1 = Start Date
 # Input 2 = End Date
@@ -15,7 +15,7 @@ include(HOME_PATH.'Include/sweetfunctions.php');
 # Input 4 = Script #1
 # Input 5,6,etc. Script X (optional)
 
-const PATH  = HOME_PATH.'';
+const PATH  = HOME_PATH.'Scripts/';
 
 // $argv[0] is '/path/to/script.php'
 $start = $argv[1];

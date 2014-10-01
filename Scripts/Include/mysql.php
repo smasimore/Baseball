@@ -80,7 +80,7 @@ function debug_log($function, $table, $data_length) {
 	$time = time();
 	$log_data = " \n SCRIPT, $time, $function, $table, $data_length"; 
 	file_put_contents(
-		HOME_PATH.'Logging/mysql_log.txt',
+		HOME_PATH.'Scripts/Logging/mysql_log.txt',
 		$log_data, 
 		FILE_APPEND
 	);

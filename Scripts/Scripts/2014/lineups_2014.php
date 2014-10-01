@@ -7,7 +7,7 @@ ini_set('mysqli.connect_timeout', '-1');
 ini_set('default_socket_timeout', '-1');
 ini_set('max_execution_time', '-1');
 include('/Users/constants.php'); 
-include(HOME_PATH.'Include/sweetfunctions.php');
+include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
 $database = 'baseball';
 
 // Change this to backfill - backfill must be true
@@ -45,7 +45,7 @@ function pullLineups() {
 	$source_code = scrape($target);
 
 	// DELETE ME
-	//$source_code = file_get_contents(HOME_PATH.'Scripts/2014/lineup_331_source_2.txt');
+	//$source_code = file_get_contents(HOME_PATH.'Scripts/Scripts/2014/lineup_331_source_2.txt');
 	//$source_code = trim(preg_replace('/\s+/', ' ', $source_code));
 
 	$games_start = '<div class="game-';

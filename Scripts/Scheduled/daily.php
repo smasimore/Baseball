@@ -6,11 +6,11 @@ ini_set('mysqli.connect_timeout', '-1');
 ini_set('default_socket_timeout', '-1');
 ini_set('max_execution_time', '-1');
 include('/Users/constants.php');
-include(HOME_PATH.'Include/sweetfunctions.php');
+include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
 
 const EMAIL_INTERVAL = 1800; // 5 minutes
 const MAX_FREQUENCY = 30;
-const PATH = HOME_PATH.'Scripts/2014/';
+const PATH = HOME_PATH.'Scripts/Scripts/2014/';
 
 //global variables
 $masterStatus = 'In Progress';
