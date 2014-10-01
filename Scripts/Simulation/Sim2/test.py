@@ -11,6 +11,6 @@ weights = {
     StatCategories.STADIUM : .1
 }
 
-test = Simulation(weights, 2014, 'current', 'basic')
+test = Simulation(weights, 2014, 'current', 'basic', 'example')
 test.setTestRun(True)
 test.run()

@@ -1,66 +1,5 @@
-class StatCategories:
-    TOTAL = 'total'
-    HOME_AWAY = 'home_away'
-    PITCHER_HANDEDNESS = 'pitcher_handedness'
-    PITCHER_ERA_BAND = 'pitcher_era_band'
-    PITCHER_VS_BATTER = 'pitcher_vs_batter'
-    SITUATION = 'situation'
-    STADIUM = 'stadium'
-
-class Total:
-    TOTAL = 'Total'
-
-class HomeAway:
-    HOME = 'Home'
-    AWAY = 'Away'
-
-class PitcherHandedness:
-    LEFT = 'VsLeft'
-    RIGHT = 'VsRight'
-
-class PitcherERABand:
-    ERA25 = 'ERA25'
-    ERA50 = 'ERA50'
-    ERA75 = 'ERA75'
-    ERA100 = 'ERA100'
-
-class PitcherVSBatter:
-    PITCHER_VS_BATTER = 'pitcher_vs_batter'
-    RELIEVER_VS_BATTER = 'reliever_vs_batter'
-
-class Situations:
-    NONE_ON = 'NoneOn'
-    RUNNERS_ON = 'RunnersOn'
-    SCORING_POS = 'ScoringPos'
-    SCORING_POS_2O = 'ScoringPos2Out'
-    BASES_LOADED = 'BasesLoaded'
-
-class Stadium:
-    STADIUM = 'Stadium'
-    HOME = 'Home'
-
-class Bases:
-    EMPTY = 0
-    FIRST = 1
-    SECOND = 2
-    THIRD = 3
-    FIRST_SECOND = 4
-    FIRST_THIRD = 5
-    SECOND_THIRD = 6
-    FIRST_SECOND_THIRD = 7
-
-    # Doesn't include 2 out mapping. That is handled in
-    # Team.getSituation().
-    BASES_TO_SITUATION = {
-        EMPTY : Situations.NONE_ON,
-        FIRST : Situations.RUNNERS_ON,
-        SECOND : Situations.SCORING_POS,
-        THIRD : Situations.SCORING_POS,
-        FIRST_SECOND : Situations.SCORING_POS,
-        FIRST_THIRD : Situations.SCORING_POS,
-        SECOND_THIRD : Situations.SCORING_POS,
-        FIRST_SECOND_THIRD : Situations.BASES_LOADED
-    }
+from Constants import *
+from WeightsMutator import WeightsMutator
 
 class Game:
 
@@ -69,24 +8,36 @@ class Game:
             HomeAway.HOME,
             weights,
             input_data['pitching_a'],
-            input_data['batting_h']
+            input_data['batting_h'],
         )
         self.awayTeam = Team(
             HomeAway.AWAY,
             weights,
             input_data['pitching_h'],
-            input_data['batting_a']
+            input_data['batting_a'],
         )
+
+    def setWeightsMutator(self, weights_mutator):
+        self.homeTeam.setWeightsMutator(weights_mutator)
+        self.awayTeam.setWeightsMutator(weights_mutator)
 
 class Team:
 
-    def __init__(self, home_away, weights, pitching_data, batting_data):
+    def __init__(self,
+        home_away,
+        weights,
+        pitching_data,
+        batting_data,
+    ):
         self.homeAway = home_away
         self.categoryWeights = weights
         self.pitcherData = pitching_data
         self.battingData = batting_data
 
-        self.setStatWeights(0, 0, Bases.EMPTY)
+        self.weightsMutator = ''
+
+        self.__setCategoryWeights(1, 0, Bases.EMPTY, True)
+        self.__setStatWeights(1, 0, Bases.EMPTY)
         print self.statWeights
         # set weights -- 2 vars, one mapping categories to weight, then need a temp var for each that maps category to type
         # each time a new batter comes up, have to recalculate batting stats
@@ -94,10 +45,12 @@ class Team:
 
     # [NEXT] def getBatterStats(self, batter, inning, outs, bases)
 
+
+
     ########## SETTERS ##########
 
     # Dependent on inning, outs, and bases.
-    def setStatWeights(self, inning, outs, bases):
+    def __setStatWeights(self, inning, outs, bases):
         # Reset statWeights for each batter.
         self.statWeights = {}
 
@@ -114,17 +67,17 @@ class Team:
         # [QUESTION] For inning > the starting pitcher's inning, what do we want
         # to do with this?
         if StatCategories.PITCHER_HANDEDNESS in self.categoryWeights.keys():
-            self.statWeights[self.getPitcherHandedness()] = self.categoryWeights[
+            self.statWeights[self.__getPitcherHandedness()] = self.categoryWeights[
                 StatCategories.PITCHER_HANDEDNESS
             ]
 
         if StatCategories.PITCHER_ERA_BAND in self.categoryWeights.keys():
             if inning <= self.pitcherData['innings']:
-                self.statWeights[self.getPitcherERABand()] = (
+                self.statWeights[self.__getPitcherERABand()] = (
                     self.categoryWeights[StatCategories.PITCHER_ERA_BAND]
                 )
             else:
-                self.statWeights[self.getRelieverERABand()] = (
+                self.statWeights[self.__getRelieverERABand()] = (
                     self.categoryWeights[StatCategories.PITCHER_ERA_BAND]
                 )
 
@@ -139,41 +92,47 @@ class Team:
                 )
 
         if StatCategories.SITUATION in self.categoryWeights.keys():
-            self.statWeights[self.getSituation(bases, outs)] = (
+            self.statWeights[self.__getSituation(bases, outs)] = (
                 self.categoryWeights[StatCategories.SITUATION]
             )
 
         if StatCategories.STADIUM in self.categoryWeights.keys():
-            self.statWeights[self.getStadium()] = (
+            self.statWeights[self.__getStadium()] = (
                 self.categoryWeights[StatCategories.STADIUM]
             )
 
+    def __setCategoryWeights(self, inning, outs, bases, winning):
+        if self.weightsMutator:
+            method = getattr(WeightsMutator(), self.weightsMutator)
+            self.categoryWeights = method(inning, outs, bases, winning)
 
+    def setWeightsMutator(self, weights_mutator):
+        self.weightsMutator = weights_mutator
 
     ########## GETTERS ##########
 
     # Defaults to RIGHT if not specified.
-    def getPitcherHandedness(self):
+    def __getPitcherHandedness(self):
         return (
             PitcherHandedness.LEFT
             if self.pitcherData['handedness'] == 'L'
             else PitcherHandedness.RIGHT
         )
 
-    def getPitcherERABand(self):
+    def __getPitcherERABand(self):
         return self.pitcherData['bucket']
 
-    def getRelieverERABand(self):
+    def __getRelieverERABand(self):
         return self.pitcherData['reliever_bucket']
 
-    def getSituation(self, bases, outs):
+    def __getSituation(self, bases, outs):
         # Check if 2 outs and batter in scoring position.
         if outs == 2 and bases > Bases.FIRST:
             return Situations.SCORING_POS_2O
 
         return Bases.BASES_TO_SITUATION[bases]
 
-    def getStadium(self):
+    def __getStadium(self):
         return (
             Stadium.HOME
             if self.homeAway == HomeAway.HOME

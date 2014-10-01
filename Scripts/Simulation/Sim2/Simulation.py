@@ -1,5 +1,7 @@
 import MySQL, time, datetime, json
-from Game import Game, StatCategories
+from Constants import *
+from Game import Game
+from WeightsMutator import WeightsMutator
 from multiprocessing import Process, Manager
 
 class Simulation:
@@ -100,17 +102,21 @@ class Simulation:
         weights,
         season = time.strftime("%Y"),
         stats_year = 'current',
-        stats_type = 'basic'):
+        stats_type = 'basic',
+        weights_mutator = ''):
 
         self.validateWeights(weights, stats_type)
         self.validateSeasonYear(season)
         self.validateInList(stats_type, self.STATS_TYPES)
         self.validateInList(stats_year, self.STATS_YEAR)
+        self.validateWeightsMutator(weights_mutator)
 
         self.weights = weights
         self.season = season
         self.statsYear = stats_year
         self.statsType = stats_type
+
+        self.weightsMutator = weights_mutator
 
         # Extra, defaulted params. To change call setters.
         self.analysisRuns = self.ANALYSIS_RUNS
@@ -130,6 +136,10 @@ class Simulation:
 
     def __runGame(self, row_number, sim_results):
         game = Game(self.weights, self.inputData[row_number])
+
+        if self.weightsMutator:
+            game.setWeightsMutator(self.weightsMutator)
+
 
     # Multiprocessing method that calls runGame.
     def runGames(self):
@@ -277,3 +287,9 @@ class Simulation:
     def validateInList(self, param, param_list):
         if param not in param_list:
             raise ValueError('%s not a valid input' % param)
+
+    def validateWeightsMutator(self, weights_mutator):
+        method = getattr(WeightsMutator(), weights_mutator)
+        if not method:
+            raise ValueError(
+                '%s is not a valid WeightsMutator function' %weights_mutator)
