@@ -219,9 +219,10 @@ function multi_insert($database, $table, $data_array, $colheads) {
         foreach ($colheads as $col) {
             $insert_data = null;
             $insert_data = $row[$col];
-            if (!$insert_data) {
+			if (is_null($insert_data)) {
                 echo "ERROR - INSERT FAILED: Make sure to include values 
-                    for all columns specified in colheads \n";
+					for all columns specified in colheads. Missing column
+					$col \n";
                 // Adding send e-mail for now to make sure I'm on top of these
                 // as I migrate to the new insert
                 send_email(
