@@ -233,7 +233,7 @@ for ($season = 1950; $season < 2014; $season++) {
                 $stat['ds'] = $entry_ds;
                 $stat['season'] = $season;
                 $player_career_daily_insert[] = $stat;
-                if ($playerSeason[$name][$split_name]) {
+                if (isset($playerSeason[$name][$split_name])) {
                     $playerSeason[$name][$split_name]['ds'] = $entry_ds;
                     $player_season_daily_insert[] = 
                         $playerSeason[$name][$split_name];
