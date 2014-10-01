@@ -40,10 +40,12 @@ function initializePlayerArray($game_stat, $split) {
         'fly_outs' => 0,
         'plate_appearances' => 0
     );
-    $playerSeason[$player_id][$split] = $playerSeason[$player_id][$split] 
-        ?: $initial_stats;
-    $playerCareer[$player_id][$split] = $playerCareer[$player_id][$split] 
-        ?: $initial_stats;
+    if (!isset($playerSeason[$player_id][$split])) {
+        $playerSeason[$player_id][$split] = $initial_stats;
+    }
+    if (!isset($playerCareer[$player_id][$split])) {
+        $playerCareer[$player_id][$split] = $initial_stats;
+    }
 }
 
 // Function to add event impact to daily and careers arrays.

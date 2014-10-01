@@ -768,7 +768,7 @@ function elvis($var, $default) {
 
 function ds_modify($date, $day_change) {
     // Format of $day_change is '+1 day'
-    $dateOneDayAdded = strtotime(date($date, strtotime($todayDate)) . $day_change);
+    $dateOneDayAdded = strtotime($date.$day_change);
     $new_date = date('Y-m-d', $dateOneDayAdded);
     return $new_date;
 }
