@@ -11,6 +11,7 @@ include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
 
 $playerSeason = array();
 $playerCareer = array();
+$seasonPlayers = array();
 
 function convertRetroDateToDs($season, $date) {
     $month = substr($date, 0, 2);
@@ -21,8 +22,11 @@ function convertRetroDateToDs($season, $date) {
 
 // Set initial values for the cumulative arrays if not already set.
 function initializePlayerArray($game_stat, $split) {
-    global $playerSeason, $playerCareer;
+    global $playerSeason, $playerCareer, $seasonPlayers;
     $player_id = $game_stat['player_id'];
+    if (!in_array($player_id, $seasonPlayers)) {
+        $seasonPlayers[] = $player_id;
+    }
     $season = $game_stat['season'];
     $player_name = format_for_mysql($game_stat['player_name']);
     $initial_stats = array(
@@ -180,6 +184,9 @@ $colheads = array(
 );
 $season_start = null;
 $season_end = null;
+$last_season_players = array();
+$last_last_season_players = array();
+$retired_players = array();
 $daily_table = 'retrosheet_historical_batting';
 $career_table = 'retrosheet_historical_batting_career';
 
@@ -187,6 +194,10 @@ for ($season = 1950; $season < 2014; $season++) {
     if ($season > 1950) {
         $previous_season_end = ds_modify($season_end, '+1 day');
         $previous_season = $season - 1;
+        // There won't be a last_last season in 1951.
+        $last_last_season_players = $last_season_players ?: array();
+        $last_season_players = $seasonPlayers;
+        $seasonPlayers = array();
     } else {
         $previous_season_end = null;
         $previous_season = null;
@@ -229,6 +240,24 @@ for ($season = 1950; $season < 2014; $season++) {
         $player_season_daily_insert = array();
         $player_career_daily_insert = array();
         foreach ($playerCareer as $name => $split) {
+            // Only insert players who have played in last 3 years.
+            $played_this = in_array($name, $seasonPlayers);
+            $played_last = in_array($name, $last_season_players);
+            $played_last_last = in_array($name, $last_last_season_players);
+            if (!($played_this || $played_last || $played_last_last)) {
+                $retired_players[$name] = $name;
+                continue;
+            } else {
+                // Ensure we didn't accidentally exclude anyone with 3 year 
+                // rule.
+                if (in_array($name, $retired_players)) {
+                    send_email(
+                        "Check out $name in $season for long career gap",
+                        "",
+                        "d"
+                    );
+                }
+            }
             foreach ($split as $split_name => $stat) {
                 $stat['ds'] = $entry_ds;
                 $stat['season'] = $season;
