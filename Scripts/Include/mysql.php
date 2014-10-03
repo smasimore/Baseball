@@ -1,7 +1,6 @@
 <?php
-
 if (!defined('DATABASE')) {
-	include('/Users/constants.php');
+    include('/Users/constants.php');
 }
 
 /*
@@ -76,15 +75,15 @@ if(strlen(MYSQL_ADDRESS) + strlen(MYSQL_USERNAME) + strlen(MYSQL_PASSWORD) + str
     echo "WARNING: MySQL not configured.<br>\n";
 
 function format_log_data($function, $table, $data_length) {
-	$time = time();
-	return " \n SCRIPT, $time, $function, $table, $data_length"; 
+    $time = time();
+    return " \n SCRIPT, $time, $function, $table, $data_length"; 
 }
 
 /***********************************************************************
 Database connection routine (only used by routines in this library
 ----------------------------------------------------------------------*/
 function connect_to_database() {
-	return(mysqli_connect(MYSQL_ADDRESS, MYSQL_USERNAME, MYSQL_PASSWORD));
+    return(mysqli_connect(MYSQL_ADDRESS, MYSQL_USERNAME, MYSQL_PASSWORD));
 }
 
 /***********************************************************************
@@ -102,16 +101,16 @@ RETURNS
 ***********************************************************************/
 function insert($database, $table, $data_array) {
 
-	error_log(
-		format_log_data('insert', $table, count($data_array)), 
-		3, 
-		'/Users/Logs/MySQL_requests.log'
-	);
+    error_log(
+        format_log_data('insert', $table, count($data_array)), 
+        3, 
+        '/Users/Logs/MySQL_requests.log'
+    );
 
-	# Connect to MySQL server and select database
-	$attempts = 0;
+    # Connect to MySQL server and select database
+    $attempts = 0;
 
-	$mysql_connect = connect_to_database();
+    $mysql_connect = connect_to_database();
 
 	echo '========'."\n";
 	while ($attempts < 10 && mysqli_connect_errno()) {
@@ -129,7 +128,7 @@ function insert($database, $table, $data_array) {
 		echo 'THIS FAILED 10 TIMES!!'."\n";
 		echo 'sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart'."\n";
 		echo '////////////////////////////////////////////////'."\n";
-		email("RESTART MYSQL", "sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart");
+		email(mysqli_connect_error(), "sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart");
 		return false;
 	}
 
@@ -210,7 +209,7 @@ function multi_insert($database, $table, $data_array, $colheads) {
         echo 'sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart'."\n";
         echo '////////////////////////////////////////////////'."\n";
         email(
-            "RESTART MYSQL", 
+            mysqli_connect_error(), 
             "sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart"
         );
         exit("FAILED multi_insert into $table");
@@ -264,7 +263,7 @@ function multi_insert($database, $table, $data_array, $colheads) {
         echo mysqli_error($mysql_connect);
         mysqli_close($mysql_connect);
         send_email(
-            "Mysqli error", 
+             mysqli_error($mysql_connect), 
             "last step of multi_insert into $table",
             "d"
         );
@@ -323,7 +322,10 @@ function update(
         echo 'THIS FAILED 10 TIMES!!'."\n";
         echo 'sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart'."\n";
         echo '////////////////////////////////////////////////'."\n";
-        email("RESTART MYSQL", "sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart");
+		email(
+			mysqli_error($mysql_connect),
+			"sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart"
+		);
         return false;
     }
 
@@ -396,7 +398,10 @@ function exe_sql($database, $sql, $delete = null) {
 		echo 'THIS FAILED 10 TIMES!!'."\n";
 		echo 'sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart'."\n";
 		echo '////////////////////////////////////////////////'."\n";
-		email("RESTART MYSQL", "sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart");
+		email(
+			mysqli_error($mysql_connect), 
+			"sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart"
+		);
 		return false;
 	}
 	mysqli_select_db($mysql_connect, $database);
