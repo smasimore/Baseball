@@ -4,7 +4,8 @@ include_once('/Users/constants.php');
 include_once(HOME_PATH.'Scripts/Include/sweetfunctions.php');
 
 echo "HI"."\n";
-echo "Does this work";
+echo 'long lineeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
+echo 'it shouldntt
 //send_email('test', 'test');
 
 ?>

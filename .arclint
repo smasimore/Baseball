@@ -1,0 +1,15 @@
+{
+  "linters": {
+    "phpcs": {
+      "type": "phpcs",
+      "include": "(\\.phpneedtoconfigure$)"
+    },
+    "php": {
+      "type": "php",
+      "include": "(\\.php$)"
+    },
+    "text": {
+      "type": "text"
+    }
+  }
+}
