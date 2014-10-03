@@ -184,8 +184,7 @@ $colheads = array(
 );
 $season_start = null;
 $season_end = null;
-$last_season_players = array();
-$last_last_season_players = array();
+$previous_season_players = array();
 $retired_players = array();
 $daily_table = 'retrosheet_historical_batting';
 $career_table = 'retrosheet_historical_batting_career';
@@ -194,9 +193,14 @@ for ($season = 1950; $season < 2014; $season++) {
     if ($season > 1950) {
         $previous_season_end = ds_modify($season_end, '+1 day');
         $previous_season = $season - 1;
-        // There won't be a last_last season in 1951.
-        $last_last_season_players = $last_season_players ?: array();
-        $last_season_players = $seasonPlayers;
+        // There won't be a -4/-3, etc. the first few seasons.
+        $previous_season_players["-4"] = $previous_season_players["-3"]
+            ?: array();
+        $previous_season_players["-3"] = $previous_season_players["-2"]
+            ?: array();
+        $previous_season_players["-2"] = $previous_season_players["-1"]
+            ?: array();
+        $previous_season_players["-1"] = $seasonPlayers;
         $seasonPlayers = array();
     } else {
         $previous_season_end = null;
@@ -241,10 +245,13 @@ for ($season = 1950; $season < 2014; $season++) {
         $player_career_daily_insert = array();
         foreach ($playerCareer as $name => $split) {
             // Only insert players who have played in last 3 years.
-            $played_this = in_array($name, $seasonPlayers);
-            $played_last = in_array($name, $last_season_players);
-            $played_last_last = in_array($name, $last_last_season_players);
-            if (!($played_this || $played_last || $played_last_last)) {
+            $played_0 = in_array($name, $seasonPlayers);
+            $played_1 = in_array($name, $previous_season_players["-1"]);
+            $played_2 = in_array($name, $previous_season_players["-2"]);
+            $played_3 = in_array($name, $previous_season_players["-3"]);
+            $played_4 = in_array($name, $previous_season_players["-4"]);
+            if (!($played_0 || $played_1 || $played_2
+                || $played_3 || $played_4)) {
                 $retired_players[$name] = $name;
                 continue;
             } else {
