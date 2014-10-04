@@ -184,7 +184,12 @@ $colheads = array(
 );
 $season_start = null;
 $season_end = null;
-$previous_season_players = array();
+$previous_season_players = array(
+    "-1" => array(),
+    "-2" => array(),
+    "-3" => array(),
+    "-4" => array()
+);
 $retired_players = array();
 $daily_table = 'retrosheet_historical_batting';
 $career_table = 'retrosheet_historical_batting_career';
