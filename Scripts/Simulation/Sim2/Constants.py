@@ -37,7 +37,6 @@ class Situations:
 
 class Stadium:
     STADIUM = 'Stadium'
-    HOME = 'Home'
 
 class Bases:
     EMPTY = 0

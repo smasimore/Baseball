@@ -54,7 +54,7 @@ class Simulation:
     ########## PRIVATE CONSTANTS ##########
     __TABLE = 'sim_input'
     __TEST_TABLE = 'sim_input_test'
-    __THREADS = 10
+    __THREADS = 1
 
 
 
@@ -95,6 +95,7 @@ class Simulation:
                      # Timespan not currently available.
     DEFAULT_THRESHOLD = 9 # Number of at bats required to no longer default.
     TEST_RUN = False
+    WEIGHTS_MUTATOR = None
 
 
 
@@ -102,21 +103,19 @@ class Simulation:
         weights,
         season = time.strftime("%Y"),
         stats_year = 'current',
-        stats_type = 'basic',
-        weights_mutator = ''):
+        stats_type = 'basic'):
 
         self.validateWeights(weights, stats_type)
         self.validateSeasonYear(season)
         self.validateInList(stats_type, self.STATS_TYPES)
         self.validateInList(stats_year, self.STATS_YEAR)
-        self.validateWeightsMutator(weights_mutator)
 
         self.weights = weights
         self.season = season
         self.statsYear = stats_year
         self.statsType = stats_type
 
-        self.weightsMutator = weights_mutator
+        self.weightsMutator = self.WEIGHTS_MUTATOR
 
         # Extra, defaulted params. To change call setters.
         self.analysisRuns = self.ANALYSIS_RUNS
@@ -137,8 +136,11 @@ class Simulation:
     def __runGame(self, row_number, sim_results):
         game = Game(self.weights, self.inputData[row_number])
 
-        if self.weightsMutator:
-            game.setWeightsMutator(self.weightsMutator)
+        # If any features are added, create a setter in Game and set here
+        # instead of passing in an additional parameter.
+        game.setWeightsMutator(self.weightsMutator)
+
+        game.run()
 
 
     # Multiprocessing method that calls runGame.
@@ -234,7 +236,9 @@ class Simulation:
         self.validateDefaultThreshold(threshold)
         self.defaultThreshold = threshold
 
-
+    def setWeightsMutator(self, weights_mutator):
+        self.validateWeightsMutator(weights_mutator)
+        self.weightsMutator = weights_mutator
 
     ########## PARAM VALIDATION FUNCTIONS ##########
 

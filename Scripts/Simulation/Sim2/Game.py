@@ -21,6 +21,10 @@ class Game:
         self.homeTeam.setWeightsMutator(weights_mutator)
         self.awayTeam.setWeightsMutator(weights_mutator)
 
+    def run(self):
+        self.homeTeam.getBatterStats('', 0, 0, Bases.EMPTY)
+        self.awayTeam.getBatterStats('', 0, 0, Bases.EMPTY)
+
 class Team:
 
     def __init__(self,
@@ -34,72 +38,15 @@ class Team:
         self.pitcherData = pitching_data
         self.battingData = batting_data
 
-        self.weightsMutator = ''
-
+    def getBatterStats(self, batter, inning, outs, bases):
         self.__setCategoryWeights(1, 0, Bases.EMPTY, True)
-        self.__setStatWeights(1, 0, Bases.EMPTY)
-        print self.statWeights
-        # set weights -- 2 vars, one mapping categories to weight, then need a temp var for each that maps category to type
-        # each time a new batter comes up, have to recalculate batting stats
+        stat_weights = self.__getStatWeights(1, 0, Bases.EMPTY)
 
-
-    # [NEXT] def getBatterStats(self, batter, inning, outs, bases)
+        print stat_weights
 
 
 
     ########## SETTERS ##########
-
-    # Dependent on inning, outs, and bases.
-    def __setStatWeights(self, inning, outs, bases):
-        # Reset statWeights for each batter.
-        self.statWeights = {}
-
-        if StatCategories.TOTAL in self.categoryWeights.keys():
-            self.statWeights[Total.TOTAL] = self.categoryWeights[
-                StatCategories.TOTAL
-            ]
-
-        if StatCategories.HOME_AWAY in self.categoryWeights.keys():
-            self.statWeights[self.homeAway] = self.categoryWeights[
-                StatCategories.HOME_AWAY
-            ]
-
-        # [QUESTION] For inning > the starting pitcher's inning, what do we want
-        # to do with this?
-        if StatCategories.PITCHER_HANDEDNESS in self.categoryWeights.keys():
-            self.statWeights[self.__getPitcherHandedness()] = self.categoryWeights[
-                StatCategories.PITCHER_HANDEDNESS
-            ]
-
-        if StatCategories.PITCHER_ERA_BAND in self.categoryWeights.keys():
-            if inning <= self.pitcherData['innings']:
-                self.statWeights[self.__getPitcherERABand()] = (
-                    self.categoryWeights[StatCategories.PITCHER_ERA_BAND]
-                )
-            else:
-                self.statWeights[self.__getRelieverERABand()] = (
-                    self.categoryWeights[StatCategories.PITCHER_ERA_BAND]
-                )
-
-        if StatCategories.PITCHER_VS_BATTER in self.categoryWeights.keys():
-            if inning <= self.pitcherData['innings']:
-                self.statWeights[PitcherVSBatter.PITCHER_VS_BATTER] = (
-                    self.categoryWeights[StatCategories.PITCHER_VS_BATTER]
-                )
-            else:
-                self.statWeights[PitcherVSBatter.RELIEVER_VS_BATTER] = (
-                    self.categoryWeights[StatCategories.PITCHER_VS_BATTER]
-                )
-
-        if StatCategories.SITUATION in self.categoryWeights.keys():
-            self.statWeights[self.__getSituation(bases, outs)] = (
-                self.categoryWeights[StatCategories.SITUATION]
-            )
-
-        if StatCategories.STADIUM in self.categoryWeights.keys():
-            self.statWeights[self.__getStadium()] = (
-                self.categoryWeights[StatCategories.STADIUM]
-            )
 
     def __setCategoryWeights(self, inning, outs, bases, winning):
         if self.weightsMutator:
@@ -109,7 +56,61 @@ class Team:
     def setWeightsMutator(self, weights_mutator):
         self.weightsMutator = weights_mutator
 
+
+
     ########## GETTERS ##########
+
+    # Dependent on inning, outs, and bases.
+    def __getStatWeights(self, inning, outs, bases):
+        # Reset statWeights for each batter.
+        stat_weights = {}
+
+        if StatCategories.TOTAL in self.categoryWeights.keys():
+            stat_weights[Total.TOTAL] = self.categoryWeights[
+                StatCategories.TOTAL
+            ]
+
+        if StatCategories.HOME_AWAY in self.categoryWeights.keys():
+            stat_weights[self.homeAway] = self.categoryWeights[
+                StatCategories.HOME_AWAY
+            ]
+
+        if StatCategories.PITCHER_HANDEDNESS in self.categoryWeights.keys():
+            stat_weights[self.__getPitcherHandedness()] = self.categoryWeights[
+                StatCategories.PITCHER_HANDEDNESS
+            ]
+
+        if StatCategories.PITCHER_ERA_BAND in self.categoryWeights.keys():
+            if inning <= self.pitcherData['innings']:
+                stat_weights[self.__getPitcherERABand()] = (
+                    self.categoryWeights[StatCategories.PITCHER_ERA_BAND]
+                )
+            else:
+                stat_weights[self.__getRelieverERABand()] = (
+                    self.categoryWeights[StatCategories.PITCHER_ERA_BAND]
+                )
+
+        if StatCategories.PITCHER_VS_BATTER in self.categoryWeights.keys():
+            if inning <= self.pitcherData['innings']:
+                stat_weights[PitcherVSBatter.PITCHER_VS_BATTER] = (
+                    self.categoryWeights[StatCategories.PITCHER_VS_BATTER]
+                )
+            else:
+                stat_weights[PitcherVSBatter.RELIEVER_VS_BATTER] = (
+                    self.categoryWeights[StatCategories.PITCHER_VS_BATTER]
+                )
+
+        if StatCategories.SITUATION in self.categoryWeights.keys():
+            stat_weights[self.__getSituation(bases, outs)] = (
+                self.categoryWeights[StatCategories.SITUATION]
+            )
+
+        if StatCategories.STADIUM in self.categoryWeights.keys():
+            stat_weights[Stadium.STADIUM] = (
+                self.categoryWeights[StatCategories.STADIUM]
+            )
+
+        return stat_weights
 
     # Defaults to RIGHT if not specified.
     def __getPitcherHandedness(self):
@@ -131,10 +132,3 @@ class Team:
             return Situations.SCORING_POS_2O
 
         return Bases.BASES_TO_SITUATION[bases]
-
-    def __getStadium(self):
-        return (
-            Stadium.HOME
-            if self.homeAway == HomeAway.HOME
-            else Stadium.STADIUM
-        )
