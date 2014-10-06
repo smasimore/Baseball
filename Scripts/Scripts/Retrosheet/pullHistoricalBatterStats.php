@@ -190,7 +190,6 @@ $previous_season_players = array(
     "-3" => array(),
     "-4" => array()
 );
-$retired_players = array();
 $daily_table = 'retrosheet_historical_batting';
 $career_table = 'retrosheet_historical_batting_career';
 
@@ -257,18 +256,7 @@ for ($season = 1950; $season < 2014; $season++) {
             $played_4 = in_array($name, $previous_season_players["-4"]);
             if (!($played_0 || $played_1 || $played_2
                 || $played_3 || $played_4)) {
-                $retired_players[$name] = $name;
                 continue;
-            } else {
-                // Ensure we didn't accidentally exclude anyone with 3 year 
-                // rule.
-                if (in_array($name, $retired_players)) {
-                    send_email(
-                        "Check out $name in $season for long career gap",
-                        "",
-                        "d"
-                    );
-                }
             }
             foreach ($split as $split_name => $stat) {
                 $stat['ds'] = $entry_ds;
