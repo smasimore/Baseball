@@ -90,7 +90,7 @@ function pullBattingData($season, $date) {
     $season_data = null;
     $sql = 
        "SELECT lower(concat(c.first, '_', c.last)) AS player_name,
-       a.resp_bat_id AS player_id,
+       a.bat_id AS player_id,
        a.season,
        a.ds,
        a.home_away,
@@ -133,11 +133,11 @@ function pullBattingData($season, $date) {
             ELSE 'ScoringPos'
           END AS situation,
         battedball_cd,
-        resp_bat_id
+        bat_id
     FROM events
     WHERE season = '$season'
     AND substr(game_id,8,4) = '$date') a
-    JOIN id c ON a.resp_bat_id = c.id";
+    JOIN id c ON a.bat_id = c.id";
     $season_data = exe_sql(DATABASE, $sql);
     return $season_data;
 }
