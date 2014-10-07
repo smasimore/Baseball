@@ -90,11 +90,11 @@ function pullBattingData($season, $date) {
     $season_data = null;
     $sql = 
        "SELECT lower(concat(c.first, '_', c.last)) AS player_name,
-       a.bat_id AS player_id,
+       a.pit_id AS player_id,
        a.season,
        a.ds,
        a.home_away,
-       a.pit_hand_cd AS vs_hand,
+       a.bat_hand_cd AS vs_hand,
        a.situation,
        CASE
            WHEN (a.event = 2
@@ -115,14 +115,14 @@ function pullBattingData($season, $date) {
         concat(substr(game_id,4,4), '-', substr(game_id,8,2), '-', 
             substr(game_id,10,2)) AS ds,
         CASE
-            WHEN bat_home_id = 1 THEN 'Home'
+            WHEN bat_home_id = 0 THEN 'Home'
             ELSE 'Away'
         END AS home_away,
         CASE 
-            WHEN pit_hand_cd = 'R' then 'VsRight'
-            WHEN pit_hand_cd = 'L' then 'VsLeft'
+            WHEN bat_hand_cd = 'R' then 'VsRight'
+            WHEN bat_hand_cd = 'L' then 'VsLeft'
             ELSE 'VsUnknown'
-        END as pit_hand_cd,
+        END as bat_hand_cd,
         CASE
             WHEN start_bases_cd = 0 THEN 'NoneOn'
             WHEN start_bases_cd = 1 THEN 'RunnersOn'
@@ -133,11 +133,11 @@ function pullBattingData($season, $date) {
             ELSE 'ScoringPos'
           END AS situation,
         battedball_cd,
-        bat_id
+        pit_id
     FROM events
     WHERE season = '$season'
     AND substr(game_id,8,4) = '$date') a
-    JOIN id c ON a.bat_id = c.id";
+    JOIN id c ON a.pit_id = c.id";
     $season_data = exe_sql(DATABASE, $sql);
     return $season_data;
 }
@@ -147,7 +147,7 @@ function updatePlayerCareer($season, $ds) {
     $playerCareer = null;
     $player_last_season_career = exe_sql(DATABASE, 
         "SELECT * 
-        FROM retrosheet_historical_batting_career 
+        FROM retrosheet_historical_pitching_career
         WHERE season = '$season' 
         AND ds = '$ds'"
     );
@@ -190,8 +190,8 @@ $previous_season_players = array(
     "-3" => array(),
     "-4" => array()
 );
-$daily_table = 'retrosheet_historical_batting';
-$career_table = 'retrosheet_historical_batting_career';
+$daily_table = 'retrosheet_historical_pitching';
+$career_table = 'retrosheet_historical_pitching_career';
 
 for ($season = 1950; $season < 2014; $season++) {
     if ($season > 1950) {
