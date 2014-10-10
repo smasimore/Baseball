@@ -115,6 +115,7 @@ function getPlayerBattingStats($stats) {
 	$singles = $hits - $doubles - $triples - $home_runs;
 	$ground_ball_rate = ($ground_balls / ($ground_balls + $fly_balls)) ?: .5;
 	$at_bats = $stats['at_bats'];
+	// TODO(cert): ADD Sac flies + sac bunts to get data in line with Retrosheet
 	$fielding_outs = $at_bats - $hits - $strikeouts;
 	$at_bats_walks = $at_bats + $all_walks;
 
