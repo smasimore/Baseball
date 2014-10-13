@@ -82,7 +82,7 @@ function createBattingJson($team, $splits) {
     $team_batting = array();
     for ($player = 1; $player <= 9; $player++) {
         foreach ($splits as $split) {
-            $team_batting["L$player"][$split] = array(
+            $team_batting[$player][$split] = array(
                 'player_name' => "$team$player",
                 'pct_single' => .3,
                 'pct_double' => .1,
@@ -112,7 +112,8 @@ $data['batting_h'] = createBattingJson(
         'ScoringPos2Out',
         'BasesLoaded', 
         'ERA75', 
-        'ERA100'
+        'ERA100',
+        'Stadium'
     )
 );
 

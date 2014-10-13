@@ -139,8 +139,9 @@ class Simulation:
         # If any features are added, create a setter in Game and set here
         # instead of passing in an additional parameter.
         game.setWeightsMutator(self.weightsMutator)
+        game.setLogging(True)
 
-        game.run()
+        game.playGame()
 
 
     # Multiprocessing method that calls runGame.

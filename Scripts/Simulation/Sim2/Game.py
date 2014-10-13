@@ -3,27 +3,105 @@ from WeightsMutator import WeightsMutator
 
 class Game:
 
+    HOME = 'Home'
+    AWAY = 'Away'
+
     def __init__(self, weights, input_data):
-        self.homeTeam = Team(
-            HomeAway.HOME,
-            weights,
-            input_data['pitching_a'],
-            input_data['batting_h'],
+        self.teams = {
+            self.HOME :
+                 Team(
+                    HomeAway.HOME,
+                    weights,
+                    input_data['pitching_a'],
+                    input_data['batting_h'],
+                ),
+            self.AWAY :
+                Team(
+                    HomeAway.AWAY,
+                    weights,
+                    input_data['pitching_h'],
+                    input_data['batting_a'],
+                )
+        }
+
+    def playGame(self):
+        # Logging only occurs if set.
+        self.log = []
+
+        # Set starting state of game.
+        # TESTING - set 1 for real
+        self.inning = 9
+        self.batter = {self.HOME : 1, self.AWAY : 1}
+        # TESTING - set 0 - 0 for real
+        self.score = {self.HOME : 1, self.AWAY : 0}
+
+        while True:
+            self.__playInning(self.AWAY)
+
+            # End game before bottom of inning if >= 9 and home winning.
+            if (self.inning >= 9 and
+                self.score[self.HOME] > self.score[self.AWAY]):
+                break
+
+            self.__playInning(self.HOME)
+
+            # End game if inning >= 9 and not tied.
+            if (self.inning >= 9 and
+                self.score[self.HOME] is not self.score[self.AWAY]):
+                break
+
+            self.inning += 1
+
+        # TESTING
+        print self.log
+
+
+    def __playInning(self, team):
+        # Set starting state of inning.
+        self.outs = 0
+        self.bases = Bases.EMPTY
+
+        while True:
+            self.__playAtBat(team)
+
+            # TESTING
+            self.outs = 3
+
+            if self.outs >= 3:
+                break
+
+
+    def __playAtBat(self, team):
+        batter_stats = self.teams[team].getBatterStats(
+            self.batter[team],
+            self.inning,
+            self.outs,
+            self.bases
         )
-        self.awayTeam = Team(
-            HomeAway.AWAY,
-            weights,
-            input_data['pitching_h'],
-            input_data['batting_a'],
-        )
+
+        if self.loggingOn is True:
+            self.__addToLog(team)
+
+
+    def __addToLog(self, team):
+        self.log.append([
+            self.score,
+            self.inning,
+            team,
+            self.outs,
+            self.batter[team]
+        ])
+
+    ########## SETTERS ##########
 
     def setWeightsMutator(self, weights_mutator):
-        self.homeTeam.setWeightsMutator(weights_mutator)
-        self.awayTeam.setWeightsMutator(weights_mutator)
+        self.teams[self.HOME].setWeightsMutator(weights_mutator)
+        self.teams[self.AWAY].setWeightsMutator(weights_mutator)
 
-    def run(self):
-        self.homeTeam.getBatterStats('', 0, 0, Bases.EMPTY)
-        self.awayTeam.getBatterStats('', 0, 0, Bases.EMPTY)
+    def setLogging(self, log):
+        self.loggingOn = log
+
+
 
 class Team:
 
@@ -38,11 +116,44 @@ class Team:
         self.pitcherData = pitching_data
         self.battingData = batting_data
 
+
     def getBatterStats(self, batter, inning, outs, bases):
         self.__setCategoryWeights(1, 0, Bases.EMPTY, True)
         stat_weights = self.__getStatWeights(1, 0, Bases.EMPTY)
+        batter_stats = self.battingData[str(batter)]
 
+        stats_to_average = {}
+        for stat, weight in stat_weights.iteritems():
+            if stat in batter_stats:
+                stats_to_average[stat] = batter_stats[stat]
+            else:
+                stats_to_average[stat] = self.pitcherData[stat]
+
+        return self.__calculateWeightedBatterStats(
+            stat_weights,
+            stats_to_average
+        )
+
+
+    def __calculateWeightedBatterStats(self, stat_weights, stats_to_average):
+        weighted_batter_stats = {}
+        # Loop through each type of at bat result.
+        for at_bat_result in stats_to_average[stats_to_average.keys()[0]]:
+            if at_bat_result == 'player_name':
+                continue
+
+            weighted_batter_stats[at_bat_result] = 0
+
+            for stat in stats_to_average:
+                # Add weighted stat value to at_bat_result.
+                weighted_batter_stats[at_bat_result] += (
+                    stat_weights[stat] * stats_to_average[stat][at_bat_result]
+                )
+
+        # TESTING
         print stat_weights
+        print stats_to_average
+        print weighted_batter_stats
 
 
 
