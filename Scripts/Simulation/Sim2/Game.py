@@ -1,5 +1,6 @@
 from Constants import *
 from WeightsMutator import WeightsMutator
+import random
 
 class Game:
 
@@ -79,17 +80,28 @@ class Game:
             self.bases
         )
 
+        # Get hit type by subtracting rand from all stacked_values and getting
+        # smallest result that's still > 0. This means the stacked value that is
+        # closest but greater than rand will be selected.
+        rand = random.random()
+        filtered_batter_stats = {}
+        for stat,value in batter_stats.iteritems():
+            if value - rand >= 0:
+                filtered_batter_stats[stat] = value - rand
+        hit_type = min(filtered_batter_stats)
+
         if self.loggingOn is True:
-            self.__addToLog(team)
+            self.__addToLog(team, hit_type)
 
 
-    def __addToLog(self, team):
+    def __addToLog(self, team, hit_type):
         self.log.append([
             self.score,
             self.inning,
             team,
             self.outs,
-            self.batter[team]
+            self.batter[team],
+            hit_type
         ])
 
     ########## SETTERS ##########
@@ -123,17 +135,29 @@ class Team:
         batter_stats = self.battingData[str(batter)]
 
         stats_to_average = {}
-        for stat, weight in stat_weights.iteritems():
+        for stat,weight in stat_weights.iteritems():
             if stat in batter_stats:
                 stats_to_average[stat] = batter_stats[stat]
             else:
                 stats_to_average[stat] = self.pitcherData[stat]
 
-        return self.__calculateWeightedBatterStats(
+        weighted_batter_stats = self.__calculateWeightedBatterStats(
             stat_weights,
             stats_to_average
         )
 
+        return self.__calculateStackedBatterStats(weighted_batter_stats)
+
+    def __calculateStackedBatterStats(self, weighted_batter_stats):
+        stacked_batter_stats = {}
+        for stat,value in weighted_batter_stats.iteritems():
+            if not stacked_batter_stats:
+               stacked_value = value
+            else:
+                stacked_value = (max(stacked_batter_stats.values()) + value)
+            stacked_batter_stats[stat.replace('pct_', '')] = stacked_value
+
+        return stacked_batter_stats
 
     def __calculateWeightedBatterStats(self, stat_weights, stats_to_average):
         weighted_batter_stats = {}
@@ -150,10 +174,7 @@ class Team:
                     stat_weights[stat] * stats_to_average[stat][at_bat_result]
                 )
 
-        # TESTING
-        print stat_weights
-        print stats_to_average
-        print weighted_batter_stats
+        return weighted_batter_stats
 
 
 
