@@ -97,9 +97,9 @@ function pullBattingData($season, $date) {
        a.pit_hand_cd AS vs_hand,
        a.situation,
        CASE
-           WHEN (a.event = 2
+           WHEN (a.event in(2,19)
                  AND battedball_cd = 'G') THEN 'ground_out'
-           WHEN (a.event = 2
+           WHEN (a.event in(2,19)
                  AND battedball_cd != 'G') THEN 'fly_out'
            WHEN a.event = 3 THEN 'strikeout'
            WHEN a.event in(14,15,16) THEN 'walk'
