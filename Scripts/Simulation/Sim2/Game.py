@@ -79,7 +79,15 @@ class Game:
             self.outs,
             self.bases
         )
+        # TODO(smas): Add function to calculate whether steal occurs during
+        # at bat.
+        hit_type = self.__getHitType(batter_stats)
 
+
+        if self.loggingOn is True:
+            self.__addToLog(team, hit_type)
+
+    def __getHitType(self, batter_stats):
         # Get hit type by subtracting rand from all stacked_values and getting
         # smallest result that's still > 0. This means the stacked value that is
         # closest but greater than rand will be selected.
@@ -88,10 +96,7 @@ class Game:
         for stat,value in batter_stats.iteritems():
             if value - rand >= 0:
                 filtered_batter_stats[stat] = value - rand
-        hit_type = min(filtered_batter_stats)
-
-        if self.loggingOn is True:
-            self.__addToLog(team, hit_type)
+        return min(filtered_batter_stats, key=filtered_batter_stats.get)
 
 
     def __addToLog(self, team, hit_type):
