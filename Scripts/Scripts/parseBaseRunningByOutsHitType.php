@@ -32,7 +32,7 @@ $where =
     ";
 $where = "true";
 $sql =
-	"SELECT cast(a.instances as double)/cast(b.instances as double) AS rate,
+	"SELECT CAST(a.instances as decimal)/CAST(b.instances as decimal) AS rate,
     	a.event_name,
     	a.start_outs,
     	a.start_bases,
