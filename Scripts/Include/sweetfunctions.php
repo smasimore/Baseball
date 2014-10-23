@@ -309,6 +309,17 @@ $splits = array('Total',
     100
 );
 
+$pctStats = array(
+    'pct_single' => 'singles',
+    'pct_double' => 'doubles',
+    'pct_triple' => 'triples',
+    'pct_home_run' => 'home_runs',
+    'pct_walk' => 'walks',
+    'pct_strikeout' => 'strikeouts',
+    'pct_ground_out' => 'ground_outs',
+    'pct_fly_out' => 'fly_outs'
+);
+
 function checkDuplicatePlayers($name, $team, $duplicate_names) {
     if (!in_array($name, array_keys($duplicate_names))) {
         return $name;
