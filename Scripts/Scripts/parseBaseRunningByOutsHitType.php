@@ -32,7 +32,7 @@ $where =
     ";
 $where = "true";
 $sql =
-	"SELECT CAST(a.instances as decimal)/CAST(b.instances as decimal) AS rate,
+	"SELECT CAST(a.instances/b.instances as decimal(12,10)) as rate,
     	a.event_name,
     	a.start_outs,
     	a.start_bases,
@@ -85,12 +85,13 @@ $sql =
    		 		event_runs_ct ,
    		 		event_outs_ct) a
    		JOIN lkup_cd_bases c ON a.start_bases_cd = c.value_cd
-   		JOIN lkup_cd_bases d ON a.end_bases_cd = d.value_cd
+		JOIN lkup_cd_bases d ON a.end_bases_cd = d.value_cd
+		WHERE a.instances > 10
    		GROUP BY a.event_name,
-   		       a.outs ,
+   		       a.outs,
    		       a.outs + a.outs_added,
-   		       c.sim_tx ,
-   		       d.sim_tx ,
+   		       c.sim_tx,
+   		       d.sim_tx,
    		       a.runs_added) a
 
 JOIN
@@ -114,7 +115,10 @@ JOIN
 				ELSE 'other'
 			END AS event_name,
 			outs_ct AS outs,
-			start_bases_cd
+			start_bases_cd,
+			end_bases_cd,
+			event_runs_ct,
+			event_outs_ct
 		FROM events
 		WHERE $where
 	  	GROUP BY CASE WHEN (event_cd in(2,19)
@@ -130,8 +134,12 @@ JOIN
 					ELSE 'other'
 				END,
 				outs_ct,
-				start_bases_cd) a
+				start_bases_cd,
+				end_bases_cd,
+				event_outs_ct,
+				event_runs_ct) a
 		JOIN lkup_cd_bases c ON a.start_bases_cd = c.value_cd
+		WHERE a.instances > 10
 		GROUP BY a.event_name,
 	       a.outs ,
 	       c.sim_tx) b
