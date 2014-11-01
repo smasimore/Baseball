@@ -7,7 +7,8 @@ class Game:
     HOME = 'Home'
     AWAY = 'Away'
 
-    def __init__(self, weights, input_data):
+    def __init__(self, weights, input_data, at_bat_impact_data):
+        self.atBatImpactData = at_bat_impact_data
         self.teams = {
             self.HOME :
                  Team(
@@ -26,15 +27,15 @@ class Game:
         }
 
     def playGame(self):
+        self.__initializeResults()
+
         # Logging only occurs if set.
         self.log = []
 
         # Set starting state of game.
-        # TESTING - set 1 for real
-        self.inning = 9
+        self.inning = 1
         self.batter = {self.HOME : 1, self.AWAY : 1}
-        # TESTING - set 0 - 0 for real
-        self.score = {self.HOME : 1, self.AWAY : 0}
+        self.score = {self.HOME : 0, self.AWAY : 0}
 
         while True:
             self.__playInning(self.AWAY)
@@ -54,7 +55,14 @@ class Game:
             self.inning += 1
 
         # TESTING
-        print self.log
+        for row in self.log:
+            print 'score | inning | team | outs | batter | hit type | bases | batter stats | hit stats'
+            print row
+            print '\n'
+
+        self.results[self.HOME]['runs'] = self.score[self.HOME]
+        self.results[self.AWAY]['runs'] = self.score[self.AWAY]
+        return self.results
 
 
     def __playInning(self, team):
@@ -64,16 +72,12 @@ class Game:
 
         while True:
             self.__playAtBat(team)
-
-            # TESTING
-            self.outs = 3
-
-            if self.outs >= 3:
+            if self.outs > 2:
                 break
 
 
     def __playAtBat(self, team):
-        batter_stats = self.teams[team].getBatterStats(
+        batter_stats, unstacked_batter_stats = self.teams[team].getBatterStats(
             self.batter[team],
             self.inning,
             self.outs,
@@ -81,33 +85,78 @@ class Game:
         )
         # TODO(smas): Add function to calculate whether steal occurs during
         # at bat.
-        hit_type = self.__getHitType(batter_stats)
-
+        hit_type = self.__getRandomlyGeneratedResult(batter_stats)
+        unstacked_hit_stats = self.__processAtBatImpact(hit_type, team)
+        self.results[team][hit_type] += 1
 
         if self.loggingOn is True:
-            self.__addToLog(team, hit_type)
+            self.__addToLog(
+                team,
+                hit_type,
+                unstacked_batter_stats,
+                unstacked_hit_stats
+            )
 
-    def __getHitType(self, batter_stats):
+        self.batter[team] = (self.batter[team] + 1
+            if self.batter[team] + 1 <= 9
+            else 1
+        )
+
+    def __processAtBatImpact(self, hit_type, team):
+        index = '%d%d%s' % (self.outs, self.bases, hit_type)
+
+        hit_impact_stats = {}
+        previous_impact_stat = 0
+        for at_bat_impact in self.atBatImpactData[index].keys():
+            hit_impact_stats[at_bat_impact] = (previous_impact_stat +
+                self.atBatImpactData[index][at_bat_impact])
+            previous_impact_stat = hit_impact_stats[at_bat_impact]
+
+        hit_impact = self.__getRandomlyGeneratedResult(hit_impact_stats)
+        self.outs, self.bases, runs = map(int, hit_impact.split('_'))
+        self.score[team] += runs
+
+        # Return for logging.
+        return self.atBatImpactData[index]
+
+    def __getRandomlyGeneratedResult(self, stats):
         # Get hit type by subtracting rand from all stacked_values and getting
         # smallest result that's still > 0. This means the stacked value that is
         # closest but greater than rand will be selected.
         rand = random.random()
-        filtered_batter_stats = {}
-        for stat,value in batter_stats.iteritems():
+        filtered_stats = {}
+        for stat,value in stats.iteritems():
             if value - rand >= 0:
-                filtered_batter_stats[stat] = value - rand
-        return min(filtered_batter_stats, key=filtered_batter_stats.get)
+                filtered_stats[stat] = value - rand
 
+        return min(filtered_stats, key=filtered_stats.get)
 
-    def __addToLog(self, team, hit_type):
+    def __addToLog(self, team, hit_type, batter_stats, hit_result_stats):
         self.log.append([
-            self.score,
+            self.score.copy(),
             self.inning,
             team,
             self.outs,
             self.batter[team],
-            hit_type
+            hit_type,
+            self.bases,
+            batter_stats,
+            hit_result_stats
         ])
+
+    def __initializeResults(self):
+        events = {
+            'runs' : 0,
+            'single' : 0,
+            'double' : 0,
+            'triple' : 0,
+            'home_run' : 0,
+            'walk' : 0,
+            'strikeout' : 0,
+            'ground_out' : 0,
+            'fly_out' : 0
+        }
+        self.results = {self.HOME : events.copy(), self.AWAY : events.copy()}
 
     ########## SETTERS ##########
 
@@ -151,7 +200,9 @@ class Team:
             stats_to_average
         )
 
-        return self.__calculateStackedBatterStats(weighted_batter_stats)
+        # Return weighted_batter_stats for logging.
+        return (self.__calculateStackedBatterStats(weighted_batter_stats),
+            weighted_batter_stats)
 
     def __calculateStackedBatterStats(self, weighted_batter_stats):
         stacked_batter_stats = {}

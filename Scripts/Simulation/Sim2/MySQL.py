@@ -46,6 +46,8 @@ def insert(table_name, column_names, data):
     query = ("Insert Into test_python_integration (%s) Values (%s)"
             % ('%s', dynamic_sub)) % ','.join(column_names)
 
+    db = []
+    data = []
     try:
         db = __connectToDatabase()
         cursor = db.cursor()
@@ -64,6 +66,8 @@ def insert(table_name, column_names, data):
 # delete("DELETE FROM test_python_integration")
 # delete("DROP TABLE if exists test_python_integration4")
 def delete(query):
+    db = []
+    data = []
     try:
         db = __connectToDatabase()
         cursor = db.cursor()
@@ -87,6 +91,8 @@ def delete(query):
 
 # mysql_read('SELECT * FROM test_python_integration')
 def read(query):
+    db = []
+    data = []
     try:
         db = __connectToDatabase()
         cursor = db.cursor()

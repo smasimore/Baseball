@@ -54,6 +54,8 @@ class Simulation:
     ########## PRIVATE CONSTANTS ##########
     __TABLE = 'sim_input'
     __TEST_TABLE = 'sim_input_test'
+    __AT_BAT_IMPACT_TABLE = 'at_bat_impact'
+    __AT_BAT_IMPACT_INDEX = ['start_outs', 'start_bases', 'event_name']
     __THREADS = 1
 
 
@@ -90,7 +92,7 @@ class Simulation:
 
 
     ########## DEFAULT PARAMS - use setter functions to override. ##########
-    ANALYSIS_RUNS = 2000
+    ANALYSIS_RUNS = 1
     GAME_DATE = None # Set a date to run a specific day of games.
                      # Timespan not currently available.
     DEFAULT_THRESHOLD = 9 # Number of at bats required to no longer default.
@@ -127,25 +129,31 @@ class Simulation:
 
 
     def run(self):
-        self.fetchInputData()
-        self.runGames()
+        self.__fetchInputData()
+        self.__fetchAtBatImpactData()
+        self.__runGames()
         # exportResults() --- formats results, exports to SQL. Logs
         # params, data, results, and one example game to sim_log
 
 
     def __runGame(self, row_number, sim_results):
-        game = Game(self.weights, self.inputData[row_number])
+        game = Game(
+            self.weights,
+            self.inputData[row_number],
+            self.atBatImpactData
+        )
 
         # If any features are added, create a setter in Game and set here
         # instead of passing in an additional parameter.
         game.setWeightsMutator(self.weightsMutator)
         game.setLogging(True)
 
-        game.playGame()
+        for analysis_run in range(0, self.analysisRuns):
+            print game.playGame()
 
 
     # Multiprocessing method that calls runGame.
-    def runGames(self):
+    def __runGames(self):
         # Create shared memory dict.
         manager = Manager()
         sim_results = manager.list()
@@ -161,7 +169,6 @@ class Simulation:
                     else rows - rows_completed
             )
             processes = {}
-            range(threads)
             for t in range(threads):
                 row_number = rows_completed + t
                 processes[t] = Process(
@@ -179,7 +186,7 @@ class Simulation:
 
         self.simResults = sim_results
 
-    def fetchInputData(self):
+    def __fetchInputData(self):
         table = self.__TABLE if self.testRun is False else self.__TEST_TABLE
         query = (
             """SELECT *
@@ -194,7 +201,7 @@ class Simulation:
                 self.statsYear,
                 self.season
             )
-        );
+        )
 
         # If gameDate set, only pull one day of data.
         if self.gameDate:
@@ -217,6 +224,27 @@ class Simulation:
 
         self.inputData = formatted_results
 
+    def __fetchAtBatImpactData(self):
+        table = self.__AT_BAT_IMPACT_TABLE
+        query = (""" SELECT * FROM %s""" % (table))
+        results = MySQL.read(query)
+
+        # Convert to useable data (index : {result1 : .1, result2 : .2, etc...}
+        self.atBatImpactData = self.__processAtBatImpactData(results)
+
+    def __processAtBatImpactData(self, impact_data):
+        processed_data = {}
+        for row in impact_data:
+            index = ''
+            for item in self.__AT_BAT_IMPACT_INDEX:
+                index = index + str(row[item])
+            end_state = (str(row['end_outs']) + '_' + str(row['end_bases']) +
+                '_' + str(row['runs_added']))
+
+            if index not in processed_data:
+                processed_data[index] = {}
+            processed_data[index][end_state] = row['rate']
+        return processed_data
 
 
     ########## EXTRA PARAM FUNCTIONS ##########
