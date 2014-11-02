@@ -320,6 +320,14 @@ $pctStats = array(
     'pct_fly_out' => 'fly_outs'
 );
 
+function is_assoc($array) {
+    foreach (array_keys($array) as $k => $v) {
+        if ($k !== $v)
+            return true;
+    }
+    return false;
+}
+
 function checkDuplicatePlayers($name, $team, $duplicate_names) {
     if (!in_array($name, array_keys($duplicate_names))) {
         return $name;

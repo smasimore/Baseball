@@ -244,16 +244,16 @@ if ($confirm !== 'y') {
 }
 
 $colheads = array(
-    'player_name',
-    'player_id',
-    'hand',
-    'innings',
-    'era',
-    'bucket',
-    'outs',
-    'earned_runs',
-    'season',
-    'ds'
+    'player_name' => '?',
+    'player_id' => '!',
+    'hand' => '?',
+    'innings' => '!',
+    'era' => '!',
+    'bucket' => '!',
+    'outs' => '!',
+    'earned_runs' => '!',
+    'season' => '!',
+    'ds' => '!'
 );
 $season_start = null;
 $season_end = null;
@@ -336,8 +336,6 @@ for ($season = 1950; $season < 2014; $season++) {
                     $playerSeason[$name];
             }
         }
-        print_r($player_season_daily_insert);
-        exit();
         multi_insert(DATABASE, $daily_table, $player_season_daily_insert, $colheads);
         multi_insert(DATABASE, $career_table, $player_career_daily_insert, $colheads);
     }

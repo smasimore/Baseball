@@ -180,6 +180,8 @@ function insert($database, $table, $data_array) {
 
 /***********************************************************************
 multi_insert($database, $table, $data_array, $col_heads)
+// TODO(cert): Update how this words
+NEW: If colheads is associative arrays checks for acceptable nulls
 ************************************************************************/
 
 function multi_insert($database, $table, $data_array, $colheads) {
@@ -216,28 +218,44 @@ function multi_insert($database, $table, $data_array, $colheads) {
     }
     mysqli_select_db($mysql_connect, $database);
 
-    // Create INSERT statement based on colheads
-    $colheads_insert = implode(',', $colheads);
+	// Determine which columns allows for null values
+	$nullable_colheads = array();
+	if (is_assoc($colheads)) {
+		foreach ($colheads as $name => $nullable) {
+			if ($nullable == '?') {
+				$nullable_colheads[] = $name;
+			}
+		}
+		// Remove null indicators for mysql insertion
+		$colheads = array_keys($colheads);
+	}
+
+	// Create INSERT statement based on colheads
+	$colheads_insert = implode(',', $colheads);
     $sql = array(); 
     foreach ($data_array as $row) {
         $insert_row = array();
         foreach ($colheads as $col) {
             $insert_data = null;
-            $insert_data = $row[$col];
+			$insert_data = $row[$col];
 			if (is_null($insert_data)) {
-                echo "ERROR - INSERT FAILED: Make sure to include values 
-					for all columns specified in colheads. Missing column
-					$col \n";
-                // Adding send e-mail for now to make sure I'm on top of these
-                // as I migrate to the new insert
-                send_email(
-                    "Incomplete Data During Insert", 
-                    "Table $table",
-                    "d"
-                );
-                exit("Failed Insert into $table");
-            } else if (mb_detect_encoding($insert_data) !== 'ASCII') {
-                $insert_row[] = 'NULL';
+				if (in_array($col, $nullable_colheads)) {
+					$insert_row[] = 'null';
+				} else {
+					echo "ERROR - INSERT FAILED: Make sure to include values 
+						for all columns specified in colheads. Missing column
+						$col \n";
+					// Adding send e-mail for now to make sure I'm on top of these
+					// as I migrate to the new insert
+					send_email(
+						"Incomplete Data During Insert", 
+						"Table $table",
+						"d"
+					);
+					exit("Failed Insert into $table");
+				}
+			} else if (mb_detect_encoding($insert_data) !== 'ASCII') {
+                $insert_row[] = 'null';
                 echo "You are trying to insert a foreign character into $table
                     check LIB_mysql_updatedbyus to turn off this error message.
                     Currently this is defaulted to NULL \n";
@@ -255,7 +273,7 @@ function multi_insert($database, $table, $data_array, $colheads) {
 
     # Create and execute SQL command
     $final_sql = 
-        "INSERT INTO $table ($colheads_insert) VALUES ".implode(',', $sql);
+		"INSERT INTO $table ($colheads_insert) VALUES ".implode(',', $sql);
     $result = mysqli_query($mysql_connect, $final_sql);
 
     # Report SQL error, if one occured, otherwise return result
