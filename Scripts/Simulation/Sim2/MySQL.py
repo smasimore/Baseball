@@ -43,11 +43,10 @@ def insert(table_name, column_names, data):
 
     # Need to sub column names here to avoid ' from being added
     # (e.g. 'name' instead of name) which won't work with sql
-    query = ("Insert Into test_python_integration (%s) Values (%s)"
-            % ('%s', dynamic_sub)) % ','.join(column_names)
+    query = ("Insert Into %s (%s) Values (%s)"
+            % (table_name, '%s', dynamic_sub)) % ','.join(column_names)
 
     db = []
-    data = []
     try:
         db = __connectToDatabase()
         cursor = db.cursor()

@@ -54,11 +54,31 @@ class Simulation:
     ########## PRIVATE CONSTANTS ##########
     __TABLE = 'sim_input'
     __TEST_TABLE = 'sim_input_test'
+    __DEBUG_TABLE = 'sim_debug'
     __AT_BAT_IMPACT_TABLE = 'at_bat_impact'
     __AT_BAT_IMPACT_INDEX = ['start_outs', 'start_bases', 'event_name']
     __THREADS = 1
 
-
+    ########## COLUMN LISTS ##########
+    DEBUG_COLUMNS = [
+        'score',
+        'inning',
+        'team',
+        'outs',
+        'batter',
+        'hit_type',
+        'bases',
+        'batter_stats',
+        'hit_stats',
+        'season',
+        'stats_year',
+        'stats_type',
+        'weights',
+        'weights_mutator',
+        'analysis_runs',
+        'sim_game_date',
+        'test_run'
+    ]
 
     ########## PARAM VALIDATION LISTS ##########
     STATS_TYPES = [
@@ -82,20 +102,12 @@ class Simulation:
         'previous',
     ]
 
-    DEFAULT_TYPES = [  # If type chosen that doesn't meet,
-        'last_season', # threshold will default to league.
-        'total',
-        'career',
-        'league',
-    ]
-
 
 
     ########## DEFAULT PARAMS - use setter functions to override. ##########
-    ANALYSIS_RUNS = 1
+    ANALYSIS_RUNS = 1000
     GAME_DATE = None # Set a date to run a specific day of games.
                      # Timespan not currently available.
-    DEFAULT_THRESHOLD = 9 # Number of at bats required to no longer default.
     TEST_RUN = False
     WEIGHTS_MUTATOR = None
 
@@ -118,11 +130,11 @@ class Simulation:
         self.statsType = stats_type
 
         self.weightsMutator = self.WEIGHTS_MUTATOR
+        self.debugLoggingOn = True
 
         # Extra, defaulted params. To change call setters.
         self.analysisRuns = self.ANALYSIS_RUNS
         self.gameDate = self.GAME_DATE
-        self.defaultThreshold = self.DEFAULT_THRESHOLD
         self.testRun = self.TEST_RUN # Use this in conjunction with setting a
                                      # file with test data. Sim will use test
                                      # data rather than MySQL.
@@ -146,10 +158,24 @@ class Simulation:
         # If any features are added, create a setter in Game and set here
         # instead of passing in an additional parameter.
         game.setWeightsMutator(self.weightsMutator)
-        game.setLogging(True)
+        game.setLogging(self.debugLoggingOn)
 
+        game_results = []
         for analysis_run in range(0, self.analysisRuns):
-            print game.playGame()
+            time = datetime.datetime.now()
+            run_results, debug_log = game.playGame()
+
+            # Turn off debug logging so that only logs for 1 game per Sim run.
+            if debug_log:
+                self.debugLoggingOn = False
+                self.__logToDebugTable(debug_log)
+                game.setLogging(self.debugLoggingOn)
+
+            # Adding to run_results which will need to be processed to get
+            # game-level stats (e.g. % home win).
+            game_results.append(run_results)
+
+        # [NEXTUP] analyze run results to get final game stats
 
 
     # Multiprocessing method that calls runGame.
@@ -247,6 +273,14 @@ class Simulation:
         return processed_data
 
 
+    def __logToDebugTable(self, debug_log):
+        sim_params = self.getSimParams()
+        for at_bat in debug_log:
+            at_bat.extend(sim_params)
+            at_bat.append(self.testRun)
+        MySQL.delete("DELETE FROM %s" % self.__DEBUG_TABLE)
+        MySQL.insert(self.__DEBUG_TABLE, self.DEBUG_COLUMNS, debug_log)
+
     ########## EXTRA PARAM FUNCTIONS ##########
 
     def setAnalysisRuns(self, runs):
@@ -261,13 +295,21 @@ class Simulation:
         self.validateTestRun(test_run)
         self.testRun = test_run
 
-    def setDefaultThreshold(self, threshold):
-        self.validateDefaultThreshold(threshold)
-        self.defaultThreshold = threshold
-
     def setWeightsMutator(self, weights_mutator):
         self.validateWeightsMutator(weights_mutator)
         self.weightsMutator = weights_mutator
+
+    def getSimParams(self):
+        # [NEXTUP] turn weights into partitionable string
+        return [
+            self.season,
+            self.statsYear,
+            self.statsType,
+            json.dumps(self.weights),
+            self.weightsMutator,
+            self.analysisRuns,
+            self.gameDate
+        ]
 
     ########## PARAM VALIDATION FUNCTIONS ##########
 

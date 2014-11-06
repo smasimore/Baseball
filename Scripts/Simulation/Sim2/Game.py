@@ -1,6 +1,6 @@
 from Constants import *
 from WeightsMutator import WeightsMutator
-import random
+import random, json
 
 class Game:
 
@@ -54,15 +54,9 @@ class Game:
 
             self.inning += 1
 
-        # TESTING
-        for row in self.log:
-            print 'score | inning | team | outs | batter | hit type | bases | batter stats | hit stats'
-            print row
-            print '\n'
-
         self.results[self.HOME]['runs'] = self.score[self.HOME]
         self.results[self.AWAY]['runs'] = self.score[self.AWAY]
-        return self.results
+        return self.results, self.log
 
 
     def __playInning(self, team):
@@ -133,15 +127,15 @@ class Game:
 
     def __addToLog(self, team, hit_type, batter_stats, hit_result_stats):
         self.log.append([
-            self.score.copy(),
+            json.dumps(self.score.copy()),
             self.inning,
             team,
             self.outs,
             self.batter[team],
             hit_type,
             self.bases,
-            batter_stats,
-            hit_result_stats
+            json.dumps(batter_stats),
+            json.dumps(hit_result_stats)
         ])
 
     def __initializeResults(self):
