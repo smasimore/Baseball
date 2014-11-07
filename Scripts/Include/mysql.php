@@ -277,12 +277,13 @@ function multi_insert($database, $table, $data_array, $colheads) {
     $result = mysqli_query($mysql_connect, $final_sql);
 
     # Report SQL error, if one occured, otherwise return result
-    if (mysqli_error($mysql_connect)) {
-        echo mysqli_error($mysql_connect);
+	if (mysqli_error($mysql_connect)) {
+		$error = mysqli_error($mysql_connect);
+        echo $error;
         mysqli_close($mysql_connect);
         send_email(
-             mysqli_error($mysql_connect), 
-            "last step of multi_insert into $table",
+            "Multi_Insert Error", 
+            "$error during Insert: $final_sql",
             "d"
         );
         exit("Mysqli error during multi_insert into $table");
