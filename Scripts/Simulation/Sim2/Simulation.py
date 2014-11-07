@@ -29,26 +29,6 @@ class Simulation:
         error_rate_h (team error rate)
         error_rate_a
 
-
-    FINAL TABLE:
-        ds (day running) **partition**
-        timestamp (time running)
-        gameid
-        game_date
-        home
-        away
-        weights_key **partition** -- function needed to convert to and from,
-                                    varchar
-        weights (mediumtext)
-        season
-        stats_type (basic, magic) **partition**
-        stats_year (previous, current, career)
-        analysis_runs
-        default_threshold
-
-        %_win
-        results (s/d/t/h/f/gb/so/steals/...)
-
     '''
 
     ########## PRIVATE CONSTANTS ##########
@@ -60,6 +40,23 @@ class Simulation:
     __THREADS = 1
 
     ########## COLUMN LISTS ##########
+    SIM_OUTPUT_COLUMNS = [
+        'home_win_pct',
+        'game_details',
+        'gameid',
+        'game_date',
+        'date_ran_sim',
+        'home',
+        'away',
+        'season',
+        'stats_year',
+        'stats_type',
+        'weights',
+        'weights_mutator',
+        'analysis_runs',
+        'sim_game_date'
+    ]
+
     DEBUG_COLUMNS = [
         'score',
         'inning',
@@ -105,7 +102,7 @@ class Simulation:
 
 
     ########## DEFAULT PARAMS - use setter functions to override. ##########
-    ANALYSIS_RUNS = 1000
+    ANALYSIS_RUNS = 100
     GAME_DATE = None # Set a date to run a specific day of games.
                      # Timespan not currently available.
     TEST_RUN = False
@@ -144,14 +141,13 @@ class Simulation:
         self.__fetchInputData()
         self.__fetchAtBatImpactData()
         self.__runGames()
-        # exportResults() --- formats results, exports to SQL. Logs
-        # params, data, results, and one example game to sim_log
-
+        self.__exportResults()
 
     def __runGame(self, row_number, sim_results):
+        game_data = self.inputData[row_number]
         game = Game(
             self.weights,
-            self.inputData[row_number],
+            game_data,
             self.atBatImpactData
         )
 
@@ -175,7 +171,10 @@ class Simulation:
             # game-level stats (e.g. % home win).
             game_results.append(run_results)
 
-        # [NEXTUP] analyze run results to get final game stats
+        # Get pct win and event averages.
+        results = self.__processGameResults(game_results)
+        results.extend([game_data['gameid'], game_data['game_date']])
+        sim_results.append(results)
 
 
     # Multiprocessing method that calls runGame.
@@ -246,6 +245,9 @@ class Simulation:
                         formatted_row[key] = json.loads(value)
                     except ValueError, e:
                         formatted_row[key] = value
+                else:
+                    formatted_row[key] = value
+
             formatted_results.append(formatted_row)
 
         self.inputData = formatted_results
@@ -278,8 +280,44 @@ class Simulation:
         for at_bat in debug_log:
             at_bat.extend(sim_params)
             at_bat.append(self.testRun)
+
         MySQL.delete("DELETE FROM %s" % self.__DEBUG_TABLE)
         MySQL.insert(self.__DEBUG_TABLE, self.DEBUG_COLUMNS, debug_log)
+
+    def __processGameResults(self, game_results):
+        totals = {}
+        home_wins = 0
+        for run in game_results:
+            if (run[HomeAway.HOME]['runs'] > run[HomeAway.AWAY]['runs']):
+                home_wins += 1
+            for team, stats in run.iteritems():
+                if team not in totals.keys():
+                    totals[team] = {}
+                for event, num in stats.iteritems():
+                    if event in totals[team].keys():
+                        totals[team][event] += num
+                    else:
+                        totals[team][event] = num
+
+        totals[HomeAway.HOME].update((event, float(num)/self.ANALYSIS_RUNS)
+            for event, num in totals[HomeAway.HOME].items())
+        totals[HomeAway.AWAY].update((event, float(num)/self.ANALYSIS_RUNS)
+            for event, num in totals[HomeAway.AWAY].items())
+
+        return [float(home_wins)/self.ANALYSIS_RUNS, totals]
+
+    def __exportResults(self):
+        # TODO(smas) IF TEST RUN EXPORT TO TEST TABLE, OVERRIDE
+        sim_params = self.getSimParams()
+        results = []
+        for game in self.simResults:
+            game.extend(sim_params)
+            results.append(game)
+
+        # [NEXTUP] Create output sql table
+        print results
+
+
 
     ########## EXTRA PARAM FUNCTIONS ##########
 
