@@ -87,9 +87,10 @@ function updateAverageInnings($stat) {
     $game_id = $stat['game_id'];
     $inning = $stat['inning'];
     $outs = $stat['event_outs_ct'];
-    if (!$seasonInnings[$player_id][$game_id]) {
+    if (!isset($seasonInnings[$player_id][$game_id]['player_id'])) {
         $starter = $inning == 1 && !$stat['outs_ct'] ? 1 : 0;
         $initialized_data = array(
+            'player_id' => $player_id,
             'starter' => $starter,
             'outs_as_starter' => 0,
             'outs_as_reliever' => 0,
