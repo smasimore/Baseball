@@ -3,6 +3,7 @@ from Constants import *
 from Game import Game
 from WeightsMutator import WeightsMutator
 from multiprocessing import Process, Manager
+from collections import OrderedDict
 
 class Simulation:
 
@@ -35,7 +36,9 @@ class Simulation:
     __TABLE = 'sim_input'
     __TEST_TABLE = 'sim_input_test'
     __DEBUG_TABLE = 'sim_debug'
+    __WEIGHTS_INDEX_TABLE = 'sim_weights_index'
     __AT_BAT_IMPACT_TABLE = 'at_bat_impact'
+    __OUTPUT_TABLE = 'sim_output'
     __AT_BAT_IMPACT_INDEX = ['start_outs', 'start_bases', 'event_name']
     __THREADS = 1
 
@@ -51,6 +54,7 @@ class Simulation:
         'season',
         'stats_year',
         'stats_type',
+        'weights_i',
         'weights',
         'weights_mutator',
         'analysis_runs',
@@ -70,6 +74,7 @@ class Simulation:
         'season',
         'stats_year',
         'stats_type',
+        'weights_i',
         'weights',
         'weights_mutator',
         'analysis_runs',
@@ -138,6 +143,7 @@ class Simulation:
 
 
     def run(self):
+        self.__addWeightsIndex()
         self.__fetchInputData()
         self.__fetchAtBatImpactData()
         self.__runGames()
@@ -173,7 +179,13 @@ class Simulation:
 
         # Get pct win and event averages.
         results = self.__processGameResults(game_results)
-        results.extend([game_data['gameid'], game_data['game_date']])
+        results.extend([
+            game_data['gameid'],
+            game_data['game_date'],
+            time.strftime("%Y-%m-%d"),
+            game_data['home'],
+            game_data['away']
+        ])
         sim_results.append(results)
 
 
@@ -211,7 +223,32 @@ class Simulation:
 
         self.simResults = sim_results
 
+        # Print status.
+        print str(rows_completed / len(self.inputData) * 100) + '% COMPLETE'
+
+    def __addWeightsIndex(self):
+        self.weightsIndex = 0
+        if not self.testRun:
+
+            while not self.weightsIndex:
+                query = ("""SELECT * FROM %s""") % self.__WEIGHTS_INDEX_TABLE
+                results = MySQL.read(query)
+                weights_readable = self.__getReadableWeights()
+                for row in results:
+                    if row['weights_readable'] == weights_readable:
+                        self.weightsIndex = row['weights_index']
+
+                if not self.weightsIndex:
+                    MySQL.insert(
+                        self.__WEIGHTS_INDEX_TABLE,
+                        ['weights_readable'],
+                        [weights_readable]
+                    )
+
     def __fetchInputData(self):
+        ### testing ###
+        self.testRun = True
+
         table = self.__TABLE if self.testRun is False else self.__TEST_TABLE
         query = (
             """SELECT *
@@ -304,7 +341,21 @@ class Simulation:
         totals[HomeAway.AWAY].update((event, float(num)/self.ANALYSIS_RUNS)
             for event, num in totals[HomeAway.AWAY].items())
 
-        return [float(home_wins)/self.ANALYSIS_RUNS, totals]
+        return [float(home_wins)/self.ANALYSIS_RUNS, json.dumps(totals)]
+
+    def __getReadableWeights(self):
+        ordered_weights = OrderedDict(sorted(self.weights.items()))
+        # For easy reading, converting weights to percents.
+        ordered_weights.update((weight, int(val*100))
+            for weight, val in ordered_weights.items())
+
+        readable = '__'.join([
+            '_'.join([
+                weight, str(val)
+            ]) for weight, val in ordered_weights.items()
+        ])
+
+        return readable
 
     def __exportResults(self):
         # TODO(smas) IF TEST RUN EXPORT TO TEST TABLE, OVERRIDE
@@ -314,8 +365,20 @@ class Simulation:
             game.extend(sim_params)
             results.append(game)
 
-        # [NEXTUP] Create output sql table
-        print results
+        MySQL.dropPartition(
+            self.__OUTPUT_TABLE,
+            str(self.season)+str(self.weightsIndex)
+        )
+        MySQL.addPartition(
+            self.__OUTPUT_TABLE,
+            str(self.season)+str(self.weightsIndex),
+            str(self.season)+", "+str(self.weightsIndex)
+        )
+        MySQL.insert(
+            self.__OUTPUT_TABLE,
+            self.SIM_OUTPUT_COLUMNS,
+            results
+        )
 
 
 
@@ -338,12 +401,13 @@ class Simulation:
         self.weightsMutator = weights_mutator
 
     def getSimParams(self):
-        # [NEXTUP] turn weights into partitionable string
+        weights_readable = self.__getReadableWeights()
         return [
             self.season,
             self.statsYear,
             self.statsType,
-            json.dumps(self.weights),
+            self.weightsIndex,
+            weights_readable,
             self.weightsMutator,
             self.analysisRuns,
             self.gameDate
@@ -369,12 +433,6 @@ class Simulation:
                 raise ValueError(
                     "Weights must add to 1 (not %s) for basic stats_type."
                     % sum(weights.values()))
-
-    def validateDefaultThreshold(self, threshold):
-        if not isinstance(threshold, int):
-            raise ValueError(
-                'Default threshold param needs to be an int. %s is not.'
-                % test_run)
 
     def validateTestRun(self, test_run):
         if not isinstance(test_run, bool):
@@ -405,4 +463,4 @@ class Simulation:
         method = getattr(WeightsMutator(), weights_mutator)
         if not method:
             raise ValueError(
-                '%s is not a valid WeightsMutator function' %weights_mutator)
+                '%s is not a valid WeightsMutator function' % weights_mutator)

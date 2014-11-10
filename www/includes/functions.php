@@ -857,7 +857,8 @@ function listModels() {
     $models_list = array();
     $models = exe_sql('information_schema',
         "select table_name from tables where table_schema = 'baseball'
-        and table_name like '%output%' and table_name != 'sim_output'");
+        and table_name like '%output%'
+        and table_name != 'sim_output_deprecated'");
     foreach ($models as $model) {
         $name = substr($model['table_name'], 11, -5);
         $models_list[$name] = $name;

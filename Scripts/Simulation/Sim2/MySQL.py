@@ -45,13 +45,19 @@ def insert(table_name, column_names, data):
     # (e.g. 'name' instead of name) which won't work with sql
     query = ("Insert Into %s (%s) Values (%s)"
             % (table_name, '%s', dynamic_sub)) % ','.join(column_names)
+    if len(column_names) is 1:
+        query = ("Insert Into %s (%s) Value ('%s')"
+            % (table_name, column_names[0], data[0]))
 
     db = []
     try:
         db = __connectToDatabase()
         cursor = db.cursor()
         # execute SQL insert query using execute() and commit() methods.
-        cursor.executemany(query, data)
+        if len(column_names) is 1:
+            cursor.execute(query)
+        else:
+            cursor.executemany(query, data)
         db.commit()
         # disconnect from server
         db.close()
@@ -100,6 +106,40 @@ def read(query):
         data = cursor.fetchall()
         return [{columns[index][0]:column for index, column in
             enumerate(value)} for value in data]
+    except MySQLdb.Error, e:
+        db.close()
+        return {'query' : query, 'error' : e}
+
+def dropPartition(table, p):
+    query = ("""ALTER TABLE %s DROP PARTITION p%s""" % (table, p))
+    db = []
+    try:
+        db = __connectToDatabase()
+        cursor = db.cursor()
+        # execute SQL insert query using execute() and commit() methods.
+        cursor.execute(query)
+        db.commit()
+        # disconnect from server
+        db.close()
+        return ''
+    except MySQLdb.Error, e:
+        db.close()
+        return {'query' : query, 'error' : e}
+
+def addPartition(table, p, partition):
+    query = ("""ALTER TABLE %s ADD PARTITION (
+            PARTITION p%s VALUES IN ((%s)))""" %
+            (table, p, partition));
+    db = []
+    try:
+        db = __connectToDatabase()
+        cursor = db.cursor()
+        # execute SQL insert query using execute() and commit() methods.
+        cursor.execute(query)
+        db.commit()
+        # disconnect from server
+        db.close()
+        return ''
     except MySQLdb.Error, e:
         db.close()
         return {'query' : query, 'error' : e}
