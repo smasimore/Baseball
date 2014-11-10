@@ -11,6 +11,6 @@ weights = {
 }
 
 test = Simulation(weights, 2014, 'current', 'basic')
-#test.setTestRun(True)
-test.setWeightsMutator('example')
+test.setTestRun(True)
+#test.setWeightsMutator('example')
 test.run()
