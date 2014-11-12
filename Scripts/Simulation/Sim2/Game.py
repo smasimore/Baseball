@@ -84,7 +84,7 @@ class Game:
         # TODO(smas): Add function to calculate whether steal occurs during
         # at bat.
         hit_type = self.__getRandomlyGeneratedResult(batter_stats)
-        unstacked_hit_stats = self.__processAtBatImpact(hit_type, team)
+        stacked_hit_stats = self.__processAtBatImpact(hit_type, team)
         self.results[team][hit_type] += 1
 
         if self.loggingOn is True:
@@ -92,7 +92,7 @@ class Game:
                 team,
                 hit_type,
                 unstacked_batter_stats,
-                unstacked_hit_stats
+                stacked_hit_stats
             )
 
         self.batter[team] = (self.batter[team] + 1
@@ -102,15 +102,9 @@ class Game:
 
     def __processAtBatImpact(self, hit_type, team):
         index = '%d%d%s' % (self.outs, self.bases, hit_type)
-
-        hit_impact_stats = {}
-        previous_impact_stat = 0
-        for at_bat_impact in self.atBatImpactData[index].keys():
-            hit_impact_stats[at_bat_impact] = (previous_impact_stat +
-                self.atBatImpactData[index][at_bat_impact])
-            previous_impact_stat = hit_impact_stats[at_bat_impact]
-
-        hit_impact = self.__getRandomlyGeneratedResult(hit_impact_stats)
+        hit_impact = self.__getRandomlyGeneratedResult(
+            self.atBatImpactData[index
+        ])
         self.outs, self.bases, runs = map(int, hit_impact.split('_'))
         self.score[team] += runs
 
@@ -129,7 +123,11 @@ class Game:
 
         return min(filtered_stats, key=filtered_stats.get)
 
-    def __addToLog(self, team, hit_type, batter_stats, hit_result_stats):
+    def __addToLog(self,
+        team,
+        hit_type,
+        unstacked_batter_stats,
+        stacked_hit_stats):
         self.log.append([
             json.dumps(self.score.copy()),
             self.inning,
@@ -138,8 +136,8 @@ class Game:
             self.batter[team],
             hit_type,
             self.bases,
-            json.dumps(batter_stats),
-            json.dumps(hit_result_stats)
+            json.dumps(unstacked_batter_stats),
+            json.dumps(stacked_hit_stats)
         ])
 
     def __initializeResults(self):

@@ -14,11 +14,22 @@ class Team:
         self.pitcherData = pitching_data
         self.battingData = batting_data
 
+        # Used to speed up getBatterStats.
+        self.storedBatterStats = {}
+
     def getBatterStats(self, batter, inning, outs, bases, winning):
-        self.__setCategoryWeights(inning, outs, bases, winning)
+        index = str(batter) + str(outs) + str(bases)
+        if self.weightsMutator:
+            self.__setCategoryWeights(inning, outs, bases, winning)
+
+        # If no mutator, can use self.storedBatterStats to speed up this step.
+        else:
+            if index in self.storedBatterStats:
+                return (self.storedBatterStats[index]['stacked'],
+                    self.storedBatterStats[index]['unstacked'])
+
         stat_weights = self.__getStatWeights(inning, outs, bases)
         batter_stats = self.battingData[str(batter)]
-
         stats_to_average = {}
         for stat,weight in stat_weights.iteritems():
             if stat in batter_stats:
@@ -30,9 +41,17 @@ class Team:
             stat_weights,
             stats_to_average
         )
+
+        stacked = self.__calculateStackedBatterStats(weighted_batter_stats)
+
+        if not self.weightsMutator:
+            self.storedBatterStats[index] = {
+                'stacked' : stacked,
+                'unstacked' : weighted_batter_stats
+            }
+
         # Return weighted_batter_stats for logging.
-        return (self.__calculateStackedBatterStats(weighted_batter_stats),
-            weighted_batter_stats)
+        return (stacked, weighted_batter_stats)
 
     def __calculateStackedBatterStats(self, weighted_batter_stats):
         stacked_batter_stats = {}
@@ -67,10 +86,9 @@ class Team:
     ########## SETTERS ##########
 
     def __setCategoryWeights(self, inning, outs, bases, winning):
-        if hasattr(self, 'weightsMutator'):
-            if self.weightsMutator:
-                method = getattr(WeightsMutator(), self.weightsMutator)
-                self.categoryWeights = method(inning, outs, bases, winning)
+        if self.weightsMutator:
+            method = getattr(WeightsMutator(), self.weightsMutator)
+            self.categoryWeights = method(inning, outs, bases, winning)
 
     def setWeightsMutator(self, weights_mutator):
         self.weightsMutator = weights_mutator

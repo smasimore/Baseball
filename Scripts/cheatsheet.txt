@@ -85,3 +85,6 @@ sudo apachectl -k restart
 ##### GIT #####
 # mass stage removed files
 git rm $(git ls-files --deleted)  
+
+# Profile processing cost for Python
+python -m cProfile test.py

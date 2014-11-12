@@ -70,7 +70,7 @@ class Simulation:
         'hit_type',
         'bases',
         'batter_stats',
-        'hit_stats',
+        'stacked_hit_stats',
         'season',
         'stats_year',
         'stats_type',
@@ -107,7 +107,7 @@ class Simulation:
 
 
     ########## DEFAULT PARAMS - use setter functions to override. ##########
-    ANALYSIS_RUNS = 100
+    ANALYSIS_RUNS = 5000
     GAME_DATE = None # Set a date to run a specific day of games.
                      # Timespan not currently available.
     TEST_RUN = False
@@ -228,27 +228,22 @@ class Simulation:
 
     def __addWeightsIndex(self):
         self.weightsIndex = 0
-        if not self.testRun:
+        while not self.weightsIndex:
+            query = ("""SELECT * FROM %s""") % self.__WEIGHTS_INDEX_TABLE
+            results = MySQL.read(query)
+            weights_readable = self.__getReadableWeights()
+            for row in results:
+                if row['weights_readable'] == weights_readable:
+                    self.weightsIndex = row['weights_index']
 
-            while not self.weightsIndex:
-                query = ("""SELECT * FROM %s""") % self.__WEIGHTS_INDEX_TABLE
-                results = MySQL.read(query)
-                weights_readable = self.__getReadableWeights()
-                for row in results:
-                    if row['weights_readable'] == weights_readable:
-                        self.weightsIndex = row['weights_index']
-
-                if not self.weightsIndex:
-                    MySQL.insert(
-                        self.__WEIGHTS_INDEX_TABLE,
-                        ['weights_readable'],
-                        [weights_readable]
-                    )
+            if not self.weightsIndex:
+                MySQL.insert(
+                    self.__WEIGHTS_INDEX_TABLE,
+                    ['weights_readable'],
+                    [weights_readable]
+                )
 
     def __fetchInputData(self):
-        ### testing ###
-        self.testRun = True
-
         table = self.__TABLE if self.testRun is False else self.__TEST_TABLE
         query = (
             """SELECT *
@@ -298,7 +293,7 @@ class Simulation:
         self.atBatImpactData = self.__processAtBatImpactData(results)
 
     def __processAtBatImpactData(self, impact_data):
-        processed_data = {}
+        unstacked_stats = {}
         for row in impact_data:
             index = ''
             for item in self.__AT_BAT_IMPACT_INDEX:
@@ -306,10 +301,21 @@ class Simulation:
             end_state = (str(row['end_outs']) + '_' + str(row['end_bases']) +
                 '_' + str(row['runs_added']))
 
-            if index not in processed_data:
-                processed_data[index] = {}
-            processed_data[index][end_state] = row['rate']
-        return processed_data
+            if index not in unstacked_stats:
+                unstacked_stats[index] = {}
+            unstacked_stats[index][end_state] = row['rate']
+
+        stacked_stats = {}
+        for start_state, unstacked_stat in unstacked_stats.iteritems():
+            stacked_stat = {}
+            previous_impact_stat = 0
+            for at_bat_impact in unstacked_stat.keys():
+                stacked_stat[at_bat_impact] = (previous_impact_stat +
+                    unstacked_stat[at_bat_impact])
+                previous_impact_stat = stacked_stat[at_bat_impact]
+            stacked_stats[start_state] = stacked_stat
+
+        return stacked_stats
 
 
     def __logToDebugTable(self, debug_log):
