@@ -35,6 +35,10 @@ php backfill.php 2014-04-01 2014-05-27 Simulation sql_to_csv.php sim_nomagic_201
 # MySQL config
 sudo vim /etc/my.cnf
 
+# Unclog Phabricator Queue
+# Can see backlog in .../daemon
+bin/phd restart
+
 # Restart mail server
 sudo postfix start
 
