@@ -1,0 +1,355 @@
+<?php
+//Copyright 2014, Saber Tooth Ventures, LLC
+
+ini_set('memory_limit', '-1');
+ini_set('default_socket_timeout', -1);
+ini_set('max_execution_time', -1);
+ini_set('mysqli.connect_timeout', -1);
+ini_set('mysqli.reconnect', '1');
+include('/Users/constants.php');
+include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
+
+///TODO: (cert) DELETE this once other diff is pushed////
+function format_double($num) {
+    $formatted_num = number_format($num, 2, ".", "");
+    return $formatted_num;
+}
+
+const PCT_START_THRESH = .5;
+$positionMap = array();
+
+function convertRetroDateToDs($season, $date) {
+    $month = substr($date, 0, 2);
+    $day = substr($date, -2);
+    $ds = "$season-$month-$day";
+    return $ds;
+}
+
+function pullPitcherMap($season, $ds) {
+    $sql =
+        "SELECT lower(concat(a.first_name_tx, '_', a.last_name_tx)) as name,
+            a.player_id,
+            a.bat_hand_cd,
+            a.pit_hand_cd,
+            a.team_id,
+            d.team_id as updated_team_id,
+            b.starter_bucket as season_starter_bucket,
+            c.starter_bucket as career_starter_bucket,
+            b.starter_era as season_starter_era,
+            c.starter_era as career_starter_era,
+            b.avg_innings_starter as season_avg_innings_starter,
+            c.avg_innings_starter as career_avg_innings_starter,
+            b.starter_innings as season_starter_innings,
+            c.starter_innings as career_starter_innings,
+            b.reliever_innings as season_reliever_innings,
+            c.reliever_innings as career_reliever_innings,
+            b.reliever_earned_runs as season_reliever_runs,
+            c.reliever_earned_runs as career_reliever_runs,
+            b.games as season_games,
+            c.games as career_games,
+            b.pct_start as season_pct_start,
+            c.pct_start as career_pct_start
+        FROM
+            (SELECT *
+            FROM rosters
+            WHERE year_id = $season) a
+        LEFT OUTER JOIN retrosheet_historical_eras b
+        ON a.player_id = b.player_id
+        AND b.season = $season
+        AND b.ds = '$ds'
+        LEFT OUTER JOIN retrosheet_historical_eras_career c
+        ON a.player_id = c.player_id
+        AND c.season = $season
+        AND c.ds = '$ds'
+        LEFT OUTER JOIN retrosheet_historical_pitching_rosters d
+        ON a.player_id = d.player_id
+        AND d.season = $season
+        AND d.ds = '$ds'";
+    $id_map = exe_sql(DATABASE, $sql);
+    $id_map = index_by($id_map, 'player_id');
+    return $id_map;
+}
+
+function pullPositionMap() {
+    $sql = "SELECT value_cd as id,
+            shortname_tx as position
+        FROM lkup_cd_fld";
+    $position_map = exe_sql(DATABASE, $sql);
+    $position_map = index_by($position_map, 'id');
+    return $position_map;
+}
+
+function getSeasonStartEnd($season) {
+    $season_sql =
+        "SELECT min(substr(game_id,8,4)) as start,
+            max(substr(game_id,8,4)) as end
+        FROM games
+        WHERE substr(game_id,4,4) = '$season'
+        GROUP BY substr(game_id,4,4)";
+    $season_dates = exe_sql(DATABASE, $season_sql);
+    $season_start = convertRetroDateToDs($season, $season_dates['start']);
+    $season_end = convertRetroDateToDs($season, $season_dates['end']);
+    return array($season_start, $season_end);
+}
+
+function pullLineupData($season, $ds) {
+    $season_data = null;
+    $sql =
+        "SELECT game_id,
+            substr(game_id,8,4) as retro_ds,
+            start_game_tm as game_time,
+            away_team_id as away,
+            home_team_id as home,
+            home_start_pit_id as pitcher_h,
+            away_start_pit_id as pitcher_a,
+            away_score_ct as away_score,
+            home_score_ct as home_score,
+            away_lineup1_bat_id,
+            away_lineup1_fld_cd
+            away_lineup2_bat_id,
+            away_lineup2_fld_cd,
+            away_lineup3_bat_id,
+            away_lineup3_fld_cd,
+            away_lineup4_bat_id,
+            away_lineup4_fld_cd,
+            away_lineup5_bat_id,
+            away_lineup5_fld_cd,
+            away_lineup6_bat_id,
+            away_lineup6_fld_cd,
+            away_lineup7_bat_id,
+            away_lineup7_fld_cd,
+            away_lineup8_bat_id,
+            away_lineup8_fld_cd,
+            away_lineup9_bat_id,
+            away_lineup9_fld_cd,
+            home_lineup1_bat_id,
+            home_lineup1_fld_cd,
+            home_lineup2_bat_id,
+            home_lineup2_fld_cd,
+            home_lineup3_bat_id,
+            home_lineup3_fld_cd,
+            home_lineup4_bat_id,
+            home_lineup4_fld_cd,
+            home_lineup5_bat_id,
+            home_lineup5_fld_cd,
+            home_lineup6_bat_id,
+            home_lineup6_fld_cd,
+            home_lineup7_bat_id,
+            home_lineup7_fld_cd,
+            home_lineup8_bat_id,
+            home_lineup8_fld_cd,
+            home_lineup9_bat_id,
+            home_lineup9_fld_cd
+        FROM games
+        WHERE substr(game_id,4,4) = '$season'
+        AND substr(game_id,8,4) = '$ds'";
+    $season_data = exe_sql(DATABASE, $sql);
+    return $season_data;
+}
+
+function getStartingPitcherArray($pitcher) {
+    $stats = array(
+        'id' => $pitcher['player_id'],
+        'name' => $pitcher['name'],
+        'hand' => $pitcher['pit_hand_cd'],
+        'season_era' => $pitcher['season_starter_era'],
+        'career_era' => $pitcher['career_starter_era'],
+        'season_bucket' => $pitcher['season_starter_bucket'],
+        'career_bucket' => $pitcher['career_starter_bucket'],
+        'season_innings' => $pitcher['season_starter_innings'],
+        'career_innings' => $pitcher['career_starter_innings'],
+        'season_avg_innings' => $pitcher['season_avg_innings_starter'],
+        'career_avg_innings' => $pitcher['career_avg_innings_starter']
+    );
+    return $stats;
+}
+
+function getStartingLineup($lineup, $team) {
+    global $positionMap;
+    $lineup_array = array();
+    for ($i = 1; $i < 10; $i++) {
+        $index = "L$i";
+        $bat_id = $team."_lineup$i"."_bat_id";
+        $field_id = $team."_lineup$i"."_fld_cd";
+        $position = $positionMap[$lineup[$field_id]]['position'];
+        $lineup_array[$index] = array(
+            'player_id' => $lineup[$bat_id],
+            'position' => $position
+        );
+    }
+    return $lineup_array;
+}
+
+function calculateERA($runs, $innings) {
+    return ($runs / $innings) * 9;
+}
+
+function getRelieverData($pitcher_map, $lineup, $home_away) {
+    $team = $lineup[$home_away];
+    $pitcher_key = 'pitcher_'.substr($home_away, 0, 1);
+    $initial_values = array(
+        'era' => 0,
+        'runs' => 0,
+        'innings' => 0,
+        'pitchers' => 0
+    );
+    $pitchers = array(
+        'season' => $initial_values,
+        'career' => $initial_values
+    );
+    // Loop through all pitchers (player_map) to find the pitchers
+    // on the team that is currently playing.
+    foreach ($pitcher_map as $pitcher) {
+        $pitcher_map_team =
+            $pitcher['updated_team_id'] ?: $pitcher['team_id'];
+        if ($pitcher_map_team == $team
+            && $pitcher['player_id'] != $lineup[$pitcher_key]) {
+            if ($pitcher['season_reliever_innings'] > 0
+            && $pitcher['season_pct_start'] < PCT_START_THRESH) {
+                $pitchers['season']['era'] += calculateERA(
+                    $pitcher['season_reliever_runs'],
+                    $pitcher['season_reliever_innings']
+                );
+                $pitchers['season']['runs'] += $pitcher['season_reliever_runs'];
+                $pitchers['season']['innings'] +=
+                    $pitcher['season_reliever_innings'];
+                $pitchers['season']['pitchers'] += 1;
+            }
+            if ($pitcher['career_reliever_innings'] > 0
+            && $pitcher['career_pct_start'] < PCT_START_THRESH) {
+               $pitchers['career']['era'] += calculateERA(
+                    $pitcher['career_reliever_runs'],
+                    $pitcher['career_reliever_innings']
+                );
+                $pitchers['career']['runs'] += $pitcher['career_reliever_runs'];
+                $pitchers['career']['innings'] +=
+                    $pitcher['career_reliever_innings'];
+                $pitchers['career']['pitchers'] += 1;
+            }
+        }
+    }
+    $final_pitcher_array = array();
+    foreach ($pitchers as $type => $data) {
+        $final_pitcher_array[$type.'_era'] =
+            format_double($data['era'] / $data['pitchers'], 2);
+        $final_pitcher_array[$type.'_weighted_era'] =
+            format_double(calculateERA($data['runs'], $data['innings']), 2);
+    }
+    return $final_pitcher_array;
+}
+
+function formatLineups($lineup, $season, $pitcher_map) {
+    $game_date = convertRetroDateToDs($season, $lineup['retro_ds']);
+    $filled_lineup = array(
+        'game_id' => $game_id,
+        'season' => $season,
+        'game_date' => $game_date,
+        'game_time' => $lineup['game_time'],
+        'home' => $lineup['home'],
+        'away' => $lineup['away'],
+        'home_score' => $lineup['home_score'],
+        'away_score' => $lineup['away_score'],
+        'home_team_winner' =>
+            $lineup['home_score'] > $lineup['away_score'] ? 1 : 0,
+        'pitcher_h' => json_encode(
+            getStartingPitcherArray($pitcher_map[$lineup['pitcher_h']])
+        ),
+        'pitcher_a' => json_encode(
+            getStartingPitcherArray($pitcher_map[$lineup['pitcher_a']])
+        ),
+        'lineup_h' =>
+            json_encode(getStartingLineup($lineup, 'home')),
+        'lineup_a' =>
+            json_encode(getStartingLineup($lineup, 'away')),
+        'reliever_h' =>
+            json_encode(getRelieverData($pitcher_map, $lineup, 'home')),
+        'reliever_a' =>
+            json_encode(getRelieverData($pitcher_map, $lineup, 'away'))
+    );
+    return $filled_lineup;
+}
+
+// Prompt user to confirm since this will overwrite a full seasons' data.
+echo "\n"."Are you sure you want to overwrite historical data? (y/n) ";
+$handle = fopen("php://stdin","r");
+$confirm = trim(fgets($handle));
+if ($confirm !== 'y') {
+    exit();
+}
+
+$colheads = array(
+    'season',
+    'ds'
+);
+$daily_table = 'retrosheet_historical_lineups';
+$career_table = 'retrosheet_historical_lineups_career';
+
+$positionMap = pullPositionMap();
+
+for ($season = 1950; $season < 2014; $season++) {
+    // testing ////
+    $season += 1;
+    list($season_start, $season_end) = getSeasonStartEnd($season);
+    $season_lineups = array();
+    for ($ds = $season_start;
+        $ds <= $season_end;
+        $ds = ds_modify($ds, '+1 day')
+    ) {
+        /////// testing /////////
+        if ($la < 30) {
+            $la += 1;
+            continue;
+        }
+        /////////////////////////
+        echo $ds."\n";
+        $retro_ds = return_between($ds, "-", "-", EXCL).substr($ds, -2);
+        $daily_lineups = array();
+        $pitcher_map = pullPitcherMap($season, $ds);
+        $daily_lineups = pullLineupData($season, $retro_ds);
+        if ($daily_lineups) {
+            foreach ($daily_lineups as $lineup) {
+                $game_id = $lineup['game_id'];
+                $season_lineups[$game_id] = formatLineups(
+                    $lineup,
+                    $season,
+                    $pitcher_map
+                );
+            }
+        }
+        print_r($season_lineups); exit();
+        $la += 1;
+        if ($la == 40) {
+            exit();
+        }
+        continue;
+        // Prep the tables for daily insertion into mysql.
+        $player_season_daily_insert = array();
+        $player_career_daily_insert = array();
+        foreach ($playerCareer as $name => $split) {
+            foreach ($split as $split_name => $stat) {
+                $stat['ds'] = $entry_ds;
+                $stat['season'] = $season;
+                $player_career_daily_insert[] = $stat;
+                if (isset($playerSeason[$name][$split_name])) {
+                    $playerSeason[$name][$split_name]['ds'] = $entry_ds;
+                    $player_season_daily_insert[] =
+                        $playerSeason[$name][$split_name];
+                }
+            }
+        }
+        multi_insert(
+            DATABASE,
+            $daily_table,
+            $player_season_daily_insert,
+            $colheads
+        );
+        multi_insert(
+            DATABASE,
+            $career_table,
+            $player_career_daily_insert,
+            $colheads
+        );
+    }
+}
+
+?>
