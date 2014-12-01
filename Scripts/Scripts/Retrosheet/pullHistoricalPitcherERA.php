@@ -17,9 +17,17 @@ const ERA_100 = 100;
 
 $playerSeason = array();
 $playerCareer = array();
-$seasonPlayers = array();
 $seasonInnings = array();
 $careerInnings = array();
+$seasonPlayers = array(
+    '0' => array(),
+    '-1' => array(),
+    '-2' => array(),
+    '-3' => array(),
+    '-4' => array()
+);
+$seasonRoster = array();
+$startingPitchers = array();
 
 function convertRetroDateToDs($season, $date) {
     $month = substr($date, 0, 2);
@@ -28,57 +36,202 @@ function convertRetroDateToDs($season, $date) {
     return $ds;
 }
 
-// Set initial values for the cumulative arrays if not already set.
-function initializePlayerArray(
-    $player_id,
-    $player_name = null,
-    $player_hand = null
-) {
-    global $playerSeason, $playerCareer, $seasonPlayers;
-    if (!in_array($player_id, $seasonPlayers)) {
-        $seasonPlayers[] = $player_id;
+function getTestData($year) {
+    $pitcher_sql = "
+        SELECT pit_id as pitcher
+        FROM events
+        WHERE season = 1950
+        ORDER BY RAND()
+        LIMIT 1000";
+    $pitchers = exe_sql(DATABASE, $pitcher_sql);
+    $pitchers = index_by($pitchers, 'pitcher');
+    $test_pitchers = implode("','",array_keys($pitchers));
+    $sql = "
+       SELECT pit_id,
+        CASE WHEN min_inn = 1 THEN 'starter'
+             ELSE 'reliever'
+             END AS pitcher_type,
+         sum(outs) AS total_outs,
+         sum(outs)/3 AS innings,
+         avg(outs)/3 as avg_innings,
+         avg(min_inn) AS avg_entry_inning
+       FROM
+          (SELECT pit_id,
+                  game_id,
+                  min(inn_ct) AS min_inn,
+                  sum(event_outs_ct) AS outs,
+                  substr(game_id,8,4) AS DAY
+           FROM events
+           WHERE pit_id in('$test_pitchers')
+             AND season <= $year
+           GROUP BY pit_id,
+                    game_id,
+                    substr(game_id,8,4)) a
+        WHERE outs > 0
+        GROUP BY pit_id,
+                CASE WHEN min_inn = 1 THEN 'starter'
+                ELSE 'reliever' END";
+    $data = exe_sql(DATABASE, $sql);
+    $data = index_by($data, 'pit_id');
+    $final_data = array();
+    foreach ($data as $pitcher_name => $pitcher) {
+        if ($pitcher['pitcher_type'] == 'starter') {
+            $final_data['starter'][$pitcher_name] = $pitcher;
+        } else {
+            $final_data['reliever'][$pitcher_name] = $pitcher;
+        }
     }
-    $player_name = $player_name ? format_for_mysql($player_name) : null;
-    $initial_stats = array(
-        'player_id' => $player_id,
-        'player_name' => $player_name,
-        'hand' => $player_hand,
-        'innings' => 0,
-        'era' => 0,
-        'outs' => 0,
-        'earned_runs' => 0,
-    );
-    if (!isset($playerSeason[$player_id])) {
-        $playerSeason[$player_id] = $initial_stats;
-    }
-    if (!isset($playerCareer[$player_id])) {
-        $playerCareer[$player_id] = $initial_stats;
-    }
-    // Check to see if player_name and player_hand need to be filled in.
-    if ($player_name && !isset($playerSeason[$player_id]['player_name'])) {
-        $playerSeason[$player_id]['player_name'] = $player_name;
-        $playerSeason[$player_id]['hand'] = $player_hand;
-    }
-    if ($player_name && !isset($playerCareer[$player_id]['player_name'])) {
-        $playerCareer[$player_id]['player_name'] = $player_name;
-        $playerCareer[$player_id]['hand'] = $player_hand;
+    return $final_data;
+}
+
+function verifyTestData($test_data, $season, $retro_ds) {
+    global $playerCareer;
+    if ($season == 1951 && $retro_ds == '1003') {
+        foreach ($test_data as $type => $test_pitcher) {
+            if ($type == 'starter') {
+                foreach ($test_pitcher as $pitcher_name => $pitcher) {
+                    if ($pitcher['total_outs'] !=
+                        $playerCareer[$pitcher_name]['starter_outs']) {
+                        print_r($pitcher);
+                        print_r($playerCareer[$pitcher_name]);
+                        exit('TEST FAILED - STARTER');
+                    } elseif (number_format($pitcher['avg_innings'], 2) !=
+                        $playerCareer[$pitcher_name]['avg_innings_starter']) {
+                        print_r($pitcher);
+                        print_r($playerCareer[$pitcher_name]);
+                        exit('TEST FAILED - STARTER AVG INNINGS');
+                    }
+                }
+            } else {
+                foreach ($test_pitcher as $pitcher_name => $pitcher) {
+                    if ($pitcher['total_outs'] !=
+                        $playerCareer[$pitcher_name]['reliever_outs']) {
+                        print_r($pitcher);
+                        print_r($test_data['starter'][$pitcher_name]);
+                        print_r($playerCareer[$pitcher_name]);
+                        exit('TEST FAILED - RELIEVER');
+                    } elseif (number_format($pitcher['avg_innings'], 2) !=
+                        $playerCareer[$pitcher_name]['avg_innings_reliever']) {
+                        print_r($pitcher);
+                        print_r($playerCareer[$pitcher_name]);
+                        exit('TEST FAILED - RELIEVER AVG INNINGS');
+                    }
+                }
+            }
+        }
+        exit('TEST SUCCEEED');
     }
 }
 
-function updateCalculatedERA($player_id) {
-    global $playerSeason, $playerCareer;
-    $season_ip = $playerSeason[$player_id]['outs'] / 3;
-    $career_ip = $playerCareer[$player_id]['outs'] / 3;
-    $season_era =
-        $season_ip ?
-        $playerSeason[$player_id]['earned_runs'] / $season_ip * 9 : INF_ERA;
-    $career_era =
-        $career_ip ?
-        $playerCareer[$player_id]['earned_runs'] / $career_ip * 9 : INF_ERA;
-    $playerSeason[$player_id]['innings'] = number_format($season_ip, 2);
-    $playerCareer[$player_id]['innings'] = number_format($career_ip, 2);
-    $playerSeason[$player_id]['era'] = number_format($season_era, 2);
-    $playerCareer[$player_id]['era'] = number_format($career_era, 2);
+function updateSeasonVars($season, $season_vars) {
+    if ($season > $season_vars['start_script']) {
+        $season_vars['previous_end'] =
+            ds_modify($season_vars['current_end'], '+1 day');
+        $season_vars['previous'] = $season - 1;
+    }
+    $season_sql =
+        "SELECT min(substr(game_id,8,4)) as start,
+            max(substr(game_id,8,4)) as end,
+            season
+        FROM events
+        WHERE season = '$season'
+        GROUP BY season";
+    $season_dates = exe_sql(DATABASE, $season_sql);
+    $season_vars['current_start'] =
+        convertRetroDateToDs($season, $season_dates['start']);
+    $season_vars['current_end'] =
+        convertRetroDateToDs($season, $season_dates['end']);
+    return $season_vars;
+}
+
+function updateSeasonPlayers() {
+    global $seasonPlayers;
+    $seasonPlayers['-4'] = $seasonPlayers['-3'] ?: array();
+    $seasonPlayers['-3'] = $seasonPlayers['-2'] ?: array();
+    $seasonPlayers['-2'] = $seasonPlayers['-1'] ?: array();
+    $seasonPlayers['-1'] = $seasonPlayers['0'] ?: array();
+    $seasonPlayers['0'] = array();
+}
+
+function updateSeasonRoster($season) {
+    global $seasonRoster;
+    $seasonRoster = null;
+    $sql = "SELECT min(team_id) as team_id,
+            0 as is_pitcher,
+            player_id,
+            last_name_tx,
+            first_name_tx,
+            bat_hand_cd,
+            pit_hand_cd
+        FROM rosters
+        WHERE year_id = $season
+        GROUP BY player_id,
+            last_name_tx,
+            first_name_tx,
+            bat_hand_cd,
+            pit_hand_cd";
+    $season_data = exe_sql(DATABASE, $sql);
+    $seasonRoster = index_by($season_data, 'player_id');
+}
+
+function pullPitchingData($season, $date) {
+    $data = null;
+    $sql =
+        "SELECT lower(concat(c.first, '_', c.last)) AS player_name,
+           CASE
+               WHEN bat_home_id = 1 THEN away_team_id
+               ELSE home_team_id
+           END as team,
+           event_id,
+           game_id,
+           inn_ct as inning,
+           pit_hand_cd as hand,
+           event_outs_ct,
+           CASE
+               WHEN bat_dest_id = 4 THEN 'ER'
+               ELSE 'NR'
+           END AS bat_dest_id,
+           CASE
+               WHEN run1_dest_id = 4 THEN 'ER'
+               ELSE 'NR'
+           END AS run1_dest_id,
+           CASE
+               WHEN run2_dest_id = 4 THEN 'ER'
+               ELSE 'NR'
+           END AS run2_dest_id,
+           CASE
+               WHEN run3_dest_id = 4 THEN 'ER'
+               ELSE 'NR'
+           END AS run3_dest_id,
+           pit_id AS bat_resp_pit_id,
+           run1_resp_pit_id,
+           run2_resp_pit_id,
+           run3_resp_pit_id
+        FROM events a
+        LEFT OUTER JOIN id c ON a.pit_id = c.id
+        WHERE season = '$season'
+        AND (event_outs_ct > 0
+            OR bat_dest_id = 4
+            OR run1_dest_id = 4
+            OR run2_dest_id = 4
+            OR run3_dest_id = 4
+            OR event_id = 1)
+        AND substr(game_id,8,4) = '$date'
+        ORDER BY game_id, event_id";
+    $data = exe_sql(DATABASE, $sql);
+    return $data;
+}
+
+function updatePlayerCareer($season, $ds) {
+    global $playerCareer;
+    unset($playerCareer);
+    $player_last_season_career = exe_sql(DATABASE,
+        "SELECT *
+        FROM retrosheet_historical_eras_career
+        WHERE season = '$season'
+        AND ds = '$ds'"
+    );
+    $playerCareer = index_by($playerCareer, 'player_id');
 }
 
 function updateAverageInnings($stat) {
@@ -88,7 +241,7 @@ function updateAverageInnings($stat) {
     $inning = $stat['inning'];
     $outs = $stat['event_outs_ct'];
     if (!isset($seasonInnings[$player_id][$game_id]['player_id'])) {
-        $starter = $inning == 1 && !$stat['outs_ct'] ? 1 : 0;
+        $starter = $inning == 1 ? 1 : 0;
         $initialized_data = array(
             'player_id' => $player_id,
             'starter' => $starter,
@@ -116,148 +269,179 @@ function updateAverageInnings($stat) {
     }
 }
 
-function updateEventOuts($game_stat) {
-    global $playerSeason, $playerCareer;
-    $player_id = $game_stat['bat_resp_pit_id'];
-    $player_name = $game_stat['player_name'];
-    $player_hand = $game_stat['hand'];
-    initializePlayerArray($player_id, $player_name, $player_hand);
-    $outs = $game_stat['event_outs_ct'];
-    $playerSeason[$player_id]['outs'] += $outs;
-    $playerCareer[$player_id]['outs'] += $outs;
-    updateAverageInnings($game_stat);
-    updateCalculatedERA($player_id);
+function initializePlayerArray(
+    $player_id,
+    $player_name = null,
+    $player_hand = null,
+    $starter = null
+) {
+    global $playerSeason, $playerCareer, $startingPitchers, $seasonPlayers;
+
+    $initial_stats = array(
+        'player_id' => $player_id,
+        'player_name' => $player_name,
+        'hand' => $player_hand,
+        'games' => 0,
+        'starts' => 0,
+        'pct_start' => 0,
+        'starter_era' => null,
+        'starter_outs' => 0,
+        'starter_earned_runs' => 0,
+        'reliever_era' => null,
+        'reliever_outs' => 0,
+        'reliever_earned_runs' => 0,
+        'overall_era' => null,
+        'overall_earned_runs' => 0
+    );
+
+    if (!in_array($player_id, $seasonPlayers['0'])) {
+        $seasonPlayers['0'][] = $player_id;
+    }
+
+    if (!$startingPitchers[$player_id]) {
+        $startingPitchers[$player_id] =
+            $starter ? 'starter' : 'reliever';
+    }
+
+    $playerSeason[$player_id] =
+        $playerSeason[$player_id] ?
+        $playerSeason[$player_id] : $initial_stats;
+
+    $playerCareer[$player_id] =
+        $playerCareer[$player_id] ?
+        $playerCareer[$player_id] : $initial_stats;
+
+    // If a pitcher allows a run before his first out he won't have his
+    // name or hand filled in. Account for this case.
+    if ($player_name && !$playerSeason[$player_id]['player_name']) {
+        $playerSeason[$player_id]['player_name'] = $player_name;
+        $playerSeason[$player_id]['hand'] = $player_hand;
+        $playerCareer[$player_id]['player_name'] = $player_name;
+        $playerCareer[$player_id]['hand'] = $player_hand;
+    }
 }
 
-function updateEventRuns($runs_pitcher, $run_type) {
-    global $playerSeason, $playerCareer;
-    initializePlayerArray($runs_pitcher);
-    switch ($run_type) {
-        case "ER":
-            $playerSeason[$runs_pitcher]['earned_runs'] += 1;
-            $playerCareer[$runs_pitcher]['earned_runs'] += 1;
-            break;
+function updateEventOuts($game_stat) {
+    global $playerSeason, $playerCareer, $startingPitchers;
+    $player_id = $game_stat['bat_resp_pit_id'];
+    $player_name = $game_stat['player_name'];
+    $player_name = $player_name ? format_for_mysql($player_name) : null;
+    $player_hand = $game_stat['hand'];
+    $starter = $game_stat['inning'] == 1 ? 1 : 0;
+    initializePlayerArray($player_id, $player_name, $player_hand, $starter);
+    $pitcher_type = $startingPitchers[$player_id];
+    $outs = $game_stat['event_outs_ct'];
+    $playerSeason[$player_id][$pitcher_type.'_outs'] += $outs;
+    $playerCareer[$player_id][$pitcher_type.'_outs'] += $outs;
+    updateAverageInnings($game_stat);
+}
+
+function updateEventRuns($runs_pitcher, $starter) {
+    global $playerSeason, $playerCareer, $startingPitchers;
+    initializePlayerArray($runs_pitcher, null, null, $starter);
+    $pitcher_type = $startingPitchers[$runs_pitcher];
+    $playerSeason[$runs_pitcher][$pitcher_type.'_earned_runs'] += 1;
+    $playerCareer[$runs_pitcher][$pitcher_type.'_earned_runs'] += 1;
+}
+
+function checkTeamRoster($game_stat) {
+    global $seasonRoster;
+    $player_id = $game_stat['bat_resp_pit_id'];
+    $team = $game_stat['team'];
+    $is_pitcher = $seasonRoster[$player_id]['is_pitcher'];
+    if ($seasonRoster[$player_id]['team_id'] != $team) {
+        $seasonRoster[$player_id]['team_id'] = $team;
     }
-    updateCalculatedERA($runs_pitcher);
+    if (!$is_pitcher) {
+        $seasonRoster[$player_id]['is_pitcher'] = 1;
+        $seasonRoster[$player_id]['first_name_tx'] =
+            format_for_mysql($seasonRoster[$player_id]['first_name_tx']);
+        $seasonRoster[$player_id]['last_name_tx'] =
+            format_for_mysql($seasonRoster[$player_id]['last_name_tx']);
+    }
 }
 
 function updateDailyStats($game_stat) {
+    // Check to see if player has been traded since Retrosheet
+    // only updates rosters once a season.
+    checkTeamRoster($game_stat);
     // Update pitcher outs seperately from runs since the runs
     // could be earned by a different pitcher.
     if ($game_stat['event_outs_ct'] > 0) {
         updateEventOuts($game_stat);
     }
+    $starter = $game_stat['inning'] == 1 ? 1 : 0;
     $batter_dest = $game_stat['bat_dest_id'];
     $runner1_dest = $game_stat['run1_dest_id'];
     $runner2_dest = $game_stat['run2_dest_id'];
     $runner3_dest = $game_stat['run3_dest_id'];
     // Use seperate if statements since multiple runners
     // can score per play.
-    if ($batter_dest !== 'NR') {
+    if ($batter_dest == 'ER') {
         $runs_pitcher = $game_stat['bat_resp_pit_id'];
-        updateEventRuns($runs_pitcher, $batter_dest);
+        updateEventRuns($runs_pitcher, $starter);
     }
-    if ($runner1_dest !== 'NR') {
+    if ($runner1_dest == 'ER') {
         $runs_pitcher = $game_stat['run1_resp_pit_id'];
-        updateEventRuns($runs_pitcher, $runner1_dest);
+        updateEventRuns($runs_pitcher, $starter);
     }
-    if ($runner2_dest !== 'NR') {
+    if ($runner2_dest == 'ER') {
         $runs_pitcher = $game_stat['run2_resp_pit_id'];
-        updateEventRuns($runs_pitcher, $runner2_dest);
+        updateEventRuns($runs_pitcher, $starter);
     }
-    if ($runner3_dest !== 'NR') {
+    if ($runner3_dest == 'ER') {
         $runs_pitcher = $game_stat['run3_resp_pit_id'];
-        updateEventRuns($runs_pitcher, $runner3_dest);
+        updateEventRuns($runs_pitcher, $starter);
     }
 }
 
-function getSeasonStartEnd($season) {
-    $season_sql =
-        "SELECT min(substr(game_id,8,4)) as start,
-            max(substr(game_id,8,4)) as end,
-            season
-        FROM events
-        WHERE season = '$season'
-        GROUP BY season";
-    $season_dates = exe_sql(DATABASE, $season_sql);
-    $season_start = convertRetroDateToDs($season, $season_dates['start']);
-    $season_end = convertRetroDateToDs($season, $season_dates['end']);
-    return array($season_start, $season_end);
-}
+function calculate_era($player, $type) {
+    $starter = 0;
+    $reliever = 0;
+    switch ($type) {
+        case 'starter':
+            $starter = 1;
+            break;
+        case 'reliever':
+            $reliever = 1;
+            break;
+        case 'overall':
+            $starter = 1;
+            $reliever = 1;
+            break;
+    }
+    $innings =
+        (($starter * $player['starter_outs']) +
+        ($reliever * $player['reliever_outs'])) / 3;
+    $runs =
+        ($starter * $player['starter_earned_runs']) +
+        ($reliever * $player['reliever_earned_runs']);
+    if (!$innings && !$runs) {
+        $era = null;
+    } else {
+        $era = $innings ? $runs / $innings * 9 : INF_ERA;
+    }
 
-function pullPitchingData($season, $date) {
-    $data = null;
-    $sql =
-        "SELECT lower(concat(c.first, '_', c.last)) AS player_name,
-           game_id,
-           inn_ct as inning,
-           outs_ct,
-           pit_hand_cd as hand,
-           event_outs_ct,
-           CASE
-               WHEN bat_dest_id = 4 THEN 'ER'
-               WHEN bat_dest_id in(5,6) THEN 'UER'
-               ELSE 'NR'
-           END AS bat_dest_id,
-           CASE
-               WHEN run1_dest_id = 4 THEN 'ER'
-               WHEN run1_dest_id in(5,6) THEN 'UER'
-               ELSE 'NR'
-           END AS run1_dest_id,
-           CASE
-               WHEN run2_dest_id = 4 THEN 'ER'
-               WHEN run2_dest_id in(5,6) THEN 'UER'
-               ELSE 'NR'
-           END AS run2_dest_id,
-           CASE
-               WHEN run3_dest_id = 4 THEN 'ER'
-               WHEN run3_dest_id in(5,6) THEN 'UER'
-               ELSE 'NR'
-           END AS run3_dest_id,
-           pit_id AS bat_resp_pit_id,
-           run1_resp_pit_id,
-           run2_resp_pit_id,
-           run3_resp_pit_id
-        FROM events a
-        JOIN id c ON a.pit_id = c.id
-        WHERE season = '$season'
-        AND (event_outs_ct > 0
-            OR bat_dest_id in(4,5,6)
-            OR run1_dest_id in(4,5,6)
-            OR run2_dest_id in(4,5,6)
-            OR run3_dest_id in(4,5,6))
-        AND substr(game_id,8,4) = '$date'
-        ORDER BY event_id";
-    $data = exe_sql(DATABASE, $sql);
-    return $data;
-}
-
-function updatePlayerCareer($season, $ds) {
-    global $playerCareer;
-    $playerCareer = null;
-    $player_last_season_career = exe_sql(DATABASE,
-        "SELECT *
-        FROM retrosheet_historical_eras_career
-        WHERE season = '$season'
-        AND ds = '$ds'"
+    return array(
+        format_double($innings, 2),
+        format_double($runs, 2),
+        format_double($era, 2)
     );
-    foreach ($player_last_season_career as $stat) {
-        $player_id = $stat['player_id'];
-        $playerCareer[$player_id] = $stat;
-    }
 }
 
 function calculate_innings_pitched($season_data, $innings_data) {
     $innings_pitched = array();
     foreach ($innings_data as $player_id => $player_data) {
-        if (!$innings_pitched[$player_id]) {
+        if (!isset($innings_pitched[$player_id])) {
             $innings_pitched[$player_id] = array(
                 'player_id' => $player_id,
                 'starts' => 0,
                 'games' => 0,
                 'outs_as_starter' => 0,
                 'outs_as_reliever' => 0,
-                'reliever_entry_inning' => 0
+                'avg_innings_starter' => null,
+                'avg_innings_reliever' => null,
+                'reliever_entry_inning' => null
             );
         }
         foreach ($player_data as $game_id => $game_data) {
@@ -275,22 +459,22 @@ function calculate_innings_pitched($season_data, $innings_data) {
         $games = $pitcher['games'];
         $starts = $pitcher['starts'];
         $relief_starts = $games - $starts;
-        $season_data[$pitcher_id]['games_pitched'] = $games;
+        $season_data[$pitcher_id]['games'] = $games;
         $season_data[$pitcher_id]['starts'] = $starts ? $starts : 0;
-        $season_data[$pitcher_id]['pct_start'] = $starts ?
-            number_format($starts / $games, 2) : 0;
+        $season_data[$pitcher_id]['pct_start'] =
+            format_double($starts ? $starts / $games : 0, 2);
         if ($starts) {
             $season_data[$pitcher_id]['avg_innings_starter'] =
-                number_format($pitcher['outs_as_starter'] / 3 / $starts, 2);
+                format_double($pitcher['outs_as_starter'] / 3 / $starts, 2);
         }
         if ($relief_starts) {
             $season_data[$pitcher_id]['avg_innings_reliever'] =
-                number_format(
+                format_double(
                     $pitcher['outs_as_reliever'] / 3 / $relief_starts,
                     2
                 );
             $season_data[$pitcher_id]['avg_relief_entry_inning'] =
-                number_format(
+                format_double(
                     $pitcher['reliever_entry_inning'] / $relief_starts,
                     2
                 );
@@ -300,130 +484,255 @@ function calculate_innings_pitched($season_data, $innings_data) {
     return $season_data;
 }
 
-function calculate_era_buckets($daily_stats) {
-    $eras = array();
-    foreach ($daily_stats as $player) {
-        $eras[] = $player['era'];
+function add_player_bucket(
+    $player_name,
+    $daily_stats,
+    $era_25,
+    $era_50,
+    $era_75,
+    $pitcher_type
+) {
+    $player_era = $daily_stats[$player_name][$pitcher_type.'_era'];
+    switch (true) {
+        case $player_era >= $era_75[$pitcher_type]:
+            $daily_stats[$player_name][$pitcher_type.'_bucket'] = ERA_100;
+            break;
+        case $player_era >= $era_50[$pitcher_type]:
+            $daily_stats[$player_name][$pitcher_type.'_bucket'] = ERA_75;
+            break;
+        case $player_era >= $era_25[$pitcher_type]:
+            $daily_stats[$player_name][$pitcher_type.'_bucket'] = ERA_50;
+            break;
+        case $player_era < $era_25[$pitcher_type]:
+            $daily_stats[$player_name][$pitcher_type.'_bucket'] = ERA_25;
+            break;
     }
-    sort($eras);
-    $era_divider = count($eras) / 4;
-    $era_25 = $eras[$era_divider];
-    $era_50 = $eras[$era_divider * 2];
-    $era_75 = $eras[$era_divider * 3];
+    return $daily_stats;
+}
+
+function playedRecently($name) {
+    global $seasonPlayers;
+    $played_0 = in_array($name, $seasonPlayers['0']);
+    $played_1 = in_array($name, $seasonPlayers['-1']);
+    $played_2 = in_array($name, $seasonPlayers['-2']);
+    $played_3 = in_array($name, $seasonPlayers['-3']);
+    $played_4 = in_array($name, $seasonPlayers['-4']);
+    if (!($played_0 || $played_1 || $played_2 || $played_3 || $played_4)) {
+        return false;
+    }
+    return true;
+}
+
+function calculate_era_buckets($daily_stats) {
+    $overall_eras = array();
+    $starter_eras = array();
+    $reliever_eras = array();
+    foreach ($daily_stats as $player) {
+        $overall_eras[] = $player['overall_era'];
+        if (isset($player['starter_era'])) {
+            $starter_eras[] = $player['starter_era'];
+        }
+        if (isset($player['reliever_era'])) {
+            $reliever_eras[] = $player['reliever_era'];
+        }
+    }
+    sort($starter_eras);
+    sort($reliever_eras);
+    sort($overall_eras);
+    $starter_era_divider = count($starter_eras) / 4;
+    $reliever_era_divider = count($reliever_eras) / 4;
+    $overall_era_divider = count($overall_eras) / 4;
+    $era_25 = array(
+        'overall' => $overall_eras[$overall_era_divider],
+        'starter' => $starter_eras[$starter_era_divider],
+        'reliever' => $reliever_eras[$reliever_era_divider]
+    );
+    $era_50 = array(
+        'overall' => $overall_eras[$overall_era_divider * 2],
+        'starter' => $starter_eras[$starter_era_divider * 2],
+        'reliever' => $reliever_eras[$reliever_era_divider * 2]
+    );
+    $era_75 = array(
+        'overall' => $overall_eras[$overall_era_divider * 3],
+        'starter' => $starter_eras[$starter_era_divider * 3],
+        'reliever' => $reliever_eras[$reliever_era_divider * 3]
+    );
     foreach ($daily_stats as $player_name => $player) {
-        $player_era = $player['era'];
-        switch (true) {
-            case $player_era < $era_25:
-                $daily_stats[$player_name]['bucket'] = ERA_25;
-                break;
-            case $player_era >= $era_25 && $player_era < $era_50:
-                $daily_stats[$player_name]['bucket'] = ERA_50;
-                break;
-            case $player_era >= $era_50 && $player_era < $era_75:
-                $daily_stats[$player_name]['bucket'] = ERA_75;
-                break;
-            case $player_era >= $era_75:
-                $daily_stats[$player_name]['bucket'] = ERA_100;
-                break;
+        $daily_stats = add_player_bucket(
+            $player_name,
+            $daily_stats,
+            $era_25,
+            $era_50,
+            $era_75,
+            'overall'
+        );
+        if (isset($player['starter_era'])) {
+            $daily_stats = add_player_bucket(
+                $player_name,
+                $daily_stats,
+                $era_25,
+                $era_50,
+                $era_75,
+                'starter'
+            );
         }
     }
     return $daily_stats;
 }
 
-// Prompt user to confirm since this will overwrite a full seasons' data.
-echo "\n"."Are you sure you want to overwrite historical data? (y/n) ";
-$handle = fopen("php://stdin","r");
-$confirm = trim(fgets($handle));
-if ($confirm !== 'y') {
-    exit();
+function updateCalculatedERA($player_id) {
+    global $playerSeason, $playerCareer;
+    list(
+        $playerSeason[$player_id]['starter_innings'],
+        $playerSeason[$player_id]['starter_earned_runs'],
+        $playerSeason[$player_id]['starter_era']
+    ) = calculate_era($playerSeason[$player_id], 'starter');
+    list(
+        $playerCareer[$player_id]['starter_innings'],
+        $playerCareer[$player_id]['starter_earned_runs'],
+        $playerCareer[$player_id]['starter_era']
+    ) = calculate_era($playerCareer[$player_id], 'starter');
+    list(
+        $playerSeason[$player_id]['reliever_innings'],
+        $playerSeason[$player_id]['reliever_earned_runs'],
+        $playerSeason[$player_id]['reliever_era']
+    ) = calculate_era($playerSeason[$player_id], 'reliever');
+    list(
+        $playerCareer[$player_id]['reliever_innings'],
+        $playerCareer[$player_id]['reliever_earned_runs'],
+        $playerCareer[$player_id]['reliever_era']
+    ) = calculate_era($playerCareer[$player_id], 'reliever');
+    list(
+        $playerSeason[$player_id]['overall_innings'],
+        $playerSeason[$player_id]['overall_earned_runs'],
+        $playerSeason[$player_id]['overall_era']
+    ) = calculate_era($playerSeason[$player_id], 'overall');
+
+    list(
+        $playerCareer[$player_id]['overall_innings'],
+        $playerCareer[$player_id]['overall_earned_runs'],
+        $playerCareer[$player_id]['overall_era']
+    ) = calculate_era($playerCareer[$player_id], 'overall');
 }
 
+//// TESTING ////
+// This is my "unit test"...don't hate
+$test = false;
+if ($test) {
+    $year = 1951;
+    $test_data = getTestData($year);
+    echo "TEST RUN..... \n";
+}
+/////////////////
+
 $colheads = array(
-    'player_name' => '?',
     'player_id' => '!',
+    'player_name' => '?',
     'hand' => '?',
-    'innings' => '!',
-    'era' => '!',
-    'bucket' => '!',
-    'outs' => '!',
-    'earned_runs' => '!',
+    'games' => '!',
+    'starts' => '!',
+    'pct_start' => '!',
+    'overall_era' => '!',
+    'starter_era' => '?',
+    'reliever_era' => '?',
+    'overall_bucket' => '!',
+    'starter_bucket' => '?',
+    'overall_innings' => '!',
+    'starter_innings' => '?',
+    'reliever_innings' => '?',
+    'avg_innings_starter' => '?',
+    'avg_innings_reliever' => '?',
+    'avg_relief_entry_inning' => '?',
+    'reliever_earned_runs' => '?',
     'season' => '!',
     'ds' => '!'
 );
-$season_start = null;
-$season_end = null;
-$previous_season_players = array(
-    "-1" => array(),
-    "-2" => array(),
-    "-3" => array(),
-    "-4" => array()
+$roster_colheads = array(
+    'team_id',
+    'player_id',
+    'last_name_tx',
+    'first_name_tx',
+    'bat_hand_cd',
+    'pit_hand_cd',
+    'season',
+    'ds'
 );
-$daily_table = 'retrosheet_historical_eras';
+
+$season_vars = array(
+    'start_script' => 1950,
+    'end_script' => 2014,
+    'current_start' => null,
+    'current_end' => null,
+    'previous' => null,
+    'previous_end' => null
+);
+$roster_table = 'retrosheet_historical_pitching_rosters';
+$season_table = 'retrosheet_historical_eras';
 $career_table = 'retrosheet_historical_eras_career';
 
-for ($season = 1950; $season < 2014; $season++) {
-    if ($season > 1950) {
-        $previous_season_end = ds_modify($season_end, '+1 day');
-        $previous_season = $season - 1;
-        // There won't be a -4/-3, etc. the first few seasons.
-        $previous_season_players["-4"] = $previous_season_players["-3"]
-            ?: array();
-        $previous_season_players["-3"] = $previous_season_players["-2"]
-            ?: array();
-        $previous_season_players["-2"] = $previous_season_players["-1"]
-            ?: array();
-        $previous_season_players["-1"] = $seasonPlayers;
-        $seasonPlayers = array();
-    } else {
-        $previous_season_end = null;
-        $previous_season = null;
-    }
-    list($season_start, $season_end) = getSeasonStartEnd($season);
-    // For the start of each season, update the career table of
-    // the players who played in previous seasons and insert them
-    // in that current season's table. Also reset playerSeason.
-    $playerSeason = null;
-    $seasonInnings = null;
-    if ($previous_season) {
-        updatePlayerCareer($previous_season, $previous_season_end);
+for ($season = $season_vars['start_script'];
+    $season < $season_vars['end_script'];
+    $season++) {
+
+    $season_vars = updateSeasonVars($season, $season_vars);
+    unset($playerSeason, $seasonInnings);
+    updateSeasonPlayers();
+    updateSeasonRoster($season);
+    if ($season_vars['previous']) {
+        updatePlayerCareer(
+            $season_vars['previous'],
+            $season_vars['previous_end']
+        );
         $player_career_daily_insert = array();
         foreach ($playerCareer as $stat) {
-                $stat['season'] = $season;
-                $stat['ds'] = $season_start;
-                $player_career_daily_insert[] = $stat;
+            $stat['season'] = $season;
+            $stat['ds'] = $season_vars['current_start'];
+            $player_career_daily_insert[] = $stat;
         }
-        multi_insert(DATABASE, $career_table, $player_career_daily_insert, $colheads);
+        if (!$test) {
+            multi_insert(
+                DATABASE,
+                $career_table,
+                $player_career_daily_insert,
+                $colheads
+            );
+        }
     }
-    for ($ds = $season_start; $ds <= $season_end;
+
+    for ($ds = $season_vars['current_start'];
+        $ds <= $season_vars['current_end'];
         $ds = ds_modify($ds, '+1 day')) {
         echo $ds."\n";
         $retro_ds = return_between($ds, "-", "-", EXCL).substr($ds, -2);
-        // Enter today's game data into tomorrow's ds (as if we pulled at 12am)
+        // For MySQL insert we'll use the following day to simulate pulling
+        // data at 12am the night before.
         $entry_ds = ds_modify($ds, '+1 day');
         $daily_stats = pullPitchingData($season, $retro_ds);
         if ($daily_stats) {
             foreach ($daily_stats as $game_stat) {
+                if ($game_stat['event_id'] == 1) {
+                    unset($startingPitchers);
+                }
                 updateDailyStats($game_stat);
             }
         }
-        $playerSeason = calculate_era_buckets($playerSeason);
-        $playerCareer = calculate_era_buckets($playerCareer);
+        foreach ($playerSeason as $player_id => $stats) {
+            updateCalculatedERA($player_id);
+        }
         $playerSeason =
             calculate_innings_pitched($playerSeason, $seasonInnings);
         $playerCareer =
             calculate_innings_pitched($playerCareer, $careerInnings);
+        $playerSeason = calculate_era_buckets($playerSeason);
+        $playerCareer = calculate_era_buckets($playerCareer);
+
         // Prep the tables for daily insertion into mysql.
         $player_season_daily_insert = array();
         $player_career_daily_insert = array();
+        $roster_daily_insert = array();
         foreach ($playerCareer as $name => $stat) {
             // Only insert players who have played in last 5 years.
-            $played_0 = in_array($name, $seasonPlayers);
-            $played_1 = in_array($name, $previous_season_players["-1"]);
-            $played_2 = in_array($name, $previous_season_players["-2"]);
-            $played_3 = in_array($name, $previous_season_players["-3"]);
-            $played_4 = in_array($name, $previous_season_players["-4"]);
-            if (!($played_0 || $played_1 || $played_2
-                || $played_3 || $played_4)) {
+            if (!playedRecently($name)) {
                 continue;
             }
             $stat['ds'] = $entry_ds;
@@ -432,12 +741,41 @@ for ($season = 1950; $season < 2014; $season++) {
             if (isset($playerSeason[$name])) {
                 $playerSeason[$name]['ds'] = $entry_ds;
                 $playerSeason[$name]['season'] = $season;
-                $player_season_daily_insert[] =
-                    $playerSeason[$name];
+                $player_season_daily_insert[] = $playerSeason[$name];
             }
         }
-        multi_insert(DATABASE, $daily_table, $player_season_daily_insert, $colheads);
-        multi_insert(DATABASE, $career_table, $player_career_daily_insert, $colheads);
+        foreach ($seasonRoster as $pitcher) {
+            if (!$pitcher['is_pitcher']) {
+                continue;
+            }
+            $pitcher['season'] = $season;
+            $pitcher['ds'] = $entry_ds;
+            $roster_daily_insert[] = $pitcher;
+        }
+
+        if ($test) {
+            verifyTestData($test_data, $season, $retro_ds);
+        } else {
+            multi_insert(
+                DATABASE,
+                $roster_table,
+                $roster_daily_insert,
+                $roster_colheads
+            );
+            multi_insert(
+                DATABASE,
+                $season_table,
+                $player_season_daily_insert,
+                $colheads
+            );
+            multi_insert(
+                DATABASE,
+                $career_table,
+                $player_career_daily_insert,
+                $colheads
+            );
+        }
+
     }
 }
 
