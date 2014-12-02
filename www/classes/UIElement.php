@@ -1,6 +1,6 @@
 <?php
 
-include_once '../includes/functions.php';
+include_once '/Users/baseball/Git/smas/Baseball/www/includes/functions.php';
 
 abstract class UIElement {
 

@@ -4,14 +4,16 @@ include_once 'UOList.php';
 
 class PageHeader {
 
+    private $loggedIn;
     private $title;
     private $subtitle;
 
-    public function __construct($logged_in = true, $title = null, $subtitle = null) {
+    public function __construct($logged_in, $title = null, $subtitle = null) {
+        $this->loggedIn = $logged_in;
         $this->title = $title;
         $this->subtitle = $subtitle;
 
-        if ($logged_in) {
+        if ($logged_in && !$title) {
             $this->fetchData();
         }
 
@@ -20,6 +22,7 @@ class PageHeader {
 
     // Sets up loggedIn header
     public function fetchData() {
+        $date = null;
         if (!$date || $date == date('Y-m-d')) {
             $date = date('Y-m-d');
             $page_title = "Today's Games";
@@ -32,6 +35,7 @@ class PageHeader {
         $past_days = ($m - 4) * 30;
         $season_progress = number_format((($d + $past_days) / 180 * 100), 0);
         $db = 'baseball';
+        $odds_data = null;
         if (!$odds_data) {
             $odds_data = get_data($db, 'locked_odds_2014', $date);
         }
@@ -83,29 +87,24 @@ class PageHeader {
 
     public function display() {
         $html_title =
-            "<font
-                face='verdana'
-                color='white'
-                class='title'
-                size='4'>
+            "<p class='title'>
                 $this->title
-            </font>";
+            </p>";
         $html_subtitle =
-            "<font
-                face='verdana'
-                color='white'
-                size='2'
-                class='title'>
+            "<p class='subtitle'>
                 $this->subtitle
-            </font>";
-        $list = new UOList(array($html_title, $html_subtitle));
+            </p>";
+        $list = new UOList(array($html_title, $html_subtitle), 'alignleft');
         $list = $list->getHTML();
+
+        $logout = $this->loggedIn ?
+            "<a class='logout alignright' href='includes/logout.php'>Logout</a>"
+            : null;
         echo
             "<div class='page_header'>
                 $list
+                $logout
             </div>";
-
-        echo $html;
     }
 }
 

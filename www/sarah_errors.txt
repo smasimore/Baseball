@@ -1,12 +1,35 @@
 
-string - hi jessica
-string - hi jessica
-string - hi jessica
-string - hi jessica
-string - hi jessica
-string - hi jessica
-string - hi jessica
-string - hi jessica
-string - hi jessica
-string - hi jessica
-string - hi jessica
+string - hello
+boolean - 1
+string - hi
+string - ugh
+string - new
+
+boolean -
+boolean -
+boolean - 1
+boolean -
+
+boolean - 1
+boolean -
+boolean - 1
+boolean -
+boolean - 1
+boolean - 1
+boolean - 1
+boolean -
+boolean -
+boolean -
+NULL -
+boolean - 1
+NULL -
+boolean - 1
+boolean -
+boolean -
+boolean -
+boolean -
+boolean -
+boolean -
+boolean -
+boolean -
+boolean -

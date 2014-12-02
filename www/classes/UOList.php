@@ -4,14 +4,16 @@ class UOList {
 
     private $elements;
     private $html;
+    private $class;
 
-    public function __construct($elements) {
+    public function __construct($elements, $class = null) {
         $this->elements = $elements;
+        $this->class = $class;
         $this->setHTML();
     }
 
     public function setHTML() {
-        $html = "<ul>";
+        $html = $this->class ? "<ul class='$this->class'>" : "<ul>";
         foreach ($this->elements as $element) {
             $html .= "<li>$element</li>";
         }

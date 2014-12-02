@@ -1,6 +1,6 @@
 <?php
 include_once 'psl-config.php';
-include_once 'sweetfunctions.php';
+include_once '/Users/baseball/Git/smas/Baseball/Scripts/Include/mysql.php';
  
 function sec_session_start() {
     $session_name = 'sec_session_id';   // Set a custom session name
@@ -200,7 +200,7 @@ function esc_url($url) {
 function s_log($data) {
     $type = "\n" . gettype($data);
     file_put_contents(
-        '../sarah_errors.txt', 
+        '/Users/baseball/Git/smas/Baseball/www/sarah_errors.txt',
         "$type - ", 
         FILE_APPEND
     );
@@ -211,7 +211,7 @@ function s_log($data) {
     }
     if (!is_array($data)) {
         file_put_contents(
-            "../sarah_errors.txt", 
+            "/Users/baseball/Git/smas/Baseball/www/sarah_errors.txt",
             "$data", 
             FILE_APPEND
         );
@@ -219,7 +219,7 @@ function s_log($data) {
     }
     $data = json_encode($data);
     file_put_contents(
-        "../sarah_errors.txt", 
+        "/Users/baseball/Git/smas/Baseball/www/sarah_errors.txt",
         "$data", 
         FILE_APPEND
     );

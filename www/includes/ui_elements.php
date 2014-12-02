@@ -1,5 +1,4 @@
 <?php
-include_once 'sweetfunctions.php';
 
 const LOG_LINES = 10;
 
@@ -579,8 +578,7 @@ function ui_log($name = 'sarah') {
     
     $html = "<div style='height:300px;width:100%;border:3px solid #000000;
         font:16px/26px Georgia, Garamond, Serif;overflow:auto;'>";
-
-    $filename = '../' . $name . '_errors.txt';
+    $filename = '/Users/baseball/Git/smas/Baseball/www/sarah_errors.txt';
     $fp = fopen( $filename, "r+" ) or die("Couldn't open $filename");
     // Empties file
     ftruncate($fp, 0);

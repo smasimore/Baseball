@@ -21,8 +21,9 @@ sec_session_start();
     
             //ui_page_header_odds();
             ui_log($_GET['name']);
-        /*} else { 
-            ui_error_logged_out();
-        }*/ ?>
+        //} else {
+          //  ui_error_logged_out();
+       // }
+       ?>
     </body>
 </html>
