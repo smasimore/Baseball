@@ -1,5 +1,4 @@
 {
   "phabricator.uri" : "http://phabricator.sabertoothventures.com/",
-  "load" : ["/Users/baseball/Phabricator/arcanist/src"],
   "unit.engine" : "BaseballUnitTestEngine"
 }

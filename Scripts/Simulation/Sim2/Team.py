@@ -19,8 +19,9 @@ class Team:
 
     def getBatterStats(self, batter, inning, outs, bases, winning):
         index = str(batter) + str(outs) + str(bases)
-        if self.weightsMutator:
-            self.__setCategoryWeights(inning, outs, bases, winning)
+        if hasattr(self, 'weightsMutator'):
+            if self.weightsMutator:
+                self.__setCategoryWeights(inning, outs, bases, winning)
 
         # If no mutator, can use self.storedBatterStats to speed up this step.
         else:
@@ -44,11 +45,12 @@ class Team:
 
         stacked = self.__calculateStackedBatterStats(weighted_batter_stats)
 
-        if not self.weightsMutator:
-            self.storedBatterStats[index] = {
-                'stacked' : stacked,
-                'unstacked' : weighted_batter_stats
-            }
+        if hasattr(self, 'weightsMutator'):
+            if not self.weightsMutator:
+                self.storedBatterStats[index] = {
+                    'stacked' : stacked,
+                    'unstacked' : weighted_batter_stats
+                }
 
         # Return weighted_batter_stats for logging.
         return (stacked, weighted_batter_stats)
