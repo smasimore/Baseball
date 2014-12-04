@@ -9,12 +9,6 @@ ini_set('mysqli.reconnect', '1');
 include('/Users/constants.php');
 include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
 
-///TODO: (cert) DELETE this once other diff is pushed////
-function format_double($num) {
-    $formatted_num = number_format($num, 2, ".", "");
-    return $formatted_num;
-}
-
 const PCT_START_THRESH = .5;
 $positionMap = array();
 
@@ -48,26 +42,42 @@ function pullPitcherMap($season, $ds) {
             b.games as season_games,
             c.games as career_games,
             b.pct_start as season_pct_start,
-            c.pct_start as career_pct_start
+            c.pct_start as career_pct_start,
+            c.ds
         FROM
-            (SELECT *
+            (SELECT min(team_id) as team_id,
+                player_id,
+                first_name_tx,
+                last_name_tx,
+                bat_hand_cd,
+                pit_hand_cd
             FROM rosters
-            WHERE year_id = $season) a
-        LEFT OUTER JOIN retrosheet_historical_eras b
-        ON a.player_id = b.player_id
-        AND b.season = $season
-        AND b.ds = '$ds'
+            WHERE year_id = $season
+            GROUP BY player_id,
+                first_name_tx,
+                last_name_tx,
+                bat_hand_cd,
+                pit_hand_cd) a
         LEFT OUTER JOIN retrosheet_historical_eras_career c
         ON a.player_id = c.player_id
         AND c.season = $season
-        AND c.ds = '$ds'
+        AND c.ds = '1951-05-16'
+        LEFT OUTER JOIN retrosheet_historical_eras b
+        ON a.player_id = b.player_id
+        AND b.season = $season
+        AND b.ds = c.ds
         LEFT OUTER JOIN retrosheet_historical_pitching_rosters d
         ON a.player_id = d.player_id
         AND d.season = $season
-        AND d.ds = '$ds'";
+        AND d.ds = c.ds";
     $id_map = exe_sql(DATABASE, $sql);
-    $id_map = index_by($id_map, 'player_id');
-    return $id_map;
+    $final_map = array();
+    foreach ($id_map as $data) {
+        $ds = $data['ds'];
+        $player_id = $data['player_id'];
+        $final_map[$ds][$player_id] = $data;
+    }
+    return $final_map;
 }
 
 function pullPositionMap() {
@@ -184,7 +194,7 @@ function calculateERA($runs, $innings) {
     return ($runs / $innings) * 9;
 }
 
-function getRelieverData($pitcher_map, $lineup, $home_away) {
+function getRelieverData($pitcher_map, $lineup, $ds, $home_away) {
     $team = $lineup[$home_away];
     $pitcher_key = 'pitcher_'.substr($home_away, 0, 1);
     $initial_values = array(
@@ -199,7 +209,7 @@ function getRelieverData($pitcher_map, $lineup, $home_away) {
     );
     // Loop through all pitchers (player_map) to find the pitchers
     // on the team that is currently playing.
-    foreach ($pitcher_map as $pitcher) {
+    foreach ($pitcher_map[$ds] as $pitcher) {
         $pitcher_map_team =
             $pitcher['updated_team_id'] ?: $pitcher['team_id'];
         if ($pitcher_map_team == $team
@@ -231,14 +241,18 @@ function getRelieverData($pitcher_map, $lineup, $home_away) {
     $final_pitcher_array = array();
     foreach ($pitchers as $type => $data) {
         $final_pitcher_array[$type.'_era'] =
-            format_double($data['era'] / $data['pitchers'], 2);
+            $data['pitchers'] ?
+            format_double($data['era'] / $data['pitchers'], 2) : 0;
         $final_pitcher_array[$type.'_weighted_era'] =
-            format_double(calculateERA($data['runs'], $data['innings']), 2);
+            $data['innings'] ?
+            format_double(calculateERA($data['runs'], $data['innings']), 2)
+            : null;
     }
     return $final_pitcher_array;
 }
 
 function formatLineups($lineup, $season, $pitcher_map) {
+    $game_id = $lineup['game_id'];
     $game_date = convertRetroDateToDs($season, $lineup['retro_ds']);
     $filled_lineup = array(
         'game_id' => $game_id,
@@ -252,19 +266,37 @@ function formatLineups($lineup, $season, $pitcher_map) {
         'home_team_winner' =>
             $lineup['home_score'] > $lineup['away_score'] ? 1 : 0,
         'pitcher_h' => json_encode(
-            getStartingPitcherArray($pitcher_map[$lineup['pitcher_h']])
+            getStartingPitcherArray(
+                $pitcher_map[$game_date][$lineup['pitcher_h']]
+            )
         ),
         'pitcher_a' => json_encode(
-            getStartingPitcherArray($pitcher_map[$lineup['pitcher_a']])
+            getStartingPitcherArray(
+                $pitcher_map[$game_date][$lineup['pitcher_a']]
+            )
         ),
         'lineup_h' =>
             json_encode(getStartingLineup($lineup, 'home')),
         'lineup_a' =>
             json_encode(getStartingLineup($lineup, 'away')),
         'reliever_h' =>
-            json_encode(getRelieverData($pitcher_map, $lineup, 'home')),
+            json_encode(
+                getRelieverData(
+                    $pitcher_map,
+                    $lineup,
+                    $game_date,
+                    'home'
+                )
+            ),
         'reliever_a' =>
-            json_encode(getRelieverData($pitcher_map, $lineup, 'away'))
+            json_encode(
+                getRelieverData(
+                    $pitcher_map,
+                    $lineup,
+                    $game_date,
+                    'away'
+                )
+            )
     );
     return $filled_lineup;
 }
