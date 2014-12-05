@@ -505,7 +505,7 @@ function scrape_backup($target) {
 function format_double($number, $dec) {
     $type = gettype($number);
     return
-        $type == double ? number_format($number, $dec, ".", "") : $number;
+        $type == 'double' ? number_format($number, $dec, ".", "") : $number;
 }
 
 function getBattingColheads($source_code, $exclude = 'batting_average', $dupe = false)  {
