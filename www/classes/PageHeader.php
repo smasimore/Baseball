@@ -84,7 +84,6 @@ class PageHeader {
         return $this;
     } 
 
-
     public function display() {
         $html_title =
             "<p class='title'>
@@ -94,17 +93,43 @@ class PageHeader {
             "<p class='subtitle'>
                 $this->subtitle
             </p>";
-        $list = new UOList(array($html_title, $html_subtitle), 'alignleft');
-        $list = $list->getHTML();
+        $header_text = new UOList(
+            array($html_title, $html_subtitle),
+            'alignleft'
+        );
+        $header_text = $header_text->getHTML();
 
         $logout = $this->loggedIn ?
-            "<a class='logout alignright' href='includes/logout.php'>Logout</a>"
-            : null;
+            "<a class='logout alignright' href='includes/logout.php'>
+                Logout
+            </a>" :
+            null;
+        $nav = $this->getNav();
+
         echo
-            "<div class='page_header'>
-                $list
-                $logout
+            "<div class='page_nav'>
+                <div class='page_header'>
+                    $header_text
+                    $logout
+                </div>
+                <div style='clear:both;'>
+                    $nav
+                </div>
             </div>";
+    }
+
+    private function getNav() {
+        if (!$this->loggedIn) {
+            return null;
+        }
+
+        $nav = new UOList(
+            array(
+                "<a class='nav_item' href='analysis.php'>Analysis</a>"
+            ),
+            'nav_list'
+        );
+        return $nav->getHTML();
     }
 }
 

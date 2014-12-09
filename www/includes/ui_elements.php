@@ -1,4 +1,5 @@
 <?php
+include_once '/Users/baseball/Git/smas/Baseball/Scripts/Include/mysql.php';
 
 const LOG_LINES = 10;
 
@@ -572,55 +573,4 @@ function ui_player_page($player, $batting_data, $pitching_data) {
     $batting_data = $batting_data[$player]['stats'];
     $pitching_data = $pitching_data[$player];
     // STOPPED HERE - need to render batting and pitching data
-}
-
-function ui_log($name = 'sarah') {
-    
-    $html = "<div style='height:300px;width:100%;border:3px solid #000000;
-        font:16px/26px Georgia, Garamond, Serif;overflow:auto;'>";
-    $filename = '/Users/baseball/Git/smas/Baseball/www/sarah_errors.txt';
-    $fp = fopen( $filename, "r+" ) or die("Couldn't open $filename");
-    // Empties file
-    ftruncate($fp, 0);
-
-    $text = array();
-    while (!feof($fp)) {
-        $line = fgets($fp);
-        $text[] = $line;
-    }
-
-    // Remove empty lines
-    $text = array_values(array_filter($text, "trim"));
-    if (count($text) > LOG_LINES) {
-        $text = array_splice($text, count($text) - LOG_LINES);
-    }
-
-    $html .= "<ul id='error_list' type='none' style='padding: 0;'>";
-
-    $text = array(); 
-    foreach ($text as $i => $row) {
-        $id = "row_$i";
-        if ($i % 2 == 0) {
-            $html .= "<li id=$id class='even_list' style='width=100%;padding:5px;'
-                onclick='highlight($id); update_details($id);'>$row</li>";
-        } else {
-            $html .= "<li id=$id class='odd_list' style='width=100%;padding:5px;'
-                onclick='highlight($id); update_details($id)'>$row</li>";
-        }
-    }
-    $html .= "</ul></div>";
-
-    $html_details = 
-        "<div 
-            id='error_details' 
-            style='margin-top:5px;height:500px;width:100%;border:3px 
-            dashed #ccc;padding-left:5px;margin-right:5px;
-            font:16px/26px Georgia, Garamond, Serif;overflow:auto;
-            background:white; display: none;'
-        />";
-
-    // when click on something update details - needs to be js FILLED element
-    $html .= $html_details;
-
-    echo $html;
 }

@@ -1,7 +1,7 @@
 <?php
 include_once 'includes/db_connect.php';
 include_once 'includes/functions.php';
-include_once 'includes/ui_elements.php';
+include_once 'classes/LogPage.php';
 
 sec_session_start();
 ?>
@@ -17,13 +17,8 @@ sec_session_start();
         <script type="text/JavaScript" src="js/errors.js"></script>
     </head>
         <body class="page">
-        <?php //if (login_check($mysqli) == true) {
-    
-            //ui_page_header_odds();
-            ui_log($_GET['name']);
-        //} else {
-          //  ui_error_logged_out();
-       // }
-       ?>
+        <?php
+            $page = new LogPage(login_check($mysqli), $_GET['name']);
+        ?>
     </body>
 </html>

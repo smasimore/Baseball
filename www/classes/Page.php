@@ -19,19 +19,26 @@ class Page {
     private $loggedIn;
     private $header = null;
 
-    protected function __construct($logged_in, $custom_header) {
+    protected function __construct($logged_in, $custom_header = false) {
         $this->loggedIn = $logged_in;
+
+        if (!$this->loggedIn && $_SERVER['REQUEST_URI'] != '/' &&
+            strpos($_SERVER['REQUEST_URI'], 'index') === false) {
+            header('Location: /index.php', true);
+            die();
+        }
+
         if (!$custom_header) {
-            $this->displayHeader();
+            $this->display();
         }
     }
 
-    protected function setHeader($header, $sub_header) {
+    protected function setHeader($header, $sub_header = null) {
         $this->header = new PageHeader($this->loggedIn, $header, $sub_header);
-        $this->displayHeader();
+        $this->display();
     }
 
-    private function displayHeader() {
+    private function display() {
         if (!$this->header) {
             $this->header = new PageHeader($this->loggedIn);
         }
