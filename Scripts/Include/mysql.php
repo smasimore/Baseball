@@ -447,9 +447,9 @@ function exe_sql($database, $sql, $delete = null) {
 		    $result_set[$xx] = mysqli_fetch_assoc($result);
     	}
         # If the result set has only one row, return a single dimension array
-        if (sizeof($result_set) == 1) {
-			$result_set = $result_set[0];
-		}
+        #if (sizeof($result_set) == 1) {
+		#	$result_set = $result_set[0];
+		#}
     }
     mysqli_close($mysql_connect);
 	return $result_set;

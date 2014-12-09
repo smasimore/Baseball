@@ -192,9 +192,6 @@ function pullLineupData($season, $ds) {
         WHERE substr(game_id,4,4) = '$season'
         AND substr(game_id,8,4) = '$ds'";
     $season_data = exe_sql(DATABASE, $sql);
-    if (array_keys($season_data)[0] !== 0) {
-        $season_data = array($season_data);
-    }
     return $season_data;
 }
 
