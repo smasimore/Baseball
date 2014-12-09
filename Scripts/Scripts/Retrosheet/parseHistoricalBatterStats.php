@@ -13,7 +13,6 @@ const MIN_PLATE_APPEARANCE = 18;
 const NUM_DECIMALS = 3;
 
 function getRetrosheetQuery($season, $table) {
-    echo 'edit this dudes name back!!'."\n";
     $query =
         "SELECT
             player_name,
@@ -31,9 +30,7 @@ function getRetrosheetQuery($season, $table) {
             season,
             ds
         FROM $table
-        WHERE season = $season
-        AND ds = '1951-04-24'
-        AND player_id = 'rizzp101'";
+        WHERE season = $season";
     return $query;
 }
 
@@ -117,12 +114,14 @@ function updateMissingSplits(
     return $player_season;
 }
 
-function prepareMultiInsert($player_season) {
-    $player_insert = array();
+function prepareMultiInsert($player_season, $season) {
+    $final_insert = array();
     foreach ($player_season as $player => $dates) {
+        $player_insert = array();
         foreach ($dates as $date => $splits) {
-            $player_insert[$player]['player_id'] = $player;
-            $player_insert[$player]['ds'] = $date;
+            $player_insert[$player][$date]['player_id'] = $player;
+            $player_insert[$player][$date]['ds'] = $date;
+            $player_insert[$player][$date]['season'] = $season;
             $final_splits = array();
             $defaults = 0;
             $max_appearances = 0;
@@ -134,12 +133,15 @@ function prepareMultiInsert($player_season) {
                     $pas > $max_appearances ? $pas : $max_appearances;
                 $final_splits[$split_name] = $split;
             }
-            $player_insert[$player]['defaults'] = $defaults;
-            $player_insert[$player]['plate_appearances'] = $max_appearances;
-            $player_insert[$player]['stats'] = json_encode($final_splits);
+            $player_insert[$player][$date]['defaults'] = $defaults;
+            $player_insert[$player][$date]['plate_appearances'] =
+                $max_appearances;
+            $player_insert[$player][$date]['stats'] =
+                json_encode($final_splits);
+            $final_insert[] = $player_insert[$player][$date];
         }
     }
-    return $player_insert;
+    return $final_insert;
 }
 
 function convertSeasonToPct($average_season) {
@@ -165,16 +167,31 @@ function convertSeasonToPct($average_season) {
     return $average_pcts;
 }
 
-echo 'testing: change back to 1950'."\n";
+$test = false;
+$colheads = array(
+    'player_id',
+    'defaults',
+    'plate_appearances',
+    'stats',
+    'season',
+    'ds'
+);
+$season_insert_table = "historical_season_batting";
+$career_insert_table = "historical_career_batting";
+
 $season_table = "retrosheet_historical_batting";
 $career_table = "retrosheet_historical_batting_career";
-for ($season = 1951; $season < 2014; $season++) {
+
+for ($season = 1950; $season < 2014; $season++) {
     $player_season = null;
     $player_career = null;
     $average_season = null;
     $average_career = null;
     $season_data = getBattingData($season, $season_table);
     $career_data = getBattingData($season, $career_table);
+    if (!$career_data) {
+        continue;
+    }
     foreach ($career_data as $index => $career_split) {
         list($player_career, $average_career) = updateBattingArray(
             $career_split,
@@ -197,19 +214,25 @@ for ($season = 1951; $season < 2014; $season++) {
     $player_career = updateMissingSplits($player_career, $average_career);
     $player_season =
         updateMissingSplits($player_season, $average_season, $player_career);
-    $player_season = prepareMultiInsert($player_season);
-    $player_career = prepareMultiInsert($player_career);
+    $player_season = prepareMultiInsert($player_season, $season);
+    $player_career = prepareMultiInsert($player_career, $season);
     print_r($player_season);
-    print_r($player_career);
-    exit();
-/*
-    multi_insert(
-        DATABASE,
-        $daily_table,
-        $player_season_daily_insert,
-        $colheads
-    );
-*/
+    if (!$test && isset($player_season)) {
+        multi_insert(
+            DATABASE,
+            $season_insert_table,
+            $player_season,
+            $colheads
+        );
+    }
+    if (!$test && isset($player_career)) {
+        multi_insert(
+            DATABASE,
+            $career_insert_table,
+            $player_career,
+            $colheads
+        );
+    }
 }
 
 ?>
