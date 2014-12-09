@@ -10,6 +10,11 @@ include('/Users/constants.php');
 include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
 
 const PCT_START_THRESH = .5;
+const INF_ERA = 99;
+const ERA_25 = 25;
+const ERA_50 = 50;
+const ERA_75 = 75;
+const ERA_100 = 100;
 $positionMap = array();
 
 function convertRetroDateToDs($season, $date) {
@@ -19,9 +24,10 @@ function convertRetroDateToDs($season, $date) {
     return $ds;
 }
 
-function pullPitcherMap($season, $ds) {
+function pullPitcherMap($season) {
     $sql =
-        "SELECT lower(concat(a.first_name_tx, '_', a.last_name_tx)) as name,
+        "SELECT DISTINCT
+            lower(concat(a.first_name_tx, '_', a.last_name_tx)) as name,
             a.player_id,
             a.bat_hand_cd,
             a.pit_hand_cd,
@@ -61,7 +67,6 @@ function pullPitcherMap($season, $ds) {
         LEFT OUTER JOIN retrosheet_historical_eras_career c
         ON a.player_id = c.player_id
         AND c.season = $season
-        AND c.ds = '1951-05-16'
         LEFT OUTER JOIN retrosheet_historical_eras b
         ON a.player_id = b.player_id
         AND b.season = $season
@@ -71,13 +76,29 @@ function pullPitcherMap($season, $ds) {
         AND d.season = $season
         AND d.ds = c.ds";
     $id_map = exe_sql(DATABASE, $sql);
-    $final_map = array();
+    $pitcher_map = array();
+    $era_map = array();
     foreach ($id_map as $data) {
         $ds = $data['ds'];
         $player_id = $data['player_id'];
-        $final_map[$ds][$player_id] = $data;
+        $season_era = $data['season_starter_era'];
+        $career_era = $data['career_starter_era'];
+        if (isset($season_era) && $season_era !== INF_ERA) {
+            $era_map[$ds]['season'][] = $season_era;
+        }
+        if (isset($career_era) && $career_era !== INF_ERA) {
+            $era_map[$ds]['career'][] = $career_era;
+        }
+        $pitcher_map[$ds][$player_id] = $data;
     }
-    return $final_map;
+    $ordered_era_map = array();
+    foreach ($era_map as $era_ds => $eras) {
+        foreach ($eras as $type => $data) {
+            sort($data);
+            $ordered_era_map[$era_ds][$type] = $data;
+        }
+    }
+    return array($pitcher_map, $ordered_era_map);
 }
 
 function pullPositionMap() {
@@ -87,6 +108,23 @@ function pullPositionMap() {
     $position_map = exe_sql(DATABASE, $sql);
     $position_map = index_by($position_map, 'id');
     return $position_map;
+}
+
+function calculateBucket($era, $era_25, $era_50, $era_75) {
+    switch (true) {
+        case $era >= $era_75:
+            return ERA_100;
+            break;
+        case $era >= $era_50:
+            return ERA_75;
+            break;
+        case $era >= $era_25:
+            return ERA_50;
+            break;
+        case $era < $era_25:
+            return ERA_25;
+            break;
+    }
 }
 
 function getSeasonStartEnd($season) {
@@ -115,7 +153,7 @@ function pullLineupData($season, $ds) {
             away_score_ct as away_score,
             home_score_ct as home_score,
             away_lineup1_bat_id,
-            away_lineup1_fld_cd
+            away_lineup1_fld_cd,
             away_lineup2_bat_id,
             away_lineup2_fld_cd,
             away_lineup3_bat_id,
@@ -154,6 +192,9 @@ function pullLineupData($season, $ds) {
         WHERE substr(game_id,4,4) = '$season'
         AND substr(game_id,8,4) = '$ds'";
     $season_data = exe_sql(DATABASE, $sql);
+    if (array_keys($season_data)[0] !== 0) {
+        $season_data = array($season_data);
+    }
     return $season_data;
 }
 
@@ -194,7 +235,7 @@ function calculateERA($runs, $innings) {
     return ($runs / $innings) * 9;
 }
 
-function getRelieverData($pitcher_map, $lineup, $ds, $home_away) {
+function getRelieverData($pitcher_map, $era_map, $lineup, $ds, $home_away) {
     $team = $lineup[$home_away];
     $pitcher_key = 'pitcher_'.substr($home_away, 0, 1);
     $initial_values = array(
@@ -209,6 +250,16 @@ function getRelieverData($pitcher_map, $lineup, $ds, $home_away) {
     );
     // Loop through all pitchers (player_map) to find the pitchers
     // on the team that is currently playing.
+    if (!$pitcher_map[$ds]) {
+        return array(
+            'season_era' => null,
+            'season_weighted_era' => null,
+            'season_bucket' => null,
+            'career_era' => null,
+            'career_weighted_era' => null,
+            'career_bucket' => null
+        );
+    }
     foreach ($pitcher_map[$ds] as $pitcher) {
         $pitcher_map_team =
             $pitcher['updated_team_id'] ?: $pitcher['team_id'];
@@ -238,6 +289,20 @@ function getRelieverData($pitcher_map, $lineup, $ds, $home_away) {
             }
         }
     }
+    $season_era_divider = count($era_map['season']) / 4;
+    $career_era_divider = count($era_map['career']) / 4;
+    $era_25 = array(
+        'season' => $era_map['season'][$season_era_divider],
+        'career' => $era_map['career'][$career_era_divider]
+    );
+    $era_50 = array(
+        'season' => $era_map['season'][$season_era_divider * 2],
+        'career' => $era_map['career'][$career_era_divider * 2]
+    );
+    $era_75 = array(
+        'season' => $era_map['season'][$season_era_divider * 3],
+        'career' => $era_map['career'][$career_era_divider * 3]
+    );
     $final_pitcher_array = array();
     foreach ($pitchers as $type => $data) {
         $final_pitcher_array[$type.'_era'] =
@@ -247,11 +312,18 @@ function getRelieverData($pitcher_map, $lineup, $ds, $home_away) {
             $data['innings'] ?
             format_double(calculateERA($data['runs'], $data['innings']), 2)
             : null;
+        $final_pitcher_array[$type.'_bucket'] =
+            calculateBucket(
+                $final_pitcher_array[$type.'_weighted_era'],
+                $era_25[$type],
+                $era_50[$type],
+                $era_75[$type]
+            );
     }
     return $final_pitcher_array;
 }
 
-function formatLineups($lineup, $season, $pitcher_map) {
+function formatLineups($lineup, $season, $pitcher_map, $era_map) {
     $game_id = $lineup['game_id'];
     $game_date = convertRetroDateToDs($season, $lineup['retro_ds']);
     $filled_lineup = array(
@@ -283,6 +355,7 @@ function formatLineups($lineup, $season, $pitcher_map) {
             json_encode(
                 getRelieverData(
                     $pitcher_map,
+                    $era_map,
                     $lineup,
                     $game_date,
                     'home'
@@ -292,6 +365,7 @@ function formatLineups($lineup, $season, $pitcher_map) {
             json_encode(
                 getRelieverData(
                     $pitcher_map,
+                    $era_map,
                     $lineup,
                     $game_date,
                     'away'
@@ -309,78 +383,60 @@ if ($confirm !== 'y') {
     exit();
 }
 
+$test = false;
 $colheads = array(
+    'game_id',
+    'home',
+    'away',
+    'home_score',
+    'away_score',
+    'home_team_winner',
+    'pitcher_h',
+    'pitcher_a',
+    'lineup_h',
+    'lineup_a',
+    'reliever_h',
+    'reliever_a',
+    'game_time',
     'season',
-    'ds'
+    'game_date'
 );
 $daily_table = 'retrosheet_historical_lineups';
-$career_table = 'retrosheet_historical_lineups_career';
-
 $positionMap = pullPositionMap();
 
 for ($season = 1950; $season < 2014; $season++) {
-    // testing ////
-    $season += 1;
     list($season_start, $season_end) = getSeasonStartEnd($season);
-    $season_lineups = array();
+    list($pitcher_map, $era_map) = pullPitcherMap($season);
+
     for ($ds = $season_start;
         $ds <= $season_end;
         $ds = ds_modify($ds, '+1 day')
     ) {
-        /////// testing /////////
-        if ($la < 30) {
-            $la += 1;
-            continue;
-        }
-        /////////////////////////
         echo $ds."\n";
         $retro_ds = return_between($ds, "-", "-", EXCL).substr($ds, -2);
+        // For MySQL insert we'll use the following day to simulate pulling
+        // data at 12am the night before.
+        $entry_ds = ds_modify($ds, '+1 day');
+        $lineups = pullLineupData($season, $retro_ds);
         $daily_lineups = array();
-        $pitcher_map = pullPitcherMap($season, $ds);
-        $daily_lineups = pullLineupData($season, $retro_ds);
-        if ($daily_lineups) {
-            foreach ($daily_lineups as $lineup) {
-                $game_id = $lineup['game_id'];
-                $season_lineups[$game_id] = formatLineups(
+        if ($lineups) {
+            foreach ($lineups as $lineup) {
+                $daily_lineups[] = formatLineups(
                     $lineup,
                     $season,
-                    $pitcher_map
+                    $pitcher_map,
+                    $era_map[$ds]
+                );
+            }
+            if (!$test) {
+                multi_insert(
+                    DATABASE,
+                    $daily_table,
+                    $daily_lineups,
+                    $colheads
                 );
             }
         }
-        print_r($season_lineups); exit();
-        $la += 1;
-        if ($la == 40) {
-            exit();
-        }
-        continue;
-        // Prep the tables for daily insertion into mysql.
-        $player_season_daily_insert = array();
-        $player_career_daily_insert = array();
-        foreach ($playerCareer as $name => $split) {
-            foreach ($split as $split_name => $stat) {
-                $stat['ds'] = $entry_ds;
-                $stat['season'] = $season;
-                $player_career_daily_insert[] = $stat;
-                if (isset($playerSeason[$name][$split_name])) {
-                    $playerSeason[$name][$split_name]['ds'] = $entry_ds;
-                    $player_season_daily_insert[] =
-                        $playerSeason[$name][$split_name];
-                }
-            }
-        }
-        multi_insert(
-            DATABASE,
-            $daily_table,
-            $player_season_daily_insert,
-            $colheads
-        );
-        multi_insert(
-            DATABASE,
-            $career_table,
-            $player_career_daily_insert,
-            $colheads
-        );
     }
 }
 
