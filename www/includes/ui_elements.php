@@ -1,5 +1,5 @@
 <?php
-include_once '/Users/baseball/Git/smas/Baseball/Scripts/Include/mysql.php';
+include_once __DIR__ . '/../../Scripts/Include/mysql.php';
 
 const LOG_LINES = 10;
 

@@ -3,9 +3,9 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-include_once '/Users/baseball/Git/smas/Baseball/www/includes/db_connect.php';
-include_once '/Users/baseball/Git/smas/Baseball/www/includes/functions.php';
-include_once '/Users/baseball/Git/smas/Baseball/www/includes/ui_elements.php';
+include_once __DIR__ . '/../includes/db_connect.php';
+include_once __DIR__ . '/../includes/functions.php';
+include_once __DIR__ . '/../includes/ui_elements.php';
 include_once 'PageHeader.php';
 include_once 'Table.php';
 include_once 'Slider.php';
