@@ -195,7 +195,7 @@ function pullLineupData($season, $ds) {
     return $season_data;
 }
 
-function getStartingPitcherArray($pitcher) {
+function getStartingPitcherArray($pitcher_name, $pitcher) {
     $stats = array(
         'id' => 
             isset($pitcher['player_id']) ? $pitcher['player_id'] : null,
@@ -227,6 +227,7 @@ function getStartingPitcherArray($pitcher) {
         'career_avg_innings' => 
             isset($pitcher['career_avg_innings_starter'])
             ? $pitcher['career_avg_innings_starter'] : null
+>>>>>>> master
     );
     return $stats;
 }
@@ -361,6 +362,7 @@ function formatLineups($lineup, $season, $pitcher_map, $era_map) {
         isset($pitcher_map[$game_date][$lineup['pitcher_h']])
         ? json_encode(
             getStartingPitcherArray(
+                $lineup['pitcher_h'],
                 $pitcher_map[$game_date][$lineup['pitcher_h']]
             )
         ) : json_encode(array("id" => $lineup['pitcher_h']));
@@ -368,6 +370,7 @@ function formatLineups($lineup, $season, $pitcher_map, $era_map) {
         isset($pitcher_map[$game_date][$lineup['pitcher_a']])
         ? json_encode(
             getStartingPitcherArray(
+                $lineup['pitcher_a'],
                 $pitcher_map[$game_date][$lineup['pitcher_a']]
             )
         ) : json_encode(array("id" => $lineup['pitcher_a']));
