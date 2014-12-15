@@ -12,7 +12,26 @@ include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
 const MIN_PLATE_APPEARANCE = 18;
 const NUM_DECIMALS = 3;
 
-function getRetrosheetQuery($season, $table) {
+function updateSeasonVars($season, $season_vars) {
+    if ($season > $season_vars['start_script']) {
+        $season_vars['previous_end'] =
+            ds_modify($season_vars['season_end'], '+1 day');
+        $season_vars['previous'] = $season - 1;
+    }
+    $season_sql =
+        "SELECT min(ds) as start,
+            max(ds) as end,
+            season
+        FROM retrosheet_historical_batting
+        WHERE season = '$season'
+        GROUP BY season";
+    $season_dates = reset(exe_sql(DATABASE, $season_sql));
+    $season_vars['season_start'] = $season_dates['start'];
+    $season_vars['season_end'] = $season_dates['end'];
+    return $season_vars;
+}
+
+function getBattingData($season, $ds, $table) {
     $query =
         "SELECT
             player_name,
@@ -30,16 +49,10 @@ function getRetrosheetQuery($season, $table) {
             season,
             ds
         FROM $table
-        WHERE season = $season";
-    return $query;
-}
-
-function getBattingData($season, $table) {
-    $season_data = exe_sql(
-        DATABASE,
-        getRetrosheetQuery($season, $table)
-    );
-    $season_data = index_by($season_data, 'player_id', 'ds', 'split');
+        WHERE season = $season
+        AND ds = '$ds'";
+    $season_data = exe_sql(DATABASE, $query);
+    $season_data = index_by($season_data, 'player_id', 'split');
     return $season_data;
 }
 
@@ -81,6 +94,9 @@ function updateMissingSplits(
     $player_career = null
 ) {
     global $splits;
+    if (!isset($player_season)) {
+        return null;
+    }
     foreach ($player_season as $player_id => $dates) {
         foreach ($dates as $date => $split_data) {
             // Note: We are cycling through ALL splits (per the global var).
@@ -111,10 +127,14 @@ function updateMissingSplits(
             }
         }
     }
+    $player_season['joe_average'] = $average_season;
     return $player_season;
 }
 
 function prepareMultiInsert($player_season, $season) {
+    if (!isset($player_season)) {
+        return null;
+    }
     $final_insert = array();
     foreach ($player_season as $player => $dates) {
         $player_insert = array();
@@ -134,6 +154,10 @@ function prepareMultiInsert($player_season, $season) {
                 $final_splits[$split_name] = $split;
             }
             $player_insert[$player][$date]['defaults'] = $defaults;
+            // HACK BEFORE ADDING ERA BANDS
+            if ($player == 'joe_average') {
+                $player_insert[$player][$date]['defaults'] = 16;
+            }
             $player_insert[$player][$date]['plate_appearances'] =
                 $max_appearances;
             $player_insert[$player][$date]['stats'] =
@@ -168,6 +192,15 @@ function convertSeasonToPct($average_season) {
 }
 
 $test = false;
+$type = 'batting';
+
+$season_vars = array(
+    'start_script' => 1950,
+    'end_script' => 2014,
+    'season_start' => null,
+    'season_end' => null,
+);
+
 $colheads = array(
     'player_id',
     'defaults',
@@ -176,62 +209,80 @@ $colheads = array(
     'season',
     'ds'
 );
-$season_insert_table = "historical_season_batting";
-$career_insert_table = "historical_career_batting";
+$season_insert_table = "historical_season_$type";
+$career_insert_table = "historical_career_$type";
 
-$season_table = "retrosheet_historical_batting";
-$career_table = "retrosheet_historical_batting_career";
+$season_table = "retrosheet_historical_$type";
+$career_table = "retrosheet_historical_$type"."_career";
 
-for ($season = 1950; $season < 2014; $season++) {
-    $player_season = null;
-    $player_career = null;
-    $average_season = null;
-    $average_career = null;
-    $season_data = getBattingData($season, $season_table);
-    $career_data = getBattingData($season, $career_table);
-    if (!$career_data) {
-        continue;
-    }
-    foreach ($career_data as $index => $career_split) {
-        list($player_career, $average_career) = updateBattingArray(
-            $career_split,
-            $player_career,
-            $average_career
-        );
-        $season_split = $season_data[$index];
-        if ($season_split) {
-            list($player_season, $average_season) = updateBattingArray(
-                $season_split,
+for ($season = $season_vars['start_script'];
+    $season < $season_vars['end_script'];
+    $season++) {
+
+    $season_vars = updateSeasonVars($season, $season_vars);
+    for ($ds = $season_vars['season_start'];
+        $ds <= $season_vars['season_end'];
+        $ds = ds_modify($ds, '+1 day')) {
+        echo $ds."\n";
+        $player_season = null;
+        $player_career = null;
+        $average_season = null;
+        $average_career = null;
+        $season_data = getBattingData($season, $ds, $season_table);
+        $career_data = getBattingData($season, $ds, $career_table);
+        if (!$career_data) {
+            echo "No Data For $ds \n";
+            continue;
+        }
+        foreach ($career_data as $index => $career_split) {
+            list($player_career, $average_career) = updateBattingArray(
+                $career_split,
+                $player_career,
+                $average_career
+            );
+            $season_split =
+                isset($season_data[$index]) ? $season_data[$index] : null;
+            if ($season_split) {
+                list($player_season, $average_season) = updateBattingArray(
+                    $season_split,
+                    $player_season,
+                    $average_season
+                );
+            }
+        }
+        // TODO(cert): Add bucket splits here (right now always defaulting).
+        $average_season = convertSeasonToPct($average_season);
+        $average_career = convertSeasonToPct($average_career);
+        // Go through the splits and fill in gaps with Totals or Averages.
+        $player_career =
+            updateMissingSplits(
+                $player_career,
+                $average_career
+            );
+        $player_season =
+            updateMissingSplits(
                 $player_season,
-                $average_season
+                $average_season,
+                $player_career
+            );
+        $player_season = prepareMultiInsert($player_season, $season);
+        $player_career = prepareMultiInsert($player_career, $season);
+        if (!$test && isset($player_season)) {
+            multi_insert(
+                DATABASE,
+                $season_insert_table,
+                $player_season,
+                $colheads
             );
         }
-    }
-    // TODO(cert): Add bucket splits here (right now always defaulting).
-    $average_season = convertSeasonToPct($average_season);
-    $average_career = convertSeasonToPct($average_career);
-    // Go through the splits and fill in gaps with Totals or Averages.
-    $player_career = updateMissingSplits($player_career, $average_career);
-    $player_season =
-        updateMissingSplits($player_season, $average_season, $player_career);
-    $player_season = prepareMultiInsert($player_season, $season);
-    $player_career = prepareMultiInsert($player_career, $season);
-    print_r($player_season);
-    if (!$test && isset($player_season)) {
-        multi_insert(
-            DATABASE,
-            $season_insert_table,
-            $player_season,
-            $colheads
-        );
-    }
-    if (!$test && isset($player_career)) {
-        multi_insert(
-            DATABASE,
-            $career_insert_table,
-            $player_career,
-            $colheads
-        );
+        if (!$test && isset($player_career)) {
+            multi_insert(
+                DATABASE,
+                $career_insert_table,
+                $player_career,
+                $colheads
+            );
+        }
     }
 }
 

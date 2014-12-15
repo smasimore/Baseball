@@ -80,7 +80,7 @@ function getSeasonStartEnd($season) {
         FROM events
         WHERE season = '$season'
         GROUP BY season";
-    $season_dates = exe_sql(DATABASE, $season_sql);
+    $season_dates = reset(exe_sql(DATABASE, $season_sql));
     $season_start = convertRetroDateToDs($season, $season_dates['start']);
     $season_end = convertRetroDateToDs($season, $season_dates['end']);
     return array($season_start, $season_end);
@@ -269,8 +269,22 @@ for ($season = 1950; $season < 2014; $season++) {
                 }
             }
         } 
-        multi_insert(DATABASE, $daily_table, $player_season_daily_insert, $colheads);
-        multi_insert(DATABASE, $career_table, $player_career_daily_insert, $colheads);
+        if (isset($player_season_daily_insert)) {
+            multi_insert(
+                DATABASE,
+                $daily_table,
+                $player_season_daily_insert,
+                $colheads
+            );
+        }
+        if (isset($player_career_daily_insert)) {
+            multi_insert(
+                DATABASE,
+                $career_table,
+                $player_career_daily_insert,
+                $colheads
+            );
+        }
     }
 }
 

@@ -232,8 +232,8 @@ function multi_insert($database, $table, $data_array, $colheads) {
 
 	// Create INSERT statement based on colheads
 	$colheads_insert = implode(',', $colheads);
-    $sql = array(); 
-    foreach ($data_array as $row) {
+	$sql = array(); 
+	foreach ($data_array as $row) {
         $insert_row = array();
         foreach ($colheads as $col) {
             $insert_data = null;
@@ -246,10 +246,9 @@ function multi_insert($database, $table, $data_array, $colheads) {
 						$col \n";
 					// Adding send e-mail for now to make sure I'm on top of these
 					// as I migrate to the new insert
-					$name = $row['player_name'];
 					send_email(
 						"Incomplete Data During Insert", 
-						"Table $table $name",
+						"Table $table",
 						"d"
 					);
 					exit("Failed Insert into $table");
