@@ -130,6 +130,7 @@ class Simulation:
         self.season = season
         self.statsYear = stats_year
         self.statsType = stats_type
+        self.inputData = []
 
         self.weightsMutator = self.WEIGHTS_MUTATOR
         self.debugLoggingOn = True
@@ -144,10 +145,18 @@ class Simulation:
 
     def run(self):
         self.__addWeightsIndex()
-        self.__fetchInputData()
+        if not self.testRun:
+            self.__fetchInputData()
+        else:
+            if not self.inputData:
+                raise ValueError('When testing, inputData must be set manually')
+
+
         self.__fetchAtBatImpactData()
         self.__runGames()
-        self.__exportResults()
+
+        # Return first row with cols for tests.
+        return dict(zip(self.SIM_OUTPUT_COLUMNS, self.__exportResults()[0]))
 
     def __runGame(self, row_number, sim_results):
         game_data = self.inputData[row_number]
@@ -347,7 +356,7 @@ class Simulation:
         totals[HomeAway.AWAY].update((event, float(num)/self.ANALYSIS_RUNS)
             for event, num in totals[HomeAway.AWAY].items())
 
-        return [float(home_wins)/self.ANALYSIS_RUNS, json.dumps(totals)]
+        return [float(home_wins)/self.analysisRuns, json.dumps(totals)]
 
     def __getReadableWeights(self):
         ordered_weights = OrderedDict(sorted(self.weights.items()))
@@ -364,28 +373,29 @@ class Simulation:
         return readable
 
     def __exportResults(self):
-        # TODO(smas) IF TEST RUN EXPORT TO TEST TABLE, OVERRIDE
         sim_params = self.getSimParams()
         results = []
         for game in self.simResults:
             game.extend(sim_params)
             results.append(game)
 
-        MySQL.dropPartition(
-            self.__OUTPUT_TABLE,
-            str(self.season)+str(self.weightsIndex)
-        )
-        MySQL.addPartition(
-            self.__OUTPUT_TABLE,
-            str(self.season)+str(self.weightsIndex),
-            str(self.season)+", "+str(self.weightsIndex)
-        )
-        MySQL.insert(
-            self.__OUTPUT_TABLE,
-            self.SIM_OUTPUT_COLUMNS,
-            results
-        )
+        if not self.testRun:
+            MySQL.dropPartition(
+                self.__OUTPUT_TABLE,
+                str(self.season)+str(self.weightsIndex)
+            )
+            MySQL.addPartition(
+                self.__OUTPUT_TABLE,
+                str(self.season)+str(self.weightsIndex),
+                str(self.season)+", "+str(self.weightsIndex)
+            )
+            MySQL.insert(
+                self.__OUTPUT_TABLE,
+                self.SIM_OUTPUT_COLUMNS,
+                results
+            )
 
+        return results
 
 
     ########## EXTRA PARAM FUNCTIONS ##########
@@ -405,6 +415,10 @@ class Simulation:
     def setWeightsMutator(self, weights_mutator):
         self.validateWeightsMutator(weights_mutator)
         self.weightsMutator = weights_mutator
+
+    # Override inputData for tests.
+    def setInputData(self, input_data):
+        self.inputData = input_data
 
     def getSimParams(self):
         weights_readable = self.__getReadableWeights()
