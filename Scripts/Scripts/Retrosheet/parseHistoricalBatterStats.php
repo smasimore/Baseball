@@ -65,24 +65,42 @@ function updateBattingArray($batting_instance, $player_stats, $average_stats) {
     // If a player hasn't batted more than the min threshold don't fill
     // his personal stats, but add him to the averages.
     if ($plate_appearances < MIN_PLATE_APPEARANCE) {
-        $average_stats[$ds][$split]['plate_appearances'] += $plate_appearances;
+        if (!isset($average_stats[$ds][$split]['plate_appearances'])) {
+            $average_stats[$ds][$split]['plate_appearances'] =
+                $plate_appearances;
+        } else {
+            $average_stats[$ds][$split]['plate_appearances'] +=
+                $plate_appearances;
+        }
         foreach ($batting_instance as $stat_name => $stat) {
             if (in_array($stat_name, $pctStats)) {
-                $average_stats[$ds][$split][$stat_name] += $stat;
+                if (!isset($average_stats[$ds][$split][$stat_name])) {
+                    $average_stats[$ds][$split][$stat_name] = $stat
+                } else {
+                    $average_stats[$ds][$split][$stat_name] += $stat;
+                }
             }
         }
         return array($player_stats, $average_stats);
     }
     $player_stats[$player_id][$ds][$split]['plate_appearances'] =
         $plate_appearances;
-    $average_stats[$ds][$split]['plate_appearances'] += $plate_appearances;
+    if (!isset($average_stats[$ds][$split]['plate_appearances'])) {
+        $average_stats[$ds][$split]['plate_appearances'] = $plate_appearances;
+    } else {
+        $average_stats[$ds][$split]['plate_appearances'] += $plate_appearances;
+    }
 
     foreach ($batting_instance as $stat_name => $stat) {
         if (in_array($stat_name, $pctStats)) {
             $stat_pct_name = array_search($stat_name, $pctStats);
             $stat_pct = number_format($stat / $plate_appearances, NUM_DECIMALS);
             $player_stats[$player_id][$ds][$split][$stat_pct_name] = $stat_pct;
-            $average_stats[$ds][$split][$stat_name] += $stat;
+            if (!isset($average_stats[$ds][$split][$stat_name])) {
+                $average_stats[$ds][$split][$stat_name] = $stat;
+            } else {
+                $average_stats[$ds][$split][$stat_name] += $stat;
+            }
         }
     }
     return array($player_stats, $average_stats);
@@ -148,7 +166,11 @@ function prepareMultiInsert($player_season, $season) {
             foreach ($splits as $split_name => $split) {
                 $split['player_id'] = $player;
                 $pas = $split['plate_appearances'];
-                $defaults += $pas ? 0 : 1;
+                if (!$defaults) {
+                    $defaults = $pas ? 0 : 1;
+                } else {
+                    $defaults += $pas ? 0 : 1;
+                }
                 $max_appearances =
                     $pas > $max_appearances ? $pas : $max_appearances;
                 $final_splits[$split_name] = $split;
