@@ -75,7 +75,7 @@ function updateBattingArray($batting_instance, $player_stats, $average_stats) {
         foreach ($batting_instance as $stat_name => $stat) {
             if (in_array($stat_name, $pctStats)) {
                 if (!isset($average_stats[$ds][$split][$stat_name])) {
-                    $average_stats[$ds][$split][$stat_name] = $stat
+                    $average_stats[$ds][$split][$stat_name] = $stat;
                 } else {
                     $average_stats[$ds][$split][$stat_name] += $stat;
                 }
@@ -123,7 +123,7 @@ function updateMissingSplits(
                 // OPTION 2: Use Batter's Career Split.
                 // OPTION 3: User Batter' Career Total Split.
                 // OPTION 4: Use Average Stats For That Split.
-                if ($player_season[$player_id][$date][$split]) {
+                if (isset($player_season[$player_id][$date][$split])) {
                     continue;
                 } else {
                     $player_season[$player_id][$date][$split] =
@@ -165,7 +165,9 @@ function prepareMultiInsert($player_season, $season) {
             $max_appearances = 0;
             foreach ($splits as $split_name => $split) {
                 $split['player_id'] = $player;
-                $pas = $split['plate_appearances'];
+                $pas =
+                    isset($split['plate_appearances'])
+                    ? $split['plate_appearances'] : 0;
                 if (!$defaults) {
                     $defaults = $pas ? 0 : 1;
                 } else {
