@@ -6,7 +6,7 @@ from Team import Team
 class TeamTestCase(unittest.TestCase):
 
     __PITCHING_DATA = {
-        u'innings': 5,
+        u'avg_innings': 5,
         u'name': u'Dan Certner',
         u'reliever_era': 5.5,
         u'reliever_bucket': u'ERA100',

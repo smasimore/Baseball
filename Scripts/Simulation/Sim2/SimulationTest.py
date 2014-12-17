@@ -54,13 +54,13 @@ class TeamTestCase(unittest.TestCase):
         }
         p_h = {
             'handedness' : 'L',
-            'innings' : 99,
+            'avg_innings' : 99,
             'bucket' : 'ERA25',
             'pitcher_vs_batter' : {}
         }
         p_a = {
             'handedness' : 'R',
-            'innings' : 99,
+            'avg_innings' : 99,
             'bucket' : 'ERA50',
             'pitcher_vs_batter' : {}
         }
@@ -114,13 +114,13 @@ class TeamTestCase(unittest.TestCase):
         }
         p_h = {
             'handedness' : 'L',
-            'innings' : 99,
+            'avg_innings' : 99,
             'bucket' : 'ERA25',
             'pitcher_vs_batter' : {}
         }
         p_a = {
             'handedness' : 'R',
-            'innings' : 99,
+            'avg_innings' : 99,
             'bucket' : 'ERA50',
             'pitcher_vs_batter' : {}
         }
@@ -154,13 +154,13 @@ class TeamTestCase(unittest.TestCase):
         }
         p_h = {
             'handedness' : 'L',
-            'innings' : 99,
+            'avg_innings' : 99,
             'bucket' : 'ERA25',
             'pitcher_vs_batter' : {}
         }
         p_a = {
             'handedness' : 'R',
-            'innings' : 99,
+            'avg_innings' : 99,
             'bucket' : 'ERA50',
             'pitcher_vs_batter' : {}
         }
@@ -194,13 +194,13 @@ class TeamTestCase(unittest.TestCase):
         }
         p_h = {
             'handedness' : 'L',
-            'innings' : 99,
+            'avg_innings' : 99,
             'bucket' : 'ERA25',
             'pitcher_vs_batter' : {}
         }
         p_a = {
             'handedness' : 'R',
-            'innings' : 99,
+            'avg_innings' : 99,
             'bucket' : 'ERA50',
             'pitcher_vs_batter' : {}
         }
@@ -225,7 +225,7 @@ class TeamTestCase(unittest.TestCase):
         b_a = {}
         p_h = {
             'handedness' : 'L',
-            'innings' : 99,
+            'avg_innings' : 99,
             'bucket' : 'ERA25',
             'pitcher_vs_batter' : {
                 u'pct_strikeout': 1.0,
@@ -233,7 +233,7 @@ class TeamTestCase(unittest.TestCase):
         }
         p_a = {
             'handedness' : 'R',
-            'innings' : 99,
+            'avg_innings' : 99,
             'bucket' : 'ERA50',
             'pitcher_vs_batter' : {
                 u'pct_strikeout': 0.5,
@@ -261,7 +261,7 @@ class TeamTestCase(unittest.TestCase):
         b_a = {}
         p_h = {
             'handedness' : 'L',
-            'innings' : 7,
+            'avg_innings' : 7,
             'bucket' : 'ERA25',
             'pitcher_vs_batter' : {
                 u'pct_strikeout': 1.0,
@@ -272,7 +272,7 @@ class TeamTestCase(unittest.TestCase):
         }
         p_a = {
             'handedness' : 'R',
-            'innings' : 7,
+            'avg_innings' : 7,
             'bucket' : 'ERA50',
             'pitcher_vs_batter' : {
                 u'pct_strikeout': 1.0,
@@ -303,7 +303,7 @@ class TeamTestCase(unittest.TestCase):
         b_a = {}
         p_h = {
             'handedness' : 'L',
-            'innings' : 7,
+            'avg_innings' : 7,
             'bucket' : 'ERA25',
             'pitcher_vs_batter' : {
                 u'pct_strikeout': 1.0,
@@ -312,7 +312,7 @@ class TeamTestCase(unittest.TestCase):
         }
         p_a = {
             'handedness' : 'R',
-            'innings' : 7,
+            'avg_innings' : 7,
             'bucket' : 'ERA50',
             'pitcher_vs_batter' : {
                 u'pct_single': 0.5,
@@ -378,13 +378,13 @@ class TeamTestCase(unittest.TestCase):
         }
         p_h = {
             'handedness' : 'L',
-            'innings' : 99,
+            'avg_innings' : 99,
             'bucket' : 'ERA25',
             'pitcher_vs_batter' : {}
         }
         p_a = {
             'handedness' : 'R',
-            'innings' : 99,
+            'avg_innings' : 99,
             'bucket' : 'ERA50',
             'pitcher_vs_batter' : {}
         }
@@ -418,13 +418,13 @@ class TeamTestCase(unittest.TestCase):
         }
         p_h = {
             'handedness' : 'L',
-            'innings' : 99,
+            'avg_innings' : 99,
             'bucket' : 'ERA25',
             'pitcher_vs_batter' : {}
         }
         p_a = {
             'handedness' : 'R',
-            'innings' : 99,
+            'avg_innings' : 99,
             'bucket' : 'ERA50',
             'pitcher_vs_batter' : {}
         }

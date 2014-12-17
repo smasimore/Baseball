@@ -120,7 +120,7 @@ class Team:
             ]
 
         if StatCategories.PITCHER_ERA_BAND in self.categoryWeights.keys():
-            if inning <= self.pitcherData['innings']:
+            if inning <= self.pitcherData['avg_innings']:
                 stat_weights[self.__getPitcherERABand()] = (
                     self.categoryWeights[StatCategories.PITCHER_ERA_BAND]
                 )
@@ -130,7 +130,7 @@ class Team:
                 )
 
         if StatCategories.PITCHER_VS_BATTER in self.categoryWeights.keys():
-            if (inning <= self.pitcherData['innings'] or
+            if (inning <= self.pitcherData['avg_innings'] or
                 not self.pitcherData[PitcherVSBatter.RELIEVER_VS_BATTER]):
                 stat_weights[PitcherVSBatter.PITCHER_VS_BATTER] = (
                     self.categoryWeights[StatCategories.PITCHER_VS_BATTER]
