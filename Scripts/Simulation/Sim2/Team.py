@@ -130,7 +130,8 @@ class Team:
                 )
 
         if StatCategories.PITCHER_VS_BATTER in self.categoryWeights.keys():
-            if inning <= self.pitcherData['innings']:
+            if (inning <= self.pitcherData['innings'] or
+                not self.pitcherData[PitcherVSBatter.RELIEVER_VS_BATTER]):
                 stat_weights[PitcherVSBatter.PITCHER_VS_BATTER] = (
                     self.categoryWeights[StatCategories.PITCHER_VS_BATTER]
                 )

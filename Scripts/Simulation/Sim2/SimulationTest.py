@@ -219,7 +219,7 @@ class TeamTestCase(unittest.TestCase):
             ]
         )
 
-    def test_pitcher_vc_batter(self):
+    def test_pitcher_vs_batter(self):
         weights = {StatCategories.PITCHER_VS_BATTER : 1.0}
         b_h = {}
         b_a = {}
@@ -239,6 +239,86 @@ class TeamTestCase(unittest.TestCase):
                 u'pct_strikeout': 0.5,
                 u'pct_single': 0.5,
             }
+        }
+
+        results = self.__runGame(weights, b_h, b_a, p_h, p_a)
+        self.assertEqual(
+            [
+                results['home_win_pct'],
+                results['weights_i'],
+                results['weights'],
+            ],
+            [
+                1.0,
+                6,
+                'pitcher_vs_batter_100',
+            ]
+        )
+
+    def test_reliever_vs_batter(self):
+        weights = {StatCategories.PITCHER_VS_BATTER : 1.0}
+        b_h = {}
+        b_a = {}
+        p_h = {
+            'handedness' : 'L',
+            'innings' : 7,
+            'bucket' : 'ERA25',
+            'pitcher_vs_batter' : {
+                u'pct_strikeout': 1.0,
+            },
+            'reliever_vs_batter' : {
+                u'pct_strikeout': 1.0,
+            }
+        }
+        p_a = {
+            'handedness' : 'R',
+            'innings' : 7,
+            'bucket' : 'ERA50',
+            'pitcher_vs_batter' : {
+                u'pct_strikeout': 1.0,
+            },
+            'reliever_vs_batter' : {
+                u'pct_single': 0.5,
+                u'pct_strikeout': 0.5,
+            }
+        }
+
+        results = self.__runGame(weights, b_h, b_a, p_h, p_a)
+        self.assertEqual(
+            [
+                results['home_win_pct'],
+                results['weights_i'],
+                results['weights'],
+            ],
+            [
+                1.0,
+                6,
+                'pitcher_vs_batter_100',
+            ]
+        )
+
+    def test_no_reliever_vs_batter(self):
+        weights = {StatCategories.PITCHER_VS_BATTER : 1.0}
+        b_h = {}
+        b_a = {}
+        p_h = {
+            'handedness' : 'L',
+            'innings' : 7,
+            'bucket' : 'ERA25',
+            'pitcher_vs_batter' : {
+                u'pct_strikeout': 1.0,
+            },
+            'reliever_vs_batter' : {}
+        }
+        p_a = {
+            'handedness' : 'R',
+            'innings' : 7,
+            'bucket' : 'ERA50',
+            'pitcher_vs_batter' : {
+                u'pct_single': 0.5,
+                u'pct_strikeout': 0.5,
+            },
+            'reliever_vs_batter' : {}
         }
 
         results = self.__runGame(weights, b_h, b_a, p_h, p_a)

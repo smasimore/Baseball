@@ -351,9 +351,9 @@ class Simulation:
                     else:
                         totals[team][event] = num
 
-        totals[HomeAway.HOME].update((event, float(num)/self.ANALYSIS_RUNS)
+        totals[HomeAway.HOME].update((event, float(num)/self.analysisRuns)
             for event, num in totals[HomeAway.HOME].items())
-        totals[HomeAway.AWAY].update((event, float(num)/self.ANALYSIS_RUNS)
+        totals[HomeAway.AWAY].update((event, float(num)/self.analysisRuns)
             for event, num in totals[HomeAway.AWAY].items())
 
         return [float(home_wins)/self.analysisRuns, json.dumps(totals)]
