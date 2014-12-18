@@ -176,11 +176,149 @@ function insert($database, $table, $data_array) {
 		return true;
 		}
 
-	}
+}
+
+/***********************************************************************
+add_partition(string $database, string table, array<> partition_keys)
+// TODO(cert): Update how this works
+************************************************************************/
+
+function add_partition($database, $table, $partition_keys) {
+
+    $attempts = 0;
+    $mysql_connect = connect_to_database();
+    echo '========'."\n";
+    while ($attempts < 10 && mysqli_connect_errno()) {
+        $mysql_connect = connect_to_database();
+        $attempts ++;
+    }
+    if ($attempts == 10) {
+        error_log(
+            format_log_data('FAILED', 'FAILED', 'FAILED'),
+            3,
+            '/Users/Logs/MySQL_requests.log'
+        );
+        printf("Connect failed: %s\n", mysqli_connect_error());
+        echo '////////////////////////////////////////////////'."\n";
+        echo 'THIS FAILED 10 TIMES!!'."\n";
+        echo 'sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart'."\n";
+        echo '////////////////////////////////////////////////'."\n";
+        email(
+            mysqli_connect_error(),
+            "sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart"
+        );
+        exit("FAILED partition_add into $table");
+    }
+    mysqli_select_db($mysql_connect, $database);
+	
+	# Create and execute SQL command
+    $partition_string = "p";
+	$partitions = "";
+    foreach ($partition_keys as $partition => $type) {
+        $partition_string .= $partition;
+		if ($type == 'string') {
+			$partitions .= "'$partition',";
+		} else {
+			$partitions .= "$partition,";
+		}
+    }
+	$partitions = trim($partitions, ",");
+    $final_sql =
+        "ALTER TABLE $table 
+		ADD PARTITION (PARTITION $partition_string
+		VALUES IN (($partitions)))";
+    $result = mysqli_query($mysql_connect, $final_sql);
+
+    # Report SQL error, if one occured, otherwise return result
+    if (mysqli_error($mysql_connect)) {
+        $error = mysqli_error($mysql_connect);
+        echo $error;
+        mysqli_close($mysql_connect);
+        send_email(
+            "Add Partition Error",
+            "$error during partion drop: $final_sql",
+            "d"
+        );
+		exit('Failed Partition Add');
+    } else {
+        mysqli_close($mysql_connect);
+    }
+}
+	
+
+/***********************************************************************
+drop_partition(string $database, string table, array<> partition_keys)
+i.e. $partition_keys = array(
+		1950 => 'int',
+		'test' => 'string'
+	 );
+// TODO(cert): Update how this works
+************************************************************************/	
+
+function drop_partition($database, $table, $partition_keys) {
+
+    $attempts = 0;
+    $mysql_connect = connect_to_database();
+    echo '========'."\n";
+    while ($attempts < 10 && mysqli_connect_errno()) {
+        $mysql_connect = connect_to_database();
+        $attempts ++;
+    }
+    if ($attempts == 10) {
+        error_log(
+            format_log_data('FAILED', 'FAILED', 'FAILED'),
+            3,
+            '/Users/Logs/MySQL_requests.log'
+        );
+        printf("Connect failed: %s\n", mysqli_connect_error());
+        echo '////////////////////////////////////////////////'."\n";
+        echo 'THIS FAILED 10 TIMES!!'."\n";
+        echo 'sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart'."\n";
+        echo '////////////////////////////////////////////////'."\n";
+        email(
+            mysqli_connect_error(),
+            "sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart"
+        );
+        exit("FAILED partition_drop into $table");
+    }
+    mysqli_select_db($mysql_connect, $database);
+
+	# Create and execute SQL command
+	$partition_string = "p";
+    $partitions = "";
+    foreach ($partition_keys as $partition => $type) {
+        $partition_string .= $partition;
+        if ($type == 'string') {
+            $partitions .= "'$partition',";
+        } else {
+            $partitions .= "$partition,";
+        }
+    }
+    $partitions = trim($partitions, ",");
+    $final_sql =
+        "ALTER TABLE $table DROP PARTITION $partition_string";
+    $result = mysqli_query($mysql_connect, $final_sql);
+
+    # Report SQL error, if one occured, otherwise return result
+    if (mysqli_error($mysql_connect)) {
+        $error = mysqli_error($mysql_connect);
+        echo $error;
+        mysqli_close($mysql_connect);
+        send_email(
+            "Drop Partition Error",
+            "$error during partion drop: $final_sql",
+            "d"
+        );
+		// No exit here since error could be that the partition
+		// never existed. Can add IF EXISTS hack if we want later
+    } else {
+        mysqli_close($mysql_connect);
+    }
+}
 
 /***********************************************************************
 multi_insert($database, $table, $data_array, $col_heads)
-// TODO(cert): Update how this words
+// TODO(cert): Update how this works
 NEW: If colheads is associative arrays checks for acceptable nulls
 ************************************************************************/
 
