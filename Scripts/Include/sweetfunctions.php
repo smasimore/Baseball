@@ -619,6 +619,15 @@ function index_by($data, $index, $index_2 = null, $index_3 = null) {
     return $indexed_table;
 }
 
+function index_by_nonunique($data, $index) {
+    $indexed_table = array();
+    foreach ($data as $row) {
+        $i1 = $row[$index];
+        $indexed_table[$i1][] = $row;
+    }
+    return $indexed_table;
+}
+
 function export_sql_to_csv($csv_name, $rows) {
     $header = array_keys($rows[0]);
     $data = array_merge(array($header), $rows);
