@@ -52,16 +52,27 @@ function pullSeasonData($season, $ds, $table) {
 
 function fillPitchers($pitcher, $stats, $type) {
     $pitcher = json_decode($pitcher, true);
+    $player_id = $pitcher['id'];
     return array(
-        'player_name' => $pitcher['name'] ?: $pitcher['id'],
-        'handedness' => $pitcher['hand'],
-        'era' => $pitcher[$type.'_era'],
-        'bucket' => $pitcher[$type.'_bucket'],
-        'avg_innings' => $pitcher[$type.'_avg_innings'],
+        'player_id' =>
+            isset($pitcher['id']) ? $pitcher['id'] : null,
+        'player_name' =>
+            isset($pitcher['name']) ? $pitcher['name'] : $pitcher['id'],
+        'handedness' =>
+            isset($pitcher['hand']) ? $pitcher['hand'] : null,
+        'era' =>
+            isset($pitcher[$type.'_era'])
+            ? $pitcher[$type.'_era'] : null,
+        'bucket' =>
+            isset($pitcher[$type.'_bucket'])
+            ? $pitcher[$type.'_bucket'] : null,
+        'avg_innings' =>
+            isset($pitcher[$type.'_avg_innings'])
+            ? $pitcher[$type.'_avg_innings'] : null,
         'pitcher_vs_batter' =>
-            $stats[$player_id]
-            ? $stats[$player_id]['stats']
-            : $stats['joe_average']['stats'],
+            isset($stats[$player_id])
+            ? json_decode($stats[$player_id]['stats'], true)
+            : json_decode($stats['joe_average']['stats'], true),
         'reliever_vs_batter' => null
     );
 }
@@ -110,8 +121,17 @@ for ($season = $startScript;
     $season < $endScript;
     $season++) {
 
+    // Drop and re-add partitions for this season/type/year combo.
+    $partitions = array(
+        $season => 'int',
+        $statsType => 'string',
+        $statsYear => 'string'
+    );
+    drop_partition(DATABASE, $insert_table, $partitions);
+    add_partition(DATABASE, $insert_table, $partitions);
     list($season_start, $season_end) = updateSeasonVars($season);
     $season_lineup = pullSeasonLineup($season);
+
     for ($ds = $season_start;
         $ds <= $season_end;
         $ds = ds_modify($ds, '+1 day')) {
@@ -167,15 +187,7 @@ for ($season = $startScript;
             );
         }
 
-        // Create unique partition name, drop if exists and then add.
-        $partitions = array(
-            $season => 'int',
-            $statsType => 'string',
-            $statsYear => 'string'
-        );
         if (!$test && isset($sim_input_data)) {
-            drop_partition(DATABASE, $insert_table, $partitions);
-            add_partition(DATABASE, $insert_table, $partitions);
             multi_insert(
                 DATABASE,
                 $insert_table,
