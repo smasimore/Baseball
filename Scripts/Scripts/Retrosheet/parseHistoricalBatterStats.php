@@ -115,6 +115,7 @@ function updateMissingSplits(
     if (!isset($player_season)) {
         return null;
     }
+    $player_season['joe_average'] = $average_season;
     foreach ($player_season as $player_id => $dates) {
         foreach ($dates as $date => $split_data) {
             // Note: We are cycling through ALL splits (per the global var).
@@ -145,7 +146,7 @@ function updateMissingSplits(
             }
         }
     }
-    $player_season['joe_average'] = $average_season;
+    print_r($player_season['joe_average']); exit();
     return $player_season;
 }
 
@@ -216,7 +217,9 @@ function convertSeasonToPct($average_season) {
 }
 
 $test = false;
-$type = 'batting';
+$type =
+    'batting';
+    //'pitching';
 
 $season_vars = array(
     'start_script' => 1950,

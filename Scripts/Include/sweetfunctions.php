@@ -293,7 +293,8 @@ $duplicate_names = array(
     )
 );
 
-$splits = array('Total',
+$splits = array(
+    'Total',
     'Home', 
     'Away', 
     'VsLeft', 
