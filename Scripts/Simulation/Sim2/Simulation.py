@@ -116,16 +116,21 @@ class Simulation:
 
 
     def __init__(self,
+        batter_pitcher_ratio,
         weights,
         season = time.strftime("%Y"),
         stats_year = 'current',
         stats_type = 'basic'):
 
+        self.startTime = datetime.datetime.now()
+
+        self.validateBatterPitcherRatio(batter_pitcher_ratio)
         self.validateWeights(weights, stats_type)
         self.validateSeasonYear(season)
         self.validateInList(stats_type, self.STATS_TYPES)
         self.validateInList(stats_year, self.STATS_YEAR)
 
+        self.batterPitcherRatio = batter_pitcher_ratio
         self.weights = weights
         self.season = season
         self.statsYear = stats_year
@@ -154,6 +159,8 @@ class Simulation:
 
         self.__fetchAtBatImpactData()
         self.__runGames()
+
+        print 'Time Taken: ' + str(datetime.datetime.now() - self.startTime)
 
         # Return first row with cols for tests.
         return dict(zip(self.SIM_OUTPUT_COLUMNS, self.__exportResults()[0]))
@@ -274,6 +281,10 @@ class Simulation:
             query = query + " AND game_date = '%s'" % self.gameDate
 
         results = MySQL.read(query)
+        if not results:
+            raise ValueError(
+                'No data in %s for query \n %s' % (self.__TABLE, query)
+            )
 
         # Convert jsons to dicts.
         formatted_results = []
@@ -294,9 +305,16 @@ class Simulation:
         self.inputData = formatted_results
 
     def __fetchAtBatImpactData(self):
-        table = self.__AT_BAT_IMPACT_TABLE
-        query = (""" SELECT * FROM %s""" % (table))
+        query = (""" SELECT * FROM %s""" % (self.__AT_BAT_IMPACT_TABLE))
         results = MySQL.read(query)
+
+        if not results:
+            raise ValueError(
+                'No data in %s for query \n %s' % (
+                    self.__AT_BAT_IMPACT_TABLE,
+                    query
+                )
+            )
 
         # Convert to useable data (index : {result1 : .1, result2 : .2, etc...}
         self.atBatImpactData = self.__processAtBatImpactData(results)
@@ -434,6 +452,16 @@ class Simulation:
         ]
 
     ########## PARAM VALIDATION FUNCTIONS ##########
+
+    def validateBatterPitcherRatio(self, ratio):
+        if not isinstance(ratio, float):
+            raise ValueError(
+                'Batter pitcher ratio needs to be a float. %s is not.'
+                % ratio)
+        if ratio > 1.0 or ratio < 0:
+            raise ValueError(
+                'Batter pitcher ratio needs to be between 0 and 1. %s is not.'
+                % ratio)
 
     def validateWeights(self, weights, stats_type):
         # Check if param is dictionary.

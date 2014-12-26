@@ -115,11 +115,17 @@ class Game:
         # Get hit type by subtracting rand from all stacked_values and getting
         # smallest result that's still > 0. This means the stacked value that is
         # closest but greater than rand will be selected.
-        rand = random.random()
-        filtered_stats = {}
-        for stat,value in stats.iteritems():
-            if value - rand >= 0:
-                filtered_stats[stat] = value - rand
+
+        # Due to rounding, top value is not always 1.0, so need to keep doing
+        # this until rand <= top value.
+        while (True):
+            rand = random.random()
+            filtered_stats = {}
+            for stat,value in stats.iteritems():
+                if value - rand >= 0:
+                    filtered_stats[stat] = value - rand
+            if filtered_stats:
+                break
 
         return min(filtered_stats, key=filtered_stats.get)
 

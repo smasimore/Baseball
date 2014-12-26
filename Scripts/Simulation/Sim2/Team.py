@@ -70,7 +70,7 @@ class Team:
         weighted_batter_stats = {}
         # Loop through each type of at bat result.
         for at_bat_result in stats_to_average[stats_to_average.keys()[0]]:
-            if at_bat_result == 'player_name':
+            if at_bat_result[:4] != 'pct_':
                 continue
 
             weighted_batter_stats[at_bat_result] = 0
@@ -78,7 +78,8 @@ class Team:
             for stat in stats_to_average:
                 # Add weighted stat value to at_bat_result.
                 weighted_batter_stats[at_bat_result] += (
-                    stat_weights[stat] * stats_to_average[stat][at_bat_result]
+                    stat_weights[stat] *
+                    float(stats_to_average[stat][at_bat_result])
                 )
 
         return weighted_batter_stats
@@ -120,6 +121,7 @@ class Team:
             ]
 
         if StatCategories.PITCHER_ERA_BAND in self.categoryWeights.keys():
+            # TODO(smas): add 'or' logic like below. Handle reliever era band.
             if inning <= self.pitcherData['avg_innings']:
                 stat_weights[self.__getPitcherERABand()] = (
                     self.categoryWeights[StatCategories.PITCHER_ERA_BAND]

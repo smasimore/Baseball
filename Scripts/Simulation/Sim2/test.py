@@ -5,12 +5,10 @@ weights = {
     StatCategories.TOTAL : .1,
     StatCategories.HOME_AWAY : .2,
     StatCategories.PITCHER_HANDEDNESS : .2,
-    StatCategories.PITCHER_ERA_BAND : .1,
-    StatCategories.PITCHER_VS_BATTER : .2,
-    StatCategories.SITUATION : .2
+    StatCategories.SITUATION : .5
 }
 
-test = Simulation(weights, 2014, 'current', 'basic')
-test.setTestRun(True)
+test = Simulation(1.0, weights, 1950, 'career', 'basic')
+#test.setTestRun(True)
 #test.setWeightsMutator('example')
 test.run()
