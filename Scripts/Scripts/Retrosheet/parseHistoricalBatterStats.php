@@ -146,7 +146,6 @@ function updateMissingSplits(
             }
         }
     }
-    print_r($player_season['joe_average']); exit();
     return $player_season;
 }
 

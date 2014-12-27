@@ -227,7 +227,6 @@ function getStartingPitcherArray($pitcher_name, $pitcher) {
         'career_avg_innings' => 
             isset($pitcher['career_avg_innings_starter'])
             ? $pitcher['career_avg_innings_starter'] : null
->>>>>>> master
     );
     return $stats;
 }

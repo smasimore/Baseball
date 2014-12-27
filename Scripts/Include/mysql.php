@@ -294,7 +294,7 @@ function drop_partition($database, $table, $partition_keys) {
             $partitions .= "$partition,";
         }
     }
-    $partitions = trim($partitions, ",");
+	$partitions = trim($partitions, ",");
     $final_sql =
         "ALTER TABLE $table DROP PARTITION $partition_string";
     $result = mysqli_query($mysql_connect, $final_sql);
@@ -304,11 +304,11 @@ function drop_partition($database, $table, $partition_keys) {
         $error = mysqli_error($mysql_connect);
         echo $error;
         mysqli_close($mysql_connect);
-        send_email(
-            "Drop Partition Error",
-            "$error during partion drop: $final_sql",
-            "d"
-        );
+        //send_email(
+        //    "Drop Partition Error",
+        //    "$error during partion drop: $final_sql",
+        //    "d"
+        //);
 		// No exit here since error could be that the partition
 		// never existed. Can add IF EXISTS hack if we want later
     } else {

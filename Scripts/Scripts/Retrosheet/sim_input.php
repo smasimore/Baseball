@@ -12,8 +12,8 @@ include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
 $startScript = '1950';
 $endScript  = '2014';
 $statsYear =
-    //'season';
-    'career';
+    'season';
+    //'career';
 $statsType =
     'basic';
     //'magic';
@@ -55,11 +55,11 @@ function fillPitchers($pitcher, $stats, $type) {
     $player_id = $pitcher['id'];
     return array(
         'player_id' =>
-            isset($pitcher['id']) ? $pitcher['id'] : null,
+            isset($pitcher['id']) ? $pitcher['id'] : 'joe_average',
         'player_name' =>
             isset($pitcher['name']) ? $pitcher['name'] : $pitcher['id'],
         'handedness' =>
-            isset($pitcher['hand']) ? $pitcher['hand'] : null,
+            isset($pitcher['hand']) ? $pitcher['hand'] : '?',
         'era' =>
             isset($pitcher[$type.'_era'])
             ? $pitcher[$type.'_era'] : null,
@@ -87,6 +87,8 @@ function fillLineups($lineup, $stats) {
             isset($stats[$player_id])
             ? json_decode($stats[$player_id]['stats'], true)
             : json_decode($stats['joe_average']['stats'], true);
+        $batter_v_pitcher['hand'] = 
+            isset($player['hand']) ? $player['hand'] : null;
         $filled_lineups[$pos] = $batter_v_pitcher;
     }
     return $filled_lineups;
