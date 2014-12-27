@@ -112,7 +112,7 @@ function insert($database, $table, $data_array) {
 
     $mysql_connect = connect_to_database();
 
-	echo '========'."\n";
+    echo '========'."\n";
 	while ($attempts < 10 && mysqli_connect_errno()) {
 		$mysql_connect = connect_to_database();
 		$attempts ++;
@@ -490,13 +490,12 @@ function update(
 
     # Create column and data values for SQL command
 	$setting_list="";
-	for ($xx=0; $xx<count($data_array); $xx++)
-		{
+	for ($xx=0; $xx<count($data_array); $xx++) {
 		list($key,$value)=each($data_array);
-		$setting_list.= $key."="."\"".$value."\"";
+		$setting_list.= $key."="."'$value'";
 		if ($xx!=count($data_array)-1)
 			$setting_list .= ",";
-		}
+	}
 
     # Create SQL command
 	$sql="UPDATE ".$table." SET ".$setting_list." WHERE ". $key_column." = " . "\"" . $id . "\"";
