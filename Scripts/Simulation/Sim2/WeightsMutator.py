@@ -6,4 +6,4 @@ class WeightsMutator:
 
     @staticmethod
     def example(inning, outs, bases, winning):
-        return {StatCategories.TOTAL : 1}
+        return {StatCategories.B_TOTAL : 1}

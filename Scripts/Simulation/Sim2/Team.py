@@ -11,13 +11,14 @@ class Team:
         ):
         self.homeAway = home_away
         self.categoryWeights = weights
-        self.pitcherData = pitching_data
+        self.pitchingData = pitching_data
         self.battingData = batting_data
 
         # Used to speed up getBatterStats.
         self.storedBatterStats = {}
 
     def getBatterStats(self, batter, inning, outs, bases, winning):
+        # TODO(smas): Include inning due to reliever and use multidim dict.
         index = str(batter) + str(outs) + str(bases)
         if hasattr(self, 'weightsMutator'):
             if self.weightsMutator:
@@ -29,14 +30,33 @@ class Team:
                 return (self.storedBatterStats[index]['stacked'],
                     self.storedBatterStats[index]['unstacked'])
 
-        stat_weights = self.__getStatWeights(inning, outs, bases)
+        stat_weights = self.__getStatWeights(
+            inning,
+            outs,
+            bases,
+            batter
+        )
         batter_stats = self.battingData[str(batter)]
+
         stats_to_average = {}
         for stat,weight in stat_weights.iteritems():
-            if stat in batter_stats:
+            # Batter stats.
+            if stat[:2] != 'p_':
                 stats_to_average[stat] = batter_stats[stat]
+            # Pitcher stats.
             else:
-                stats_to_average[stat] = self.pitcherData[stat]
+                # Remove 'p_' prefix to get pitcher stats.
+                p_stat = stat[2:]
+                # Starting pitcher stats. Or if no reliever stats.
+                if (inning <= self.pitchingData['avg_innings'] or
+                    not self.pitchingData[Pitcher.RELIEVER]):
+                    stats_to_average[stat] = (
+                        self.pitchingData[Pitcher.STARTER][p_stat]
+                    )
+                else:
+                    stats_to_average[stat] = (
+                        self.pitchingData[Pitcher.RELIEVER][p_stat]
+                    )
 
         weighted_batter_stats = self.__calculateWeightedBatterStats(
             stat_weights,
@@ -61,7 +81,12 @@ class Team:
             if not stacked_batter_stats:
                stacked_value = value
             else:
-                stacked_value = (max(stacked_batter_stats.values()) + value)
+                # Needs to be forced to be 0 or else can get multiple values
+                # equal to > 0 values (e.g. single and strikeout = 1)
+                if value == 0:
+                    stacked_value = 0
+                else:
+                    stacked_value = (max(stacked_batter_stats.values()) + value)
             stacked_batter_stats[stat.replace('pct_', '')] = stacked_value
 
         return stacked_batter_stats
@@ -101,55 +126,72 @@ class Team:
     ########## GETTERS ##########
 
     # Dependent on inning, outs, and bases.
-    def __getStatWeights(self, inning, outs, bases):
+    def __getStatWeights(self, inning, outs, bases, batter):
         # Reset statWeights for each batter.
         stat_weights = {}
-
-        if StatCategories.TOTAL in self.categoryWeights.keys():
+        if StatCategories.B_TOTAL in self.categoryWeights.keys():
             stat_weights[Total.TOTAL] = self.categoryWeights[
-                StatCategories.TOTAL
+                StatCategories.B_TOTAL
             ]
 
-        if StatCategories.HOME_AWAY in self.categoryWeights.keys():
+        if StatCategories.B_HOME_AWAY in self.categoryWeights.keys():
             stat_weights[self.homeAway] = self.categoryWeights[
-                StatCategories.HOME_AWAY
+                StatCategories.B_HOME_AWAY
             ]
 
-        if StatCategories.PITCHER_HANDEDNESS in self.categoryWeights.keys():
+        if StatCategories.B_PITCHER_HANDEDNESS in self.categoryWeights.keys():
             stat_weights[self.__getPitcherHandedness()] = self.categoryWeights[
-                StatCategories.PITCHER_HANDEDNESS
+                StatCategories.B_PITCHER_HANDEDNESS
             ]
 
-        if StatCategories.PITCHER_ERA_BAND in self.categoryWeights.keys():
-            # TODO(smas): add 'or' logic like below. Handle reliever era band.
-            if inning <= self.pitcherData['avg_innings']:
+        if StatCategories.B_PITCHER_ERA_BAND in self.categoryWeights.keys():
+            if inning <= self.pitchingData['avg_innings']:
                 stat_weights[self.__getPitcherERABand()] = (
-                    self.categoryWeights[StatCategories.PITCHER_ERA_BAND]
+                    self.categoryWeights[StatCategories.B_PITCHER_ERA_BAND]
                 )
             else:
                 stat_weights[self.__getRelieverERABand()] = (
-                    self.categoryWeights[StatCategories.PITCHER_ERA_BAND]
+                    self.categoryWeights[StatCategories.B_PITCHER_ERA_BAND]
                 )
 
-        if StatCategories.PITCHER_VS_BATTER in self.categoryWeights.keys():
-            if (inning <= self.pitcherData['avg_innings'] or
-                not self.pitcherData[PitcherVSBatter.RELIEVER_VS_BATTER]):
-                stat_weights[PitcherVSBatter.PITCHER_VS_BATTER] = (
-                    self.categoryWeights[StatCategories.PITCHER_VS_BATTER]
-                )
-            else:
-                stat_weights[PitcherVSBatter.RELIEVER_VS_BATTER] = (
-                    self.categoryWeights[StatCategories.PITCHER_VS_BATTER]
-                )
-
-        if StatCategories.SITUATION in self.categoryWeights.keys():
+        if StatCategories.B_SITUATION in self.categoryWeights.keys():
             stat_weights[self.__getSituation(bases, outs)] = (
-                self.categoryWeights[StatCategories.SITUATION]
+                self.categoryWeights[StatCategories.B_SITUATION]
             )
 
-        if StatCategories.STADIUM in self.categoryWeights.keys():
+        if StatCategories.B_STADIUM in self.categoryWeights.keys():
             stat_weights[Stadium.STADIUM] = (
-                self.categoryWeights[StatCategories.STADIUM]
+                self.categoryWeights[StatCategories.B_STADIUM]
+            )
+
+        if StatCategories.P_TOTAL in self.categoryWeights.keys():
+            stat_weights['p_' + Total.TOTAL] = self.categoryWeights[
+                StatCategories.P_TOTAL
+            ]
+
+        if StatCategories.P_HOME_AWAY in self.categoryWeights.keys():
+            stat_weights['p_' + HomeAway.getOpposite(self.homeAway)] = (
+                self.categoryWeights[StatCategories.P_HOME_AWAY]
+            )
+
+        if StatCategories.P_BATTER_HANDEDNESS in self.categoryWeights.keys():
+            stat_weights['p_' + self.__getBatterHandedness(batter)] = (
+                self.categoryWeights[StatCategories.P_BATTER_HANDEDNESS]
+            )
+
+        if StatCategories.P_BATTER_AVG_BAND in self.categoryWeights.keys():
+            stat_weights['p_' + self.__getBatterAVGBand(batter)] = (
+                self.categoryWeights[StatCategories.P_BATTER_AVG_BAND]
+            )
+
+        if StatCategories.P_SITUATION in self.categoryWeights.keys():
+            stat_weights['p_' + self.__getSituation(bases, outs)] = (
+                self.categoryWeights[StatCategories.P_SITUATION]
+            )
+
+        if StatCategories.P_STADIUM in self.categoryWeights.keys():
+            stat_weights['p_' + Stadium.STADIUM] = (
+                self.categoryWeights[StatCategories.P_STADIUM]
             )
 
         return stat_weights
@@ -157,16 +199,35 @@ class Team:
     # Defaults to RIGHT if not specified.
     def __getPitcherHandedness(self):
         return (
-            PitcherHandedness.LEFT
-            if self.pitcherData['handedness'] == 'L'
-            else PitcherHandedness.RIGHT
+            Handedness.LEFT
+            if self.pitchingData['handedness'] == 'L'
+            else Handedness.RIGHT
         )
 
+    def __getBatterHandedness(self, batter):
+        batter_h = self.battingData[str(batter)]['handedness']
+
+        # Switch hitter. Default to opposite of pitcher's handedness.
+        if batter_h == 'B':
+            pitcher_h = self.__getPitcherHandedness()
+            return Handedness.getOpposite(pitcher_h)
+        else:
+            return (
+                Handedness.LEFT
+                if batter_h == 'L' else Handedness.RIGHT
+            )
+
     def __getPitcherERABand(self):
-        return self.pitcherData['bucket']
+        return self.pitchingData['bucket']
 
     def __getRelieverERABand(self):
-        return self.pitcherData['reliever_bucket']
+        # If null, default to starter band.
+        return (self.pitchingData['reliever_bucket'] if
+            self.pitchingData['reliever_bucket'] else
+            self.__getPitcherERABand())
+
+    def __getBatterAVGBand(self, batter):
+        return self.battingData[str(batter)]['bucket']
 
     def __getSituation(self, bases, outs):
         # Check if 2 outs and batter in scoring position.

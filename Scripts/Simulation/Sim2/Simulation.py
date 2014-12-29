@@ -7,31 +7,6 @@ from collections import OrderedDict
 
 class Simulation:
 
-    '''
-
-    STARTING TABLE:
-        ds (date added) **partition**
-        timestamp
-        gameid (date . hour . home)
-        game_date
-        home
-        away
-        stats_type **partition**
-        stats_year **partition** (don't need 2013, 2014, etc all in it,
-                    just need career for defaulting)
-        season **partition**
-
-        pitching_h (name, handedness, bucket, era, innings, batter v pitcher,
-                    reliever b v p, reliever bucket, text/mediumtext)
-        pitching_a
-        batting_h (include stadium, only include relevant h/a, l/r?, stadium,
-                    pitcher bucket, reliever bucket, text/mediumtext)
-        batting_a
-        error_rate_h (team error rate)
-        error_rate_a
-
-    '''
-
     ########## PRIVATE CONSTANTS ##########
     __TABLE = 'sim_input'
     __TEST_TABLE = 'sim_input_test'
@@ -89,13 +64,18 @@ class Simulation:
     ]
 
     STATS = [
-        StatCategories.TOTAL,
-        StatCategories.HOME_AWAY,
-        StatCategories.PITCHER_HANDEDNESS,
-        StatCategories.PITCHER_ERA_BAND,
-        StatCategories.PITCHER_VS_BATTER,
-        StatCategories.SITUATION,
-        StatCategories.STADIUM,
+        StatCategories.B_TOTAL,
+        StatCategories.B_HOME_AWAY,
+        StatCategories.B_PITCHER_HANDEDNESS,
+        StatCategories.B_PITCHER_ERA_BAND,
+        StatCategories.B_SITUATION,
+        StatCategories.B_STADIUM,
+        StatCategories.P_TOTAL,
+        StatCategories.P_HOME_AWAY,
+        StatCategories.P_BATTER_HANDEDNESS,
+        StatCategories.P_BATTER_AVG_BAND,
+        StatCategories.P_SITUATION,
+        StatCategories.P_STADIUM,
     ]
 
     STATS_YEAR = [
@@ -107,7 +87,7 @@ class Simulation:
 
 
     ########## DEFAULT PARAMS - use setter functions to override. ##########
-    ANALYSIS_RUNS = 5000
+    ANALYSIS_RUNS = 1
     GAME_DATE = None # Set a date to run a specific day of games.
                      # Timespan not currently available.
     TEST_RUN = False
@@ -116,7 +96,6 @@ class Simulation:
 
 
     def __init__(self,
-        batter_pitcher_ratio,
         weights,
         season = time.strftime("%Y"),
         stats_year = 'current',
@@ -124,13 +103,11 @@ class Simulation:
 
         self.startTime = datetime.datetime.now()
 
-        self.validateBatterPitcherRatio(batter_pitcher_ratio)
         self.validateWeights(weights, stats_type)
         self.validateSeasonYear(season)
         self.validateInList(stats_type, self.STATS_TYPES)
         self.validateInList(stats_year, self.STATS_YEAR)
 
-        self.batterPitcherRatio = batter_pitcher_ratio
         self.weights = weights
         self.season = season
         self.statsYear = stats_year
@@ -346,7 +323,7 @@ class Simulation:
 
 
     def __logToDebugTable(self, debug_log):
-        sim_params = self.getSimParams()
+        sim_params = self.__getSimParams()
         for at_bat in debug_log:
             at_bat.extend(sim_params)
             at_bat.append(self.testRun)
@@ -391,7 +368,7 @@ class Simulation:
         return readable
 
     def __exportResults(self):
-        sim_params = self.getSimParams()
+        sim_params = self.__getSimParams()
         results = []
         for game in self.simResults:
             game.extend(sim_params)
@@ -438,7 +415,7 @@ class Simulation:
     def setInputData(self, input_data):
         self.inputData = input_data
 
-    def getSimParams(self):
+    def __getSimParams(self):
         weights_readable = self.__getReadableWeights()
         return [
             self.season,
@@ -452,16 +429,6 @@ class Simulation:
         ]
 
     ########## PARAM VALIDATION FUNCTIONS ##########
-
-    def validateBatterPitcherRatio(self, ratio):
-        if not isinstance(ratio, float):
-            raise ValueError(
-                'Batter pitcher ratio needs to be a float. %s is not.'
-                % ratio)
-        if ratio > 1.0 or ratio < 0:
-            raise ValueError(
-                'Batter pitcher ratio needs to be between 0 and 1. %s is not.'
-                % ratio)
 
     def validateWeights(self, weights, stats_type):
         # Check if param is dictionary.

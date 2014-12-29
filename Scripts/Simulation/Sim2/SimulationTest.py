@@ -5,7 +5,7 @@ from Game import StatCategories
 from WeightsMutator import WeightsMutator
 from Team import Team
 
-class TeamTestCase(unittest.TestCase):
+class SimulationTestCase(unittest.TestCase):
 
     def __getBatting(self, batting):
         team_batting = {}
@@ -39,8 +39,8 @@ class TeamTestCase(unittest.TestCase):
         game.setInputData(input_data)
         return game.run()
 
-    def test_total(self):
-        weights = {StatCategories.TOTAL : 1.0}
+    def test_b_total(self):
+        weights = {StatCategories.B_TOTAL : 1.0}
         b_h = {
             Total.TOTAL : {
                 u'pct_strikeout': 0.5,
@@ -55,13 +55,13 @@ class TeamTestCase(unittest.TestCase):
         p_h = {
             'handedness' : 'L',
             'avg_innings' : 99,
-            'bucket' : 'ERA25',
+            'bucket' : '25',
             'pitcher_vs_batter' : {}
         }
         p_a = {
             'handedness' : 'R',
             'avg_innings' : 99,
-            'bucket' : 'ERA50',
+            'bucket' : '50',
             'pitcher_vs_batter' : {}
         }
 
@@ -90,8 +90,8 @@ class TeamTestCase(unittest.TestCase):
                 'a_test',
                 'current',
                 1.0,
-                2,
-                'total_100',
+                6,
+                'b_total_100',
                 'basic',
                 2014,
                 'test',
@@ -99,8 +99,8 @@ class TeamTestCase(unittest.TestCase):
             ]
         )
 
-    def test_home_away(self):
-        weights = {StatCategories.HOME_AWAY : 1.0}
+    def test_b_home_away(self):
+        weights = {StatCategories.B_HOME_AWAY : 1.0}
         b_h = {
             HomeAway.HOME : {
                 u'pct_strikeout': 0.5,
@@ -115,13 +115,53 @@ class TeamTestCase(unittest.TestCase):
         p_h = {
             'handedness' : 'L',
             'avg_innings' : 99,
-            'bucket' : 'ERA25',
+            'bucket' : '25',
             'pitcher_vs_batter' : {}
         }
         p_a = {
             'handedness' : 'R',
             'avg_innings' : 99,
-            'bucket' : 'ERA50',
+            'bucket' : '50',
+            'pitcher_vs_batter' : {}
+        }
+
+        results = self.__runGame(weights, b_h, b_a, p_h, p_a)
+        self.assertEqual(
+            [
+                results['home_win_pct'],
+                results['weights_i'],
+                results['weights'],
+            ],
+            [
+                1.0,
+                1,
+                'b_home_away_100',
+            ]
+        )
+
+    def test_b_pitcher_handedness(self):
+        weights = {StatCategories.B_PITCHER_HANDEDNESS : 1.0}
+        b_h = {
+            Handedness.RIGHT : {
+                u'pct_strikeout': 0.5,
+                u'pct_single': 0.5,
+            }
+        }
+        b_a = {
+            Handedness.LEFT : {
+                u'pct_strikeout': 1,
+            }
+        }
+        p_h = {
+            'handedness' : 'L',
+            'avg_innings' : 99,
+            'bucket' : '25',
+            'pitcher_vs_batter' : {}
+        }
+        p_a = {
+            'handedness' : 'R',
+            'avg_innings' : 99,
+            'bucket' : '50',
             'pitcher_vs_batter' : {}
         }
 
@@ -135,33 +175,101 @@ class TeamTestCase(unittest.TestCase):
             [
                 1.0,
                 3,
-                'home_away_100',
+                'b_pitcher_handedness_100',
             ]
         )
 
-    def test_pitcher_handedness(self):
-        weights = {StatCategories.PITCHER_HANDEDNESS : 1.0}
+    def test_b_pitcher_era_band(self):
+        weights = {StatCategories.B_PITCHER_ERA_BAND : 1.0}
         b_h = {
-            PitcherHandedness.RIGHT : {
+            PerformanceBand.B50 : {
                 u'pct_strikeout': 0.5,
                 u'pct_single': 0.5,
             }
         }
         b_a = {
-            PitcherHandedness.LEFT : {
+            PerformanceBand.B25 : {
                 u'pct_strikeout': 1,
             }
         }
         p_h = {
             'handedness' : 'L',
             'avg_innings' : 99,
-            'bucket' : 'ERA25',
+            'bucket' : '25',
             'pitcher_vs_batter' : {}
         }
         p_a = {
             'handedness' : 'R',
             'avg_innings' : 99,
-            'bucket' : 'ERA50',
+            'bucket' : '50',
+            'pitcher_vs_batter' : {}
+        }
+
+        results = self.__runGame(weights, b_h, b_a, p_h, p_a)
+        self.assertEqual(
+            [
+                results['home_win_pct'],
+                results['weights_i'],
+                results['weights'],
+            ],
+            [
+                1.0,
+                2,
+                'b_pitcher_era_band_100',
+            ]
+        )
+
+    def test_b_situation(self):
+        weights = {StatCategories.B_SITUATION : 1.0}
+        b_h = {
+            Situations.NONE_ON : {
+                u'pct_strikeout': 0.5,
+                u'pct_single': 0.5,
+            },
+            Situations.RUNNERS_ON : {
+                u'pct_strikeout': 0.5,
+                u'pct_single': 0.5,
+            },
+            Situations.SCORING_POS : {
+                u'pct_strikeout': 0.5,
+                u'pct_single': 0.5,
+            },
+            Situations.SCORING_POS_2O : {
+                u'pct_strikeout': 0.5,
+                u'pct_single': 0.5,
+            },
+            Situations.BASES_LOADED : {
+                u'pct_strikeout': 0.5,
+                u'pct_single': 0.5,
+            }
+        }
+        b_a = {
+            Situations.NONE_ON : {
+                u'pct_strikeout': 1.0,
+            },
+            Situations.RUNNERS_ON : {
+                u'pct_strikeout': 1.0,
+            },
+            Situations.SCORING_POS : {
+                u'pct_strikeout': 1.0,
+            },
+            Situations.SCORING_POS_2O : {
+                u'pct_strikeout': 1.0,
+            },
+            Situations.BASES_LOADED : {
+                u'pct_strikeout': 1.0,
+            }
+        }
+        p_h = {
+            'handedness' : 'L',
+            'avg_innings' : 99,
+            'bucket' : '25',
+            'pitcher_vs_batter' : {}
+        }
+        p_a = {
+            'handedness' : 'R',
+            'avg_innings' : 99,
+            'bucket' : '50',
             'pitcher_vs_batter' : {}
         }
 
@@ -175,33 +283,33 @@ class TeamTestCase(unittest.TestCase):
             [
                 1.0,
                 4,
-                'pitcher_handedness_100',
+                'b_situation_100',
             ]
         )
 
-    def test_pitcher_era_band(self):
-        weights = {StatCategories.PITCHER_ERA_BAND : 1.0}
+    def test_b_stadium(self):
+        weights = {StatCategories.B_STADIUM : 1.0}
         b_h = {
-            PitcherERABand.ERA50 : {
+            Stadium.STADIUM : {
                 u'pct_strikeout': 0.5,
                 u'pct_single': 0.5,
             }
         }
         b_a = {
-            PitcherERABand.ERA25 : {
+            Stadium.STADIUM : {
                 u'pct_strikeout': 1,
             }
         }
         p_h = {
             'handedness' : 'L',
             'avg_innings' : 99,
-            'bucket' : 'ERA25',
+            'bucket' : '25',
             'pitcher_vs_batter' : {}
         }
         p_a = {
             'handedness' : 'R',
             'avg_innings' : 99,
-            'bucket' : 'ERA50',
+            'bucket' : '50',
             'pitcher_vs_batter' : {}
         }
 
@@ -215,178 +323,34 @@ class TeamTestCase(unittest.TestCase):
             [
                 1.0,
                 5,
-                'pitcher_era_band_100',
+                'b_stadium_100',
             ]
         )
 
-    def test_pitcher_vs_batter(self):
-        weights = {StatCategories.PITCHER_VS_BATTER : 1.0}
+    def test_p_total(self):
+        weights = {StatCategories.P_TOTAL : 1.0}
         b_h = {}
         b_a = {}
         p_h = {
             'handedness' : 'L',
             'avg_innings' : 99,
-            'bucket' : 'ERA25',
+            'bucket' : '25',
             'pitcher_vs_batter' : {
-                u'pct_strikeout': 1.0,
+                Total.TOTAL : {
+                    u'pct_strikeout': 1,
+                }
             }
         }
         p_a = {
             'handedness' : 'R',
             'avg_innings' : 99,
-            'bucket' : 'ERA50',
+            'bucket' : '50',
             'pitcher_vs_batter' : {
-                u'pct_strikeout': 0.5,
-                u'pct_single': 0.5,
+                Total.TOTAL : {
+                    u'pct_strikeout': 0.5,
+                    u'pct_single': 0.5,
+                }
             }
-        }
-
-        results = self.__runGame(weights, b_h, b_a, p_h, p_a)
-        self.assertEqual(
-            [
-                results['home_win_pct'],
-                results['weights_i'],
-                results['weights'],
-            ],
-            [
-                1.0,
-                6,
-                'pitcher_vs_batter_100',
-            ]
-        )
-
-    def test_reliever_vs_batter(self):
-        weights = {StatCategories.PITCHER_VS_BATTER : 1.0}
-        b_h = {}
-        b_a = {}
-        p_h = {
-            'handedness' : 'L',
-            'avg_innings' : 7,
-            'bucket' : 'ERA25',
-            'pitcher_vs_batter' : {
-                u'pct_strikeout': 1.0,
-            },
-            'reliever_vs_batter' : {
-                u'pct_strikeout': 1.0,
-            }
-        }
-        p_a = {
-            'handedness' : 'R',
-            'avg_innings' : 7,
-            'bucket' : 'ERA50',
-            'pitcher_vs_batter' : {
-                u'pct_strikeout': 1.0,
-            },
-            'reliever_vs_batter' : {
-                u'pct_single': 0.5,
-                u'pct_strikeout': 0.5,
-            }
-        }
-
-        results = self.__runGame(weights, b_h, b_a, p_h, p_a)
-        self.assertEqual(
-            [
-                results['home_win_pct'],
-                results['weights_i'],
-                results['weights'],
-            ],
-            [
-                1.0,
-                6,
-                'pitcher_vs_batter_100',
-            ]
-        )
-
-    def test_no_reliever_vs_batter(self):
-        weights = {StatCategories.PITCHER_VS_BATTER : 1.0}
-        b_h = {}
-        b_a = {}
-        p_h = {
-            'handedness' : 'L',
-            'avg_innings' : 7,
-            'bucket' : 'ERA25',
-            'pitcher_vs_batter' : {
-                u'pct_strikeout': 1.0,
-            },
-            'reliever_vs_batter' : {}
-        }
-        p_a = {
-            'handedness' : 'R',
-            'avg_innings' : 7,
-            'bucket' : 'ERA50',
-            'pitcher_vs_batter' : {
-                u'pct_single': 0.5,
-                u'pct_strikeout': 0.5,
-            },
-            'reliever_vs_batter' : {}
-        }
-
-        results = self.__runGame(weights, b_h, b_a, p_h, p_a)
-        self.assertEqual(
-            [
-                results['home_win_pct'],
-                results['weights_i'],
-                results['weights'],
-            ],
-            [
-                1.0,
-                6,
-                'pitcher_vs_batter_100',
-            ]
-        )
-
-    def test_situation(self):
-        weights = {StatCategories.SITUATION : 1.0}
-        b_h = {
-            Situations.NONE_ON : {
-                u'pct_strikeout': 0.5,
-                u'pct_single': 0.5,
-            },
-            Situations.RUNNERS_ON : {
-                u'pct_strikeout': 0.5,
-                u'pct_single': 0.5,
-            },
-            Situations.SCORING_POS : {
-                u'pct_strikeout': 0.5,
-                u'pct_single': 0.5,
-            },
-            Situations.SCORING_POS_2O : {
-                u'pct_strikeout': 0.5,
-                u'pct_single': 0.5,
-            },
-            Situations.BASES_LOADED : {
-                u'pct_strikeout': 0.5,
-                u'pct_single': 0.5,
-            }
-        }
-        b_a = {
-            Situations.NONE_ON : {
-                u'pct_strikeout': 1.0,
-            },
-            Situations.RUNNERS_ON : {
-                u'pct_strikeout': 1.0,
-            },
-            Situations.SCORING_POS : {
-                u'pct_strikeout': 1.0,
-            },
-            Situations.SCORING_POS_2O : {
-                u'pct_strikeout': 1.0,
-            },
-            Situations.BASES_LOADED : {
-                u'pct_strikeout': 1.0,
-            }
-        }
-        p_h = {
-            'handedness' : 'L',
-            'avg_innings' : 99,
-            'bucket' : 'ERA25',
-            'pitcher_vs_batter' : {}
-        }
-        p_a = {
-            'handedness' : 'R',
-            'avg_innings' : 99,
-            'bucket' : 'ERA50',
-            'pitcher_vs_batter' : {}
         }
 
         results = self.__runGame(weights, b_h, b_a, p_h, p_a)
@@ -399,34 +363,34 @@ class TeamTestCase(unittest.TestCase):
             [
                 1.0,
                 7,
-                'situation_100',
+                'p_total_100',
             ]
         )
 
-    def test_stadium(self):
-        weights = {StatCategories.STADIUM : 1.0}
-        b_h = {
-            Stadium.STADIUM : {
-                u'pct_strikeout': 0.5,
-                u'pct_single': 0.5,
-            }
-        }
-        b_a = {
-            Stadium.STADIUM : {
-                u'pct_strikeout': 1,
-            }
-        }
+    def test_p_home_away(self):
+        weights = {StatCategories.P_HOME_AWAY : 1.0}
+        b_h = {}
+        b_a = {}
         p_h = {
             'handedness' : 'L',
             'avg_innings' : 99,
-            'bucket' : 'ERA25',
-            'pitcher_vs_batter' : {}
+            'bucket' : '25',
+            'pitcher_vs_batter' : {
+                HomeAway.HOME : {
+                    u'pct_strikeout': 1,
+                }
+            }
         }
         p_a = {
             'handedness' : 'R',
             'avg_innings' : 99,
-            'bucket' : 'ERA50',
-            'pitcher_vs_batter' : {}
+            'bucket' : '50',
+            'pitcher_vs_batter' : {
+                HomeAway.AWAY : {
+                    u'pct_strikeout': 0.5,
+                    u'pct_single': 0.5,
+                }
+            }
         }
 
         results = self.__runGame(weights, b_h, b_a, p_h, p_a)
@@ -439,7 +403,321 @@ class TeamTestCase(unittest.TestCase):
             [
                 1.0,
                 8,
-                'stadium_100',
+                'p_home_away_100',
+            ]
+        )
+
+    def test_p_batter_handedness(self):
+        weights = {StatCategories.P_BATTER_HANDEDNESS : 1.0}
+        b_h = {'handedness' : 'L'}
+        b_a = {'handedness' : 'R'}
+        p_h = {
+            'handedness' : 'L',
+            'avg_innings' : 99,
+            'bucket' : '25',
+            'pitcher_vs_batter' : {
+                Handedness.RIGHT : {
+                    u'pct_strikeout': 1,
+                }
+            }
+        }
+        p_a = {
+            'handedness' : 'R',
+            'avg_innings' : 99,
+            'bucket' : '50',
+            'pitcher_vs_batter' : {
+                Handedness.LEFT : {
+                    u'pct_strikeout': 0.5,
+                    u'pct_single': 0.5,
+                }
+            }
+        }
+
+        results = self.__runGame(weights, b_h, b_a, p_h, p_a)
+        self.assertEqual(
+            [
+                results['home_win_pct'],
+                results['weights_i'],
+                results['weights'],
+            ],
+            [
+                1.0,
+                9,
+                'p_batter_handedness_100',
+            ]
+        )
+
+    def test_p_batter_handedness_switch(self):
+        weights = {StatCategories.P_BATTER_HANDEDNESS : 1.0}
+        b_h = {'handedness' : 'B'}
+        b_a = {'handedness' : 'B'}
+        p_h = {
+            'handedness' : 'L',
+            'avg_innings' : 99,
+            'bucket' : '25',
+            'pitcher_vs_batter' : {
+                Handedness.RIGHT : {
+                    u'pct_strikeout': 1,
+                }
+            }
+        }
+        p_a = {
+            'handedness' : 'R',
+            'avg_innings' : 99,
+            'bucket' : '50',
+            'pitcher_vs_batter' : {
+                Handedness.LEFT : {
+                    u'pct_strikeout': 0.5,
+                    u'pct_single': 0.5,
+                }
+            }
+        }
+
+        results = self.__runGame(weights, b_h, b_a, p_h, p_a)
+        self.assertEqual(
+            [
+                results['home_win_pct'],
+                results['weights_i'],
+                results['weights'],
+            ],
+            [
+                1.0,
+                9,
+                'p_batter_handedness_100',
+            ]
+        )
+
+    def test_p_batter_avg_band(self):
+        weights = {StatCategories.P_BATTER_AVG_BAND : 1.0}
+        b_h = {'bucket' : '100'}
+        b_a = {'bucket' : '50'}
+        p_h = {
+            'handedness' : 'L',
+            'avg_innings' : 99,
+            'bucket' : '25',
+            'pitcher_vs_batter' : {
+                PerformanceBand.B50 : {
+                    u'pct_strikeout': 1,
+                }
+            }
+        }
+        p_a = {
+            'handedness' : 'R',
+            'avg_innings' : 99,
+            'bucket' : '50',
+            'pitcher_vs_batter' : {
+                PerformanceBand.B100 : {
+                    u'pct_strikeout': 0.5,
+                    u'pct_single': 0.5,
+                }
+            }
+        }
+
+        results = self.__runGame(weights, b_h, b_a, p_h, p_a)
+        self.assertEqual(
+            [
+                results['home_win_pct'],
+                results['weights_i'],
+                results['weights'],
+            ],
+            [
+                1.0,
+                10,
+                'p_batter_avg_band_100',
+            ]
+        )
+
+    def test_p_situation(self):
+        weights = {StatCategories.P_SITUATION : 1.0}
+        b_h = {}
+        b_a = {}
+        p_h = {
+            'handedness' : 'L',
+            'avg_innings' : 99,
+            'bucket' : '25',
+            'pitcher_vs_batter' : {
+                Situations.NONE_ON : {
+                    u'pct_strikeout': 1.0,
+                },
+                Situations.RUNNERS_ON : {
+                    u'pct_strikeout': 1.0,
+                },
+                Situations.SCORING_POS : {
+                    u'pct_strikeout': 1.0,
+                },
+                Situations.SCORING_POS_2O : {
+                    u'pct_strikeout': 1.0,
+                },
+                Situations.BASES_LOADED : {
+                    u'pct_strikeout': 1.0,
+                }
+            }
+        }
+        p_a = {
+            'handedness' : 'R',
+            'avg_innings' : 99,
+            'bucket' : '50',
+            'pitcher_vs_batter' : {
+                Situations.NONE_ON : {
+                    u'pct_strikeout': 0.5,
+                    u'pct_single': 0.5,
+                },
+                Situations.RUNNERS_ON : {
+                    u'pct_strikeout': 0.5,
+                    u'pct_single': 0.5,
+                },
+                Situations.SCORING_POS : {
+                    u'pct_strikeout': 0.5,
+                    u'pct_single': 0.5,
+                },
+                Situations.SCORING_POS_2O : {
+                    u'pct_strikeout': 0.5,
+                    u'pct_single': 0.5,
+                },
+                Situations.BASES_LOADED : {
+                    u'pct_strikeout': 0.5,
+                    u'pct_single': 0.5,
+                }
+            }
+        }
+
+        results = self.__runGame(weights, b_h, b_a, p_h, p_a)
+        self.assertEqual(
+            [
+                results['home_win_pct'],
+                results['weights_i'],
+                results['weights'],
+            ],
+            [
+                1.0,
+                11,
+                'p_situation_100',
+            ]
+        )
+
+    def test_p_stadium(self):
+        weights = {StatCategories.P_STADIUM : 1.0}
+        b_h = {}
+        b_a = {}
+        p_h = {
+            'handedness' : 'L',
+            'avg_innings' : 99,
+            'bucket' : '25',
+            'pitcher_vs_batter' : {
+                Stadium.STADIUM : {
+                    u'pct_strikeout': 1,
+                }
+            }
+        }
+        p_a = {
+            'handedness' : 'R',
+            'avg_innings' : 99,
+            'bucket' : '50',
+            'pitcher_vs_batter' : {
+                Stadium.STADIUM : {
+                    u'pct_strikeout': 0.5,
+                    u'pct_single': 0.5,
+                }
+            }
+        }
+
+        results = self.__runGame(weights, b_h, b_a, p_h, p_a)
+        self.assertEqual(
+            [
+                results['home_win_pct'],
+                results['weights_i'],
+                results['weights'],
+            ],
+            [
+                1.0,
+                12,
+                'p_stadium_100',
+            ]
+        )
+
+    def test_p_total_reliever(self):
+        weights = {StatCategories.P_TOTAL : 1.0}
+        b_h = {}
+        b_a = {}
+        p_h = {
+            'handedness' : 'L',
+            'avg_innings' : 99,
+            'bucket' : '25',
+            'pitcher_vs_batter' : {
+                Total.TOTAL : {
+                    u'pct_strikeout': 1,
+                }
+            }
+        }
+        p_a = {
+            'handedness' : 'R',
+            'avg_innings' : 5,
+            'bucket' : '50',
+            'pitcher_vs_batter' : {
+                Total.TOTAL : {
+                    u'pct_strikeout': 1,
+                }
+            },
+            'reliever_vs_batter' : {
+                Total.TOTAL : {
+                    u'pct_strikeout': 0.5,
+                    u'pct_single': 0.5,
+                }
+            }
+        }
+
+        results = self.__runGame(weights, b_h, b_a, p_h, p_a)
+        self.assertEqual(
+            [
+                results['home_win_pct'],
+                results['weights_i'],
+                results['weights'],
+            ],
+            [
+                1.0,
+                7,
+                'p_total_100',
+            ]
+        )
+
+    def test_p_total_no_reliever(self):
+        weights = {StatCategories.P_TOTAL : 1.0}
+        b_h = {}
+        b_a = {}
+        p_h = {
+            'handedness' : 'L',
+            'avg_innings' : 99,
+            'bucket' : '25',
+            'pitcher_vs_batter' : {
+                Total.TOTAL : {
+                    u'pct_strikeout': 1,
+                }
+            }
+        }
+        p_a = {
+            'handedness' : 'R',
+            'avg_innings' : 5,
+            'bucket' : '50',
+            'pitcher_vs_batter' : {
+                Total.TOTAL : {
+                    u'pct_single': 0.5,
+                    u'pct_strikeout': 0.5,
+                }
+            },
+            'reliever_vs_batter' : {}
+        }
+
+        results = self.__runGame(weights, b_h, b_a, p_h, p_a)
+        self.assertEqual(
+            [
+                results['home_win_pct'],
+                results['weights_i'],
+                results['weights'],
+            ],
+            [
+                1.0,
+                7,
+                'p_total_100',
             ]
         )
 

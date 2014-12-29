@@ -9,32 +9,12 @@ class TeamTestCase(unittest.TestCase):
         u'avg_innings': 5,
         u'name': u'Dan Certner',
         u'reliever_era': 5.5,
-        u'reliever_bucket': u'ERA100',
+        u'reliever_bucket': u'100',
         u'handedness': u'R',
-        u'bucket': u'ERA75',
+        u'bucket': u'75',
         u'era': 3.5,
-        u'reliever_vs_batter':{
-            u'pct_fly_out': 0.1,
-            u'pct_triple': 0.1,
-            u'player_name': u'cert pitcher',
-            u'pct_ground_out': 0.1,
-            u'pct_walk': 0.1,
-            u'pct_double': 0.1,
-            u'pct_strikeout': 0.1,
-            u'pct_single': 0.3,
-            u'pct_home_run': 0.1
-        },
-        u'pitcher_vs_batter': {
-            u'pct_fly_out': 0.1,
-            u'pct_triple': 0.1,
-            u'player_name': u'cert pitcher',
-            u'pct_ground_out': 0.1,
-            u'pct_walk': 0.1,
-            u'pct_double': 0.1,
-            u'pct_strikeout': 0.1,
-            u'pct_single': 0.3,
-            u'pct_home_run': 0.1
-        }
+        u'reliever_vs_batter':{},
+        u'pitcher_vs_batter': {}
     }
 
     __BATTING_DATA = {
@@ -50,7 +30,7 @@ class TeamTestCase(unittest.TestCase):
                 u'pct_single': 0.3,
                 u'pct_home_run': 0.1
             },
-            u'ERA100': {
+            u'100': {
                 u'pct_fly_out': 0.1,
                 u'pct_triple': 0.1,
                 u'player_name': u'smas1',
@@ -61,7 +41,7 @@ class TeamTestCase(unittest.TestCase):
                 u'pct_single': 0.3,
                 u'pct_home_run': 0.1
             },
-            u'ERA75': {
+            u'75': {
                 u'pct_fly_out': 0.1,
                 u'pct_triple': 0.1,
                 u'player_name': u'smas1',
@@ -119,13 +99,12 @@ class TeamTestCase(unittest.TestCase):
 
 
     __WEIGHTS = {
-        'pitcher_era_band': 0.1,
-        'home_away': 0.2,
-        'pitcher_handedness': 0.2,
-        'stadium': 0.1,
-        'situation': 0.1,
-        'total': 0.1,
-        'pitcher_vs_batter': 0.2
+        'b_pitcher_era_band': 0.1,
+        'b_home_away': 0.2,
+        'b_pitcher_handedness': 0.2,
+        'b_stadium': 0.1,
+        'b_situation': 0.1,
+        'b_total': 0.3,
     }
 
     def test_nomutator(self):
@@ -151,14 +130,14 @@ class TeamTestCase(unittest.TestCase):
         self.assertEqual(
             unstacked,
             {
-                u'pct_fly_out': 0.11000000000000003,
+                u'pct_fly_out': 0.11000000000000001,
                 u'pct_triple': 0.09000000000000001,
-                u'pct_ground_out': 0.10000000000000002,
-                u'pct_walk': 0.10000000000000002,
-                u'pct_double': 0.10000000000000002,
-                u'pct_strikeout': 0.10000000000000002,
+                u'pct_ground_out': 0.1,
+                u'pct_walk': 0.1,
+                u'pct_double': 0.1,
+                u'pct_strikeout': 0.1,
                 u'pct_single': 0.3,
-                u'pct_home_run': 0.10000000000000002
+                u'pct_home_run': 0.1
             }
         )
 
@@ -178,7 +157,7 @@ class TeamTestCase(unittest.TestCase):
             Bases.FIRST_SECOND_THIRD,
             True
         )
-        print unstacked
+
         self.assertGreater(min(stacked.values()), 0)
         self.assertAlmostEqual(max(stacked.values()), 1)
         self.assertAlmostEqual(sum(unstacked.values()), 1)

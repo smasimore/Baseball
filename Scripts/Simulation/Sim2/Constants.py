@@ -1,11 +1,24 @@
+# B prefix means it's the batter's stats. P means pitcher's.
 class StatCategories:
-    TOTAL = 'total'
-    HOME_AWAY = 'home_away'
-    PITCHER_HANDEDNESS = 'pitcher_handedness'
-    PITCHER_ERA_BAND = 'pitcher_era_band'
-    PITCHER_VS_BATTER = 'pitcher_vs_batter'
-    SITUATION = 'situation'
-    STADIUM = 'stadium'
+    B_TOTAL = 'b_total'
+    B_HOME_AWAY = 'b_home_away'
+    B_PITCHER_HANDEDNESS = 'b_pitcher_handedness'
+    B_PITCHER_ERA_BAND = 'b_pitcher_era_band'
+    B_SITUATION = 'b_situation'
+    B_STADIUM = 'b_stadium'
+
+    P_TOTAL = 'p_total'
+    P_HOME_AWAY = 'p_home_away'
+    P_BATTER_HANDEDNESS = 'p_batter_handedness'
+    P_BATTER_AVG_BAND = 'p_batter_avg_band'
+    P_SITUATION = 'p_situation'
+    P_STADIUM = 'p_stadium'
+
+# Pitcher stats can be starter or reliever. These are the keys that contain
+# the relevant pitcher's data within the sim_input['pitching_h'] dict.
+class Pitcher:
+    STARTER = 'pitcher_vs_batter'
+    RELIEVER = 'reliever_vs_batter'
 
 class Total:
     TOTAL = 'Total'
@@ -14,19 +27,24 @@ class HomeAway:
     HOME = 'Home'
     AWAY = 'Away'
 
-class PitcherHandedness:
+    @staticmethod
+    def getOpposite(ha):
+        return HomeAway.HOME if ha == HomeAway.AWAY else HomeAway.AWAY
+
+class Handedness:
     LEFT = 'VsLeft'
     RIGHT = 'VsRight'
 
-class PitcherERABand:
-    ERA25 = 'ERA25'
-    ERA50 = 'ERA50'
-    ERA75 = 'ERA75'
-    ERA100 = 'ERA100'
+    @staticmethod
+    def getOpposite(h):
+        return Handedness.RIGHT if h == Handedness.LEFT else Handedness.LEFT
 
-class PitcherVSBatter:
-    PITCHER_VS_BATTER = 'pitcher_vs_batter'
-    RELIEVER_VS_BATTER = 'reliever_vs_batter'
+# Lower means lower ERA/average. B stands for band.
+class PerformanceBand:
+    B25 = '25'
+    B50 = '50'
+    B75 = '75'
+    B100 = '100'
 
 class Situations:
     NONE_ON = 'NoneOn'
