@@ -87,7 +87,7 @@ class Simulation:
 
 
     ########## DEFAULT PARAMS - use setter functions to override. ##########
-    ANALYSIS_RUNS = 1
+    ANALYSIS_RUNS = 5000
     GAME_DATE = None # Set a date to run a specific day of games.
                      # Timespan not currently available.
     TEST_RUN = False

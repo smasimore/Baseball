@@ -8,11 +8,14 @@ class Team:
         weights,
         pitching_data,
         batting_data,
-        ):
+    ):
         self.homeAway = home_away
         self.categoryWeights = weights
         self.pitchingData = pitching_data
         self.battingData = batting_data
+
+        # Initialize.
+        self.weightsMutator = None
 
         # Used to speed up getBatterStats.
         self.storedBatterStats = {}
@@ -20,9 +23,8 @@ class Team:
     def getBatterStats(self, batter, inning, outs, bases, winning):
         # TODO(smas): Include inning due to reliever and use multidim dict.
         index = str(batter) + str(outs) + str(bases)
-        if hasattr(self, 'weightsMutator'):
-            if self.weightsMutator:
-                self.__setCategoryWeights(inning, outs, bases, winning)
+        if self.weightsMutator:
+            self.__setCategoryWeights(inning, outs, bases, winning)
 
         # If no mutator, can use self.storedBatterStats to speed up this step.
         else:
@@ -49,6 +51,7 @@ class Team:
                 p_stat = stat[2:]
                 # Starting pitcher stats. Or if no reliever stats.
                 if (inning <= self.pitchingData['avg_innings'] or
+                    Pitcher.RELIEVER not in self.pitchingData or
                     not self.pitchingData[Pitcher.RELIEVER]):
                     stats_to_average[stat] = (
                         self.pitchingData[Pitcher.STARTER][p_stat]
@@ -65,12 +68,11 @@ class Team:
 
         stacked = self.__calculateStackedBatterStats(weighted_batter_stats)
 
-        if hasattr(self, 'weightsMutator'):
-            if not self.weightsMutator:
-                self.storedBatterStats[index] = {
-                    'stacked' : stacked,
-                    'unstacked' : weighted_batter_stats
-                }
+        if not self.weightsMutator:
+            self.storedBatterStats[index] = {
+                'stacked' : stacked,
+                'unstacked' : weighted_batter_stats
+            }
 
         # Return weighted_batter_stats for logging.
         return (stacked, weighted_batter_stats)
