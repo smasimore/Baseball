@@ -460,7 +460,8 @@ function update(
         3,
         '/Users/Logs/MySQL_requests.log'
     );
-
+	
+	$attempts = 0;
     # Connect to MySQL server and select database
 	$mysql_connect = connect_to_database();
 

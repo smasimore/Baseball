@@ -80,7 +80,7 @@ function getSeasonStartEnd($season) {
         FROM events
         WHERE season = '$season'
         GROUP BY season";
-    $season_dates = exe_sql(DATABASE, $season_sql);
+    $season_dates = reset(exe_sql(DATABASE, $season_sql));
     $season_start = convertRetroDateToDs($season, $season_dates['start']);
     $season_end = convertRetroDateToDs($season, $season_dates['end']);
     return array($season_start, $season_end);

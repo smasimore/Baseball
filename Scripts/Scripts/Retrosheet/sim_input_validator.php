@@ -16,9 +16,14 @@ const BATTER = 'batter';
 const SEASON = 'season';
 const CAREER = 'career';
 const BASIC = 'basic';
+const HOME = 'home';
+const AWAY = 'away';
 const HOME_ABBR = 'h';
 const AWAY_ABBR = 'a';
-const SIM_INPUT = 'sim_input';
+const JOE_AVERAGE = 'joe_average';
+const SIM_INPUT_TABLE = 'sim_input';
+const GAMES_TABLE = 'games';
+const EVENTS_TABLE = 'events';
 const STAT_DIFFERENCE = .001;
 
 $numTestDates = 5;
@@ -26,17 +31,59 @@ $statsYear = //CAREER;
             SEASON;
 $statsType = BASIC;
 $silenceSuccess = true;
+$skipJoeAverage = false;
 $splitsTested = array();
+$recentPlayers = array();
+$joeAverages = array();
+$splits = array(
+    'Total',
+    'Home',
+    'Away',
+    'VsLeft',
+    'VsRight',
+    'NoneOn',
+    'RunnersOn',
+    'ScoringPos',
+    'ScoringPos2Out',
+    'BasesLoaded'
+);
 
 function pullSimInput($test_days) {
     global $statsYear, $statsType;
     $season = substr($ds, 0, 4);
     $sql = "SELECT *
-        FROM " . SIM_INPUT . "
+        FROM " . SIM_INPUT_TABLE . "
         WHERE game_date in($test_days)
         AND stats_type = '$statsType'
         AND stats_year = '$statsYear'";
     return exe_sql(DATABASE, $sql);
+}
+
+function pullRecentPlayers($game_id, $type) {
+    global $recentPlayers;
+    $season = substr($game_id, 3, 4);
+    $ds = substr($game_id, 7, 4);
+    $five_ago = $season - 4;
+    $type_id = $type == BATTER ? 'BAT_ID' : 'PIT_ID';
+    $sql = "SELECT DISTINCT $type_id
+        FROM " . EVENTS_TABLE . "
+        WHERE (season < $season
+        AND season >= $five_ago)
+        OR (season = $season
+        AND substr(game_id, 8, 4) < $ds)";
+    if (isset($recentPlayers[$sql])) {
+        $data = $recentPlayers[$sql];
+    } else {
+        $data = exe_sql(DATABASE, $sql);
+        $recentPlayers[$sql] = $data;
+    }
+    $players = array();
+    foreach ($data as $player) {
+        $name = $player[$type_id];
+        $players[] = "'$name'";
+    }
+    $players = implode(',', $players);
+    return $players;
 }
 
 function pullPlateAppearances(
@@ -83,15 +130,50 @@ function assertTrue($truth, $game_id, $stat, $error = null) {
     }
 }
 
+function pullLineup($game_id) {
+    $sql = "SELECT *
+        FROM " . GAMES_TABLE .
+        " WHERE game_id = '$game_id'";
+    return reset(exe_sql(DATABASE, $sql));
+}
+
+function validateBatter($lineup, $batter_id, $home_away, $lineup_pos) {
+    $home_away = ($home_away == HOME_ABBR) ? HOME : AWAY;
+    $game_id = $lineup['GAME_ID'];
+    $batter_index =
+        strtoupper($home_away) . '_LINEUP' . $lineup_pos . '_BAT_ID';
+    $actual_batter = $lineup[$batter_index];
+    // For Joe Average ensure that batter doesn't meet MIN_AT_BATS.
+    if ($batter_id == JOE_AVERAGE) {
+        $pas = pullPlateAppearances(
+            "bat_id = '$actual_batter'",
+            $game_id
+        );
+        assertTrue(
+            ($pas < MIN_AT_BATS),
+            $game_id,
+            'batter_joe_average',
+            "$actual_batter !== 'joe_average'"
+        );
+    } else {
+        assertTrue(
+            ($actual_batter == $batter_id),
+            $game_id,
+            "batter_$home_away",
+            "$actual_batter !== $batter_id for L$i"
+        );
+    }
+}
+
 function validatePitcher($game_id, $pitcher_id, $home_away) {
     $pitcher =
-        ($home_away == HOME_ABBR) ? "HOME_START_PIT_ID" : "AWAY_START_PIT_ID";
+        ($home_away == HOME_ABBR) ? 'HOME_START_PIT_ID' : 'AWAY_START_PIT_ID';
     $sql = "SELECT $pitcher as pitcher
-        FROM games
-        WHERE game_id = '$game_id'";
+        FROM " . GAMES_TABLE .
+        " WHERE game_id = '$game_id'";
     $actual_pitcher = reset(exe_sql(DATABASE, $sql))['pitcher'];
     // For Joe Average ensure that pitcher doesn't meet MIN_AT_BATS.
-    if ($pitcher_id == 'joe_average') {
+    if ($pitcher_id == JOE_AVERAGE) {
         $pas = pullPlateAppearances(
             "pit_id = '$actual_pitcher'",
             $game_id
@@ -113,7 +195,7 @@ function validatePitcher($game_id, $pitcher_id, $home_away) {
 }
 
 function validateSplit($stats, $player_id, $split, $game_id, $type) {
-    global $statsYear;
+    global $statsYear, $joeAverages;
     $season = substr($game_id, 3, 4);
     $ds = substr($game_id, 7, 4);
     $prev_season =
@@ -123,12 +205,14 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
     // refers to the opposing batter.
     switch ($type) {
         case PITCHER:
-            $player_where = "PIT_ID = '$player_id'";
+            $type_id = 'PIT_ID';
+            $player_where = "$type_id = '$player_id'";
             $opp_hand = 'BAT_HAND_CD';
             $bat_home_id = RetrosheetHomeAway::AWAY;
             break;
         case BATTER:
-            $player_where = "BAT_ID = '$player_id'";
+            $type_id = 'BAT_ID';
+            $player_where = "$type_id = '$player_id'";
             $opp_hand = 'PIT_HAND_CD';
             $bat_home_id = RetrosheetHomeAway::HOME;
             break;
@@ -144,9 +228,6 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
         case "Away":
             $away_id = 1 - $bat_home_id;
             $where = "BAT_HOME_ID = $away_id";
-            break;
-        case "VsUnknown":
-            $where = "$opp_hand = '?'";
             break;
         case "VsLeft":
             $where = "$opp_hand = 'L'";
@@ -176,6 +257,7 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
     }
     // Create second copy of $where for use in Joe Average logic.
     $original_where = $where;
+    $is_joe_average = null;
     $pas = $stats['plate_appearances'];
     // Check to see if player has enough PA's to have stats, otherwise check
     // defaulting logic.
@@ -209,8 +291,10 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
     // DEFAULT 4: Season - Joe Average - Original Split
     // Set $where back to $original_where (for original split) and remove
     // $player_where (i.e. search all players to get joe_average)
+                        $recent_players = pullRecentPlayers($game_id, $type);
+                        $player_where = "$type_id in($recent_players)";
+                        $is_joe_average = 1;
                         $where = $original_where;
-                        $player_where = 'TRUE';
                         $prev_season = 'FALSE';
                         $pas = pullPlateAppearances(
                             $player_where,
@@ -251,7 +335,9 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
             if (is_null($pas) || $pas < MIN_AT_BATS) {
     // DEFAULT 2: Career - Joe Average - Original Split
                 $where = $original_where;
-                $player_where = 'TRUE';
+                $recent_players = pullRecentPlayers($game_id, $type);
+                $player_where = "$type_id in($recent_players)";
+                $is_joe_average = 1;
                 $pas = pullPlateAppearances(
                     $player_where,
                     $game_id,
@@ -310,45 +396,65 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
            ) b
         ON a.dummy = b.dummy
         ORDER BY 1-pct";
-    $data = exe_sql(DATABASE, $sql);
-    $data = index_by($data, 'event_name');
-    foreach ($stats as $split_name => $stat) {
-        if ($split_name == 'plate_appearances' || $split_name == 'player_id') {
-            continue;
+    // To save processing time don't re-run Joe Average queries
+    if ($is_joe_average && isset($joeAverages[$sql])) {
+        $data = $joeAverages[$sql];
+    } else {
+        $data = exe_sql(DATABASE, $sql);
+        $data = index_by($data, 'event_name');
+        if ($is_joe_average && !isset($joeAverages[$sql])) {
+            $joeAverages[$sql] = $data;
         }
-        $split_index = substr($split_name, 4);
-        $sql_stat = $data[$split_index]['pct'];
-        $difference = abs($sql_stat - $stat);
-        assertTrue(
-            ($difference < STAT_DIFFERENCE),
-            $game_id,
-            $split,
-            "$split_index error: $sql_stat !== $stat for $player_id in $season"
-        );
+    }
+    if ($skipJoeAverage) {
+        // TODO(cert): Queries might get long might want to do something with
+        // relative averages...only if it becomes a problem though.
+    } else {
+        foreach ($stats as $split_name => $stat) {
+            if ($split_name == 'plate_appearances'
+                || $split_name == 'player_id'
+            ) {
+                continue;
+            }
+            $split_index = substr($split_name, 4);
+            $sql_stat = $data[$split_index]['pct'];
+            $difference = abs($sql_stat - $stat);
+            assertTrue(
+                ($difference < STAT_DIFFERENCE),
+                $game_id,
+                $split,
+                "$split_index error: $sql_stat !== $stat for
+                    $player_id in $season"
+            );
+        }
     }
 }
 
 function validatePitching($game, $home_away) {
+    global $splits;
     $game_id = $game['gameid'];
     $pitching_data = json_decode($game["pitching_$home_away"], true);
     $pitcher_id = $pitching_data['player_id'];
     validatePitcher($game_id, $pitcher_id, $home_away);
-    // Validate Pitcher Splits
-    $splits = array(
-        'Total',
-        'Home',
-        'Away',
-        'VsLeft',
-        'VsRight',
-        'NoneOn',
-        'RunnersOn',
-        'ScoringPos',
-        'ScoringPos2Out',
-        'BasesLoaded'
-    );
     foreach ($splits as $split) {
         $stats = $pitching_data['pitcher_vs_batter'][$split];
         validateSplit($stats, $pitcher_id, $split, $game_id, PITCHER);
+    }
+}
+
+function validateBatting($game, $home_away) {
+    global $splits;
+    $game_id = $game['gameid'];
+    $batting_data = json_decode($game["batting_$home_away"], true);
+    $lineup = pullLineup($game_id);
+    for ($i = 1; $i < 10; $i++) {
+        $player_data = $batting_data[$i];
+        $batter_id = $player_data['Total']['player_id'];
+        validateBatter($lineup, $batter_id, $home_away, $i);
+        foreach ($splits as $split) {
+            $stats = $player_data[$split];
+            validateSplit($stats, $batter_id, $split, $game_id, BATTER);
+        }
     }
 }
 
@@ -363,7 +469,7 @@ for ($i = 0; $i < $numTestDates; $i++) {
 }
 // Override $test_days for now since all data isn't filled
 $test_days = array(
-    //"'1950-04-27'" => "'1950-04-27'",
+    "'1950-04-27'" => "'1950-04-27'",
     "'1950-05-02'" => "'1950-05-02'"
 );
 //////////////////////////////////////////////////////////
@@ -373,11 +479,24 @@ $sim_input = pullSimInput($test_days);
 if (!isset($sim_input)) {
     exit("No Valid Game Days in $test_days \n");
 }
+$start_message = "\n Testing...";
 foreach ($sim_input as $game) {
     // Validate pitchers.
+    echo $start_message . $game['gameid'] . "\n";
+    echo '                        pitching_h ';
     validatePitching($game, HOME_ABBR);
+    echo "SUCCESS! \n";
+    echo '                        pitching_a ';
     validatePitching($game, AWAY_ABBR);
+    echo "SUCCESS! \n";
+    echo '                        batting_h ';
+    validateBatting($game, HOME_ABBR);
+    echo "SUCCESS! \n";
+    echo '                        batting_a ';
+    validateBatting($game, AWAY_ABBR);
+    echo "SUCCESS! \n";
     $days_tested[$game['game_date']] = $game['game_date'];
+    $start_message = '           ';
 }
 
 echo "\n \n VARS VALIDATED: ";
