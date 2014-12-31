@@ -34,10 +34,9 @@ $statsType = BASIC;
 $silenceSuccess = true;
 $skipJoeAverage = false;
 $splitsTested = array();
-$recentPlayers = array();
-$joeAverages = array();
-$cacheQuery1 = null;
-$cacheQuery2 = null;
+$cache = array(
+    'hits' => 0
+);
 $splits = array(
     'Total',
     'Home',
@@ -64,7 +63,7 @@ function pullSimInput($test_days, $seasons) {
 }
 
 function pullRecentPlayers($game_id, $type) {
-    global $recentPlayers;
+    global $cache;
     $season = substr($game_id, 3, 4);
     $ds = substr($game_id, 7, 4);
     $five_ago = $season - 4;
@@ -75,11 +74,12 @@ function pullRecentPlayers($game_id, $type) {
         AND season >= $five_ago)
         OR (season = $season
         AND substr(game_id, 8, 4) < $ds)";
-    if (isset($recentPlayers[$sql])) {
-        $data = $recentPlayers[$sql];
+    if (isset($cache['recentPlayers'][$sql])) {
+        $data = $cache['recentPlayers'][$sql];
+        $cache['hits'] += 1;
     } else {
         $data = exe_sql(DATABASE, $sql);
-        $recentPlayers[$sql] = $data;
+        $cache['recentPlayers'][$sql] = $data;
     }
     $players = array();
     foreach ($data as $player) {
@@ -96,11 +96,11 @@ function pullPlateAppearances(
     $stats_year = null,
     $where = null
 ) {
-    global $statsYear;
+    global $statsYear, $cache;
     $season = substr($game_id, 3, 4);
     $ds = substr($game_id, 7, 4);
     // Use $statsYear unless overwritten in function input.
-    $stats_year ?: $statsYear;
+    $stats_year = $stats_year ?: $statsYear;
     // If stats_year == 'career' add previous season(s) to query.
     $prev_season =
         ($stats_year == CAREER)
@@ -115,17 +115,23 @@ function pullPlateAppearances(
         AND event_cd in(" . implode(',', RetrosheetBatting::getAllEvents()) . ")
         AND ($prev_season
         OR (season = $season && substr(game_id,8,4) < $ds))";
-    $data = reset(exe_sql(DATABASE, $sql));
+    if (isset($cache['plateAppearances'][$sql])) {
+        $data = $cache['plateAppearances'][$sql];
+        $cache['hits'] += 1;
+    } else {
+        $data = reset(exe_sql(DATABASE, $sql));
+        $cache['plateAppearances'][$sql] = $data;
+    }
     $pas = $data ? $data['plate_appearances'] : 0;
     return $pas;
 }
 
 function assertTrue($truth, $game_id, $stat, $error = null) {
-    global $silenceSuccess, $splitsTested, $cacheQuery1, $cacheQuery2;
+    global $silenceSuccess, $splitsTested, $cache;
     $message = "GAMEID: $game_id => $stat \t \t \t";
     if (!$truth) {
-        print_r($cacheQuery1);
-        print_r($cacheQuery1);
+        print_r($cache['Query1']);
+        print_r($cache['Query2']);
         exit("\n \n \n $message FAILED -- $error \n \n \n");
     } else {
         $splitsTested[$stat] =
@@ -202,8 +208,7 @@ function validatePitcher($game_id, $pitcher_id, $home_away) {
 }
 
 function validateSplit($stats, $player_id, $split, $game_id, $type) {
-    global
-        $statsYear, $joeAverages, $skipJoeAverage, $cacheQuery1, $cacheQuery2;
+    global $statsYear, $skipJoeAverage, $cache;
     $season = substr($game_id, 3, 4);
     $ds = substr($game_id, 7, 4);
     $prev_season =
@@ -273,25 +278,24 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
     // defaulting logic.
     if ($pas < MIN_AT_BATS) {
         if ($statsYear == 'season') {
-    // DEFAULT 1: Career - Original Split
-    // Move to career stats (set $prev_season to include all previous years)
-            $prev_season = "season < $season";
-            $pas = pullPlateAppearances(
-                $player_where,
-                $game_id,
-                CAREER,
-                $where
-            );
+    // DEFAULT 1: Season - Total Split
+            $where = 'TRUE';
+            $pas = pullPlateAppearances($player_where, $game_id);
             if ($pas < MIN_AT_BATS) {
-    // DEFAULT 2: Season - Total Split
-    // Set $prev_season back to FALSE and remove the WHERE (i.e. = TRUE)
-                $prev_season = 'FALSE';
-                $where = 'TRUE';
+    // DEFAULT 2: Career - Original Split
+    // Move to career stats (set $prev_season to include all previous years)
+                $prev_season = "season < $season";
+                $where = $original_where;
+                $pas = pullPlateAppearances(
+                    $player_where,
+                    $game_id,
+                    CAREER,
+                    $where
+                    );
                 $pas = pullPlateAppearances($player_where, $game_id);
                 if ($pas < MIN_AT_BATS) {
     // DEFAULT 3: Career - Total Split
-    // Set $prev_season back to career
-                    $prev_season = "season < $season";
+                    $where = 'TRUE';
                     $pas = pullPlateAppearances(
                         $player_where,
                         $game_id,
@@ -415,15 +419,16 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
         ON a.dummy = b.dummy
         ORDER BY 1-pct";
     // To save processing time don't re-run Joe Average queries
-    if ($is_joe_average && isset($joeAverages[$sql])) {
-        $data = $joeAverages[$sql];
+    if ($is_joe_average && isset($cache['joeAverages'][$sql])) {
+        $data = $cache['joeAverages'][$sql];
+        $cache['hits'] += 1;
     } else if ($is_joe_average && $skipJoeAverage) {
         // do nothing
     } else {
         $data = exe_sql(DATABASE, $sql);
         $data = index_by($data, 'event_name');
-        if ($is_joe_average && !isset($joeAverages[$sql])) {
-            $joeAverages[$sql] = $data;
+        if ($is_joe_average && !isset($cache['joeAverages'][$sql])) {
+            $cache['joeAverages'][$sql] = $data;
         }
         foreach ($stats as $split_name => $stat) {
             if ($split_name == 'plate_appearances'
@@ -435,8 +440,8 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
             $sql_stat =
                 isset($data[$split_index]) ? $data[$split_index]['pct'] : 0;
             $difference = abs($sql_stat - $stat);
-            $cacheQuery1 = $data;
-            $cacheQuery2 = $stats;
+            $cache['Query1'] = $data;
+            $cache['Query2'] = $stats;
             assertTrue(
                 ($difference < STAT_DIFFERENCE),
                 $game_id,
@@ -494,7 +499,7 @@ $test_days = array(
     "'1950-05-02'" => "'1950-05-02'"
 );
 $test_seasons = array(1950 => 1950);
- */
+*/
 //////////////////////////////////////////////////////////
 
 $test_days = implode(',', $test_days);
@@ -505,7 +510,6 @@ if (!isset($sim_input)) {
 }
 $start_message = "\n Testing...";
 foreach ($sim_input as $game) {
-    // Validate pitchers.
     echo $start_message . $game['gameid'] . "\n";
     echo '                        pitching_h ';
     validatePitching($game, HOME_ABBR);
@@ -527,6 +531,7 @@ echo "\n \n VARS VALIDATED: ";
 asort($splitsTested);
 print_r($splitsTested);
 $days_tested = count($days_tested);
-echo "\n \n \n SUCCESS => $days_tested DAYS TESTED \n \n \n \n";
+echo "\n \n \n SUCCESS => $days_tested DAYS TESTED \n \n";
+echo "Cache Hits = " . $cache['hits'] . "\n \n";
 
 ?>
