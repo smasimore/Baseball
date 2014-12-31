@@ -16,24 +16,24 @@ class RetrosheetBatting {
 
     public static function getAllEvents() {
         return array(
-            GENERIC_OUT => self::GENERIC_OUT,
-            STRIKEOUT => self::STRIKEOUT,
-            WALK => self::WALK,
-            INTENTIONAL_WALK => self::INTENTIONAL_WALK,
-            HIT_BY_PITCH => self::HIT_BY_PITCH,
-            FIELDERS_CHOICE => self::FIELDERS_CHOICE,
-            SINGLE => self::SINGLE,
-            DOUBLE => self::DOUBLE,
-            TRIPLE => self::TRIPLE,
-            HOME_RUN => self::HOME_RUN
+            'GENERIC_OUT' => self::GENERIC_OUT,
+            'STRIKEOUT' => self::STRIKEOUT,
+            'WALK' => self::WALK,
+            'INTENTIONAL_WALK' => self::INTENTIONAL_WALK,
+            'HIT_BY_PITCH' => self::HIT_BY_PITCH,
+            'FIELDERS_CHOICE' => self::FIELDERS_CHOICE,
+            'SINGLE' => self::SINGLE,
+            'DOUBLE' => self::DOUBLE,
+            'TRIPLE' => self::TRIPLE,
+            'HOME_RUN' => self::HOME_RUN
         );
     }
 
     public static function getWalkEvents() {
         return array(
-            WALK => self::WALK,
-            INTENTIONAL_WALK => self::INTENTIONAL_WALK,
-            HIT_BY_PITCH => self::HIT_BY_PITCH
+            'WALK' => self::WALK,
+            'INTENTIONAL_WALK' => self::INTENTIONAL_WALK,
+            'HIT_BY_PITCH' => self::HIT_BY_PITCH
         );
     }
 }
