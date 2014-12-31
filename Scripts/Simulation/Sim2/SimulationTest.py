@@ -24,6 +24,7 @@ class SimulationTestCase(unittest.TestCase):
         input_data = [{
             'gameid' : 'test',
             'game_date' : 'test',
+            'rand_bucket' : 0,
             'home' : 'h_test',
             'away' : 'a_test',
             'batting_h' : self.__getBatting(batting_h),

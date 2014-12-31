@@ -23,6 +23,7 @@ class Simulation:
         'game_details',
         'gameid',
         'game_date',
+        'rand_bucket',
         'date_ran_sim',
         'home',
         'away',
@@ -92,6 +93,11 @@ class Simulation:
                      # Timespan not currently available.
     TEST_RUN = False
     WEIGHTS_MUTATOR = None
+    DEBUG_LOGGING = False
+
+    # Input data split into 30 rand groups.
+    SAMPLE_MIN = 0
+    SAMPLE_MAX = 29
 
 
 
@@ -114,16 +120,16 @@ class Simulation:
         self.statsType = stats_type
         self.inputData = []
 
-        self.weightsMutator = self.WEIGHTS_MUTATOR
-        self.debugLoggingOn = True
-
         # Extra, defaulted params. To change call setters.
         self.analysisRuns = self.ANALYSIS_RUNS
         self.gameDate = self.GAME_DATE
         self.testRun = self.TEST_RUN # Use this in conjunction with setting a
                                      # file with test data. Sim will use test
                                      # data rather than MySQL.
-
+        self.weightsMutator = self.WEIGHTS_MUTATOR
+        self.debugLoggingOn = self.DEBUG_LOGGING
+        self.sampleMin = self.SAMPLE_MIN
+        self.sampleMax = self.SAMPLE_MAX
 
     def run(self):
         self.__addWeightsIndex()
@@ -175,6 +181,7 @@ class Simulation:
         results.extend([
             game_data['gameid'],
             game_data['game_date'],
+            game_data['rand_bucket'],
             time.strftime("%Y-%m-%d"),
             game_data['home'],
             game_data['away']
@@ -237,25 +244,35 @@ class Simulation:
                 )
 
     def __fetchInputData(self):
-        table = self.__TABLE if self.testRun is False else self.__TEST_TABLE
-        query = (
-            """SELECT *
-            FROM %s
-            WHERE
+        table= self.__TABLE if self.testRun is False else self.__TEST_TABLE
+
+        # Used in export step to clear output table of previous data.
+        self.queryWhere = (
+            """ WHERE
                 stats_type = '%s' AND
                 stats_year = '%s' AND
-                season = %d"""
+                season = %d AND
+                rand_bucket >= %d AND
+                rand_bucket <= %d"""
             % (
-                table,
                 self.statsType,
                 self.statsYear,
-                self.season
+                self.season,
+                self.sampleMin,
+                self.sampleMax
             )
         )
 
         # If gameDate set, only pull one day of data.
         if self.gameDate:
-            query = query + " AND game_date = '%s'" % self.gameDate
+            self.queryWhere = (self.queryWhere + " AND game_date = '%s'"
+                % self.gameDate)
+
+        query = (
+            """SELECT *
+            FROM %s %s"""
+            % (table, self.queryWhere)
+        )
 
         results = MySQL.read(query)
         if not results:
@@ -375,10 +392,12 @@ class Simulation:
             results.append(game)
 
         if not self.testRun:
-            MySQL.dropPartition(
-                self.__OUTPUT_TABLE,
-                str(self.season)+str(self.weightsIndex)
+            delete_query = (
+                """DELETE
+                FROM %s %s"""
+                % (self.__OUTPUT_TABLE, self.queryWhere)
             )
+            MySQL.delete(delete_query)
             MySQL.addPartition(
                 self.__OUTPUT_TABLE,
                 str(self.season)+str(self.weightsIndex),
@@ -414,6 +433,11 @@ class Simulation:
     # Override inputData for tests.
     def setInputData(self, input_data):
         self.inputData = input_data
+
+    def setSample(self, mini, maxi):
+        self.validateSample(mini, maxi)
+        self.sampleMin = mini
+        self.sampleMax = maxi
 
     def __getSimParams(self):
         weights_readable = self.__getReadableWeights()
@@ -479,3 +503,26 @@ class Simulation:
         if not method:
             raise ValueError(
                 '%s is not a valid WeightsMutator function' % weights_mutator)
+
+    def validateSample(self, mini, maxi):
+        if not isinstance(mini, int):
+            raise ValueError(
+                'Min sample value should be an int, %s is not' % mini)
+        if not isinstance(maxi, int):
+            raise ValueError(
+                'Max sample value should be an int, %s is not' % maxi)
+        if mini > maxi:
+            raise ValueError(
+                'Min sample value should be <= max, %s is not less than %s'
+                % (mini, maxi)
+            )
+        if mini < self.SAMPLE_MIN:
+            raise ValueError(
+                'Min sample value should be >= %s, %s is not'
+                % (self.SAMPLE_MIN, mini)
+            )
+        if maxi > self.SAMPLE_MAX:
+            raise ValueError(
+                'Max sample value should be <= %s, %s is not'
+                % (self.SAMPLE_MAX, maxi)
+            )
