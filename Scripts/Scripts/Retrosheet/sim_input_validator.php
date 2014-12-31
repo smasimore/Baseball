@@ -26,15 +26,18 @@ const GAMES_TABLE = 'games';
 const EVENTS_TABLE = 'events';
 const STAT_DIFFERENCE = .001;
 
-$numTestDates = 5;
-$statsYear = //CAREER;
-            SEASON;
+$numTestDates = 1;
+$maxYear = 1962;
+$statsYear = CAREER;
+            //SEASON;
 $statsType = BASIC;
 $silenceSuccess = true;
 $skipJoeAverage = false;
 $splitsTested = array();
 $recentPlayers = array();
 $joeAverages = array();
+$cacheQuery1 = null;
+$cacheQuery2 = null;
 $splits = array(
     'Total',
     'Home',
@@ -48,12 +51,13 @@ $splits = array(
     'BasesLoaded'
 );
 
-function pullSimInput($test_days) {
+function pullSimInput($test_days, $seasons) {
     global $statsYear, $statsType;
     $season = substr($ds, 0, 4);
     $sql = "SELECT *
         FROM " . SIM_INPUT_TABLE . "
-        WHERE game_date in($test_days)
+        WHERE season in($seasons)
+        AND game_date in($test_days)
         AND stats_type = '$statsType'
         AND stats_year = '$statsYear'";
     return exe_sql(DATABASE, $sql);
@@ -111,15 +115,17 @@ function pullPlateAppearances(
         AND event_cd in(" . implode(',', RetrosheetBatting::getAllEvents()) . ")
         AND ($prev_season
         OR (season = $season && substr(game_id,8,4) < $ds))";
-    $data = exe_sql(DATABASE, $sql);
-    $pas = $data ? reset($data)['plate_appearances'] : 0;
+    $data = reset(exe_sql(DATABASE, $sql));
+    $pas = $data ? $data['plate_appearances'] : 0;
     return $pas;
 }
 
 function assertTrue($truth, $game_id, $stat, $error = null) {
-    global $silenceSuccess, $splitsTested;
+    global $silenceSuccess, $splitsTested, $cacheQuery1, $cacheQuery2;
     $message = "GAMEID: $game_id => $stat \t \t \t";
     if (!$truth) {
+        print_r($cacheQuery1);
+        print_r($cacheQuery1);
         exit("\n \n \n $message FAILED -- $error \n \n \n");
     } else {
         $splitsTested[$stat] =
@@ -160,7 +166,7 @@ function validateBatter($lineup, $batter_id, $home_away, $lineup_pos) {
             ($actual_batter == $batter_id),
             $game_id,
             "batter_$home_away",
-            "$actual_batter !== $batter_id for L$i"
+            "$actual_batter !== $batter_id"
         );
     }
 }
@@ -171,7 +177,8 @@ function validatePitcher($game_id, $pitcher_id, $home_away) {
     $sql = "SELECT $pitcher as pitcher
         FROM " . GAMES_TABLE .
         " WHERE game_id = '$game_id'";
-    $actual_pitcher = reset(exe_sql(DATABASE, $sql))['pitcher'];
+    $data = reset(exe_sql(DATABASE, $sql));
+    $actual_pitcher = $data['pitcher'];
     // For Joe Average ensure that pitcher doesn't meet MIN_AT_BATS.
     if ($pitcher_id == JOE_AVERAGE) {
         $pas = pullPlateAppearances(
@@ -195,7 +202,8 @@ function validatePitcher($game_id, $pitcher_id, $home_away) {
 }
 
 function validateSplit($stats, $player_id, $split, $game_id, $type) {
-    global $statsYear, $joeAverages;
+    global
+        $statsYear, $joeAverages, $skipJoeAverage, $cacheQuery1, $cacheQuery2;
     $season = substr($game_id, 3, 4);
     $ds = substr($game_id, 7, 4);
     $prev_season =
@@ -258,10 +266,12 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
     // Create second copy of $where for use in Joe Average logic.
     $original_where = $where;
     $is_joe_average = null;
-    $pas = $stats['plate_appearances'];
+    $pas =
+        isset($stats['plate_appearances'])
+        ? $stats['plate_appearances'] : 0;
     // Check to see if player has enough PA's to have stats, otherwise check
     // defaulting logic.
-    if (is_null($pas) || $pas < MIN_AT_BATS) {
+    if ($pas < MIN_AT_BATS) {
         if ($statsYear == 'season') {
     // DEFAULT 1: Career - Original Split
     // Move to career stats (set $prev_season to include all previous years)
@@ -272,13 +282,13 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
                 CAREER,
                 $where
             );
-            if (is_null($pas) || $pas < MIN_AT_BATS) {
+            if ($pas < MIN_AT_BATS) {
     // DEFAULT 2: Season - Total Split
     // Set $prev_season back to FALSE and remove the WHERE (i.e. = TRUE)
                 $prev_season = 'FALSE';
                 $where = 'TRUE';
                 $pas = pullPlateAppearances($player_where, $game_id);
-                if (is_null($pas) || $pas < MIN_AT_BATS) {
+                if ($pas < MIN_AT_BATS) {
     // DEFAULT 3: Career - Total Split
     // Set $prev_season back to career
                     $prev_season = "season < $season";
@@ -287,41 +297,46 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
                         $game_id,
                         CAREER
                     );
-                    if (is_null($pas) || $pas < MIN_AT_BATS) {
+                    if ($pas < MIN_AT_BATS) {
     // DEFAULT 4: Season - Joe Average - Original Split
     // Set $where back to $original_where (for original split) and remove
     // $player_where (i.e. search all players to get joe_average)
-                        $recent_players = pullRecentPlayers($game_id, $type);
-                        $player_where = "$type_id in($recent_players)";
                         $is_joe_average = 1;
-                        $where = $original_where;
-                        $prev_season = 'FALSE';
-                        $pas = pullPlateAppearances(
-                            $player_where,
-                            $game_id,
-                            SEASON,
-                            $where
-                        );
-                        if (is_null($pas) || $pas < MIN_AT_BATS) {
-    // DEFAULT 5 - Career - Joe Average - Original Split
-                            $prev_season = "season < $season";
+                        if (!$skipJoeAverage) {
+                            $recent_players =
+                                pullRecentPlayers($game_id, $type);
+                            $player_where = "$type_id in($recent_players)";
+                            $where = $original_where;
+                            $prev_season = 'FALSE';
                             $pas = pullPlateAppearances(
                                 $player_where,
                                 $game_id,
-                                CAREER,
+                                SEASON,
                                 $where
                             );
-                            if (is_null($pas) || $pas < MIN_AT_BATS) {
+                            if ($pas < MIN_AT_BATS) {
+    // DEFAULT 5 - Career - Joe Average - Original Split
+                                $prev_season = "season < $season";
+                                $pas = pullPlateAppearances(
+                                    $player_where,
+                                    $game_id,
+                                    CAREER,
+                                    $where
+                                );
+                                if ($pas < MIN_AT_BATS) {
     // DEFAULT 6: Season - Joe Average - Total
     // Remove the $where to revert back to total split
-                                $where = 'TRUE';
-                                $prev_season = 'FALSE';
-                                $pas =
-                                    pullPlateAppearances($player_where, $game_id);
-                                if (is_null($pas) || $pas < MIN_AT_BATS) {
+                                    $where = 'TRUE';
+                                    $prev_season = 'FALSE';
+                                    $pas = pullPlateAppearances(
+                                        $player_where,
+                                        $game_id
+                                    );
+                                    if ($pas < MIN_AT_BATS) {
     // DEFAULT 7: Career - Joe Average - Total
     // Add back $prev_season for career stats
-                                    $prev_season = "season < $season";
+                                        $prev_season = "season < $season";
+                                    }
                                 }
                             }
                         }
@@ -332,21 +347,24 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
     // DEFAULT 1: Career - Total Split
             $where = 'TRUE';
             $pas = pullPlateAppearances($player_where, $game_id);
-            if (is_null($pas) || $pas < MIN_AT_BATS) {
+            if ($pas < MIN_AT_BATS) {
     // DEFAULT 2: Career - Joe Average - Original Split
-                $where = $original_where;
-                $recent_players = pullRecentPlayers($game_id, $type);
-                $player_where = "$type_id in($recent_players)";
                 $is_joe_average = 1;
-                $pas = pullPlateAppearances(
-                    $player_where,
-                    $game_id,
-                    CAREER,
-                    $where
-                );
-                if (is_null($pas) || $pas < MIN_AT_BATS) {
+                if (!$skipJoeAverage) {
+                    $where = $original_where;
+                    $recent_players = pullRecentPlayers($game_id, $type);
+                    $player_where = "$type_id in($recent_players)";
+                    $is_joe_average = 1;
+                    $pas = pullPlateAppearances(
+                        $player_where,
+                        $game_id,
+                        CAREER,
+                        $where
+                    );
+                    if ($pas < MIN_AT_BATS) {
     // DEFAULT 3: Career - Joe Average - Total Split
-                    $where = 'TRUE';
+                        $where = 'TRUE';
+                    }
                 }
             }
         }
@@ -399,17 +417,14 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
     // To save processing time don't re-run Joe Average queries
     if ($is_joe_average && isset($joeAverages[$sql])) {
         $data = $joeAverages[$sql];
+    } else if ($is_joe_average && $skipJoeAverage) {
+        // do nothing
     } else {
         $data = exe_sql(DATABASE, $sql);
         $data = index_by($data, 'event_name');
         if ($is_joe_average && !isset($joeAverages[$sql])) {
             $joeAverages[$sql] = $data;
         }
-    }
-    if ($skipJoeAverage) {
-        // TODO(cert): Queries might get long might want to do something with
-        // relative averages...only if it becomes a problem though.
-    } else {
         foreach ($stats as $split_name => $stat) {
             if ($split_name == 'plate_appearances'
                 || $split_name == 'player_id'
@@ -417,8 +432,11 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
                 continue;
             }
             $split_index = substr($split_name, 4);
-            $sql_stat = $data[$split_index]['pct'];
+            $sql_stat =
+                isset($data[$split_index]) ? $data[$split_index]['pct'] : 0;
             $difference = abs($sql_stat - $stat);
+            $cacheQuery1 = $data;
+            $cacheQuery2 = $stats;
             assertTrue(
                 ($difference < STAT_DIFFERENCE),
                 $game_id,
@@ -460,22 +478,28 @@ function validateBatting($game, $home_away) {
 
 $days_tested = array();
 $test_days = array();
+$test_seasons = array();
 for ($i = 0; $i < $numTestDates; $i++) {
-    $rand_season = rand(1950, 2013);
+    $rand_season = rand(1950, $maxYear);
     $rand_month = formatDayMonth(rand(4, 9));
     $rand_day = formatDayMonth(rand(1, 31));
     $rand_ds = "'$rand_season-$rand_month-$rand_day'";
+    $test_seasons[$rand_season] = $rand_season;
     $test_days[$rand_ds] = $rand_ds;
 }
 // Override $test_days for now since all data isn't filled
+/* Leaving this in here for when I test on my computer :)
 $test_days = array(
     "'1950-04-27'" => "'1950-04-27'",
     "'1950-05-02'" => "'1950-05-02'"
 );
+$test_seasons = array(1950 => 1950);
+ */
 //////////////////////////////////////////////////////////
 
 $test_days = implode(',', $test_days);
-$sim_input = pullSimInput($test_days);
+$test_seasons = implode(',', $test_seasons);
+$sim_input = pullSimInput($test_days, $test_seasons);
 if (!isset($sim_input)) {
     exit("No Valid Game Days in $test_days \n");
 }
