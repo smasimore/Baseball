@@ -520,6 +520,35 @@ function update(
 	}
 
 /***********************************************************************
+mem_exe_sql($database, $sql, $memcached, $retention)
+-------------------------------------------------------------
+TODO(cert): Fill this in later
+***********************************************************************/
+function mem_exe_sql($database, $sql, $memcached, $retention = null) {
+
+	if (!$memcached) {
+		exit("mem_exe_sql called without memcached passed in");
+	}	
+
+	// Check the cache for data.
+	$hash = md5($sql);
+	$data = $memcached->get($hash);
+	// TODO(cert): test $memcached->getResultCode() 
+	// and Memcached::RES_NOTFOUND in case $data actually is false
+	if ($data !== false) {
+		return $data;
+	}
+	// If no data in cache continue with request.
+	$data = exe_sql($database, $sql);
+
+	// Add the result to the cache (default to 1hr retention)
+	$retention = $retention ? $time() + $retention : time() + 3600;
+	$memcached->set($hash, $data, $retention);
+	
+	return $data;
+}
+
+/***********************************************************************
 exe_sql($database, $sql)
 -------------------------------------------------------------
 DESCRIPTION:
