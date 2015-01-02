@@ -11,6 +11,7 @@ include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
 
 const MIN_PLATE_APPEARANCE = 18;
 const NUM_DECIMALS = 3;
+const TOTAL = 'Total';
 
 function updateSeasonVars($season, $season_vars) {
     if ($season > $season_vars['start_script']) {
@@ -128,18 +129,21 @@ function updateMissingSplits(
                     continue;
                 } else {
                     $player_season[$player_id][$date][$split] =
-                        $player_season[$player_id][$date]['Total'];
+                        $player_season[$player_id][$date][TOTAL];
                 }
                 if (!$player_season[$player_id][$date][$split] &&
                     $player_career[$player_id][$date]) {
                     $player_season[$player_id][$date][$split] =
                         $player_career[$player_id][$date][$split] ?
                         $player_career[$player_id][$date][$split] :
-                        $player_career[$player_id][$date]['Total'];
+                        $player_career[$player_id][$date][TOTAL];
                 }
                 if (!$player_season[$player_id][$date][$split]) {
                     $player_season[$player_id][$date][$split] =
-                        $average_season[$date][$split];
+                        $average_season[$date][$split]['plate_appearances'] >=
+                            MIN_PLATE_APPEARANCE
+                        ? $average_season[$date][$split]
+                        : $average_season[$date][TOTAL];
                 }
                 $player_season[$player_id][$date][$split]
                     ['plate_appearances'] = 0;
@@ -201,14 +205,12 @@ function convertSeasonToPct($average_season) {
             foreach ($split as $stat_name => $stat) {
                 if (in_array($stat_name, $pctStats)) {
                     $stat_pct_name = array_search($stat_name, $pctStats);
-                    if ($stat > 0) {
-                        $pct_stat = $stat / $plate_appearances;
+                        $pct_stat = $stat > 0 ? $stat / $plate_appearances : 0;
                         $average_pcts[$ds][$split_name][$stat_pct_name] =
                             number_format($pct_stat, NUM_DECIMALS);
-                    } else {
-                        $average_pcts[$ds][$split_name][$stat_pct_name] = 0;
-                    }
                 }
+                $average_pcts[$ds][$split_name]['plate_appearances'] =
+                    $plate_appearances;
             }
         }
     }
