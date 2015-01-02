@@ -1,7 +1,7 @@
 <?php
 include_once 'Page.php';
-include_once 'Table.php';
-include_once '../includes/ui_elements.php';
+include_once __DIR__ . '/../ui/Table.php';
+include_once __DIR__ . '../../includes/ui_elements.php';
 
 class GamesPage extends Page{
     private $date;

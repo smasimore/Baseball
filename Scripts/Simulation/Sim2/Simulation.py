@@ -270,7 +270,7 @@ class Simulation:
 
         query = (
             """SELECT *
-            FROM %s %s"""
+            FROM %s %s LIMIT 1"""
             % (table, self.queryWhere)
         )
 
@@ -439,6 +439,10 @@ class Simulation:
         self.sampleMin = mini
         self.sampleMax = maxi
 
+    def setDebugLogging(self, log):
+        self.validateDebugLogging(log)
+        self.debugLoggingOn = log
+
     def __getSimParams(self):
         weights_readable = self.__getReadableWeights()
         return [
@@ -526,3 +530,9 @@ class Simulation:
                 'Max sample value should be <= %s, %s is not'
                 % (self.SAMPLE_MAX, maxi)
             )
+
+    def validateDebugLogging(self, log):
+        if not isinstance(log, bool):
+            raise ValueError(
+                'Debug logging param needs to be a bool. %s is not.'
+                % log)

@@ -10,6 +10,5 @@ weights = {
 
 test = Simulation(weights, 1950, 'career', 'basic')
 test.setSample(0,4)
-#test.setTestRun(True)
-#test.setWeightsMutator('example')
+test.setDebugLogging(True)
 test.run()

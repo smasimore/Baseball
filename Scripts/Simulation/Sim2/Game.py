@@ -102,14 +102,15 @@ class Game:
 
     def __processAtBatImpact(self, hit_type, team):
         index = '%d%d%s' % (self.outs, self.bases, hit_type)
+        stacked_atbat_impact_stats = self.atBatImpactData[index]
         hit_impact = self.__getRandomlyGeneratedResult(
-            self.atBatImpactData[index
-        ])
+            stacked_atbat_impact_stats
+        )
         self.outs, self.bases, runs = map(int, hit_impact.split('_'))
         self.score[team] += runs
 
         # Return for logging.
-        return self.atBatImpactData[index]
+        return stacked_atbat_impact_stats
 
     def __getRandomlyGeneratedResult(self, stats):
         # Get hit type by subtracting rand from all stacked_values and getting

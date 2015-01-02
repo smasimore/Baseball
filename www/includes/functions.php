@@ -200,7 +200,7 @@ function esc_url($url) {
 function s_log($data) {
     $type = "\n" . gettype($data);
     file_put_contents(
-        __DIR__ . '/../www/sarah_errors.txt',
+        __DIR__ . '/../sarah_errors.txt',
         "$type - ", 
         FILE_APPEND
     );

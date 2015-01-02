@@ -53,7 +53,8 @@ table td {
 }
 
 .page_nav:hover .nav_list {
-    height: auto;
+    transition-delay: 400ms;
+    height: 30px;
     cursor: pointer;
     visibility: visible;
     padding-top:15px 0;
@@ -183,6 +184,14 @@ table td {
 
 .alignright {
     float: right;
+}
+
+.bottom_border {
+    border-bottom:1px solid #ccc;
+}
+
+.auto_width {
+    width: auto;
 }
 
 /* Login */

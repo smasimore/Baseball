@@ -1,5 +1,5 @@
 <?php
-include_once 'classes/LoginPage.php';
+include_once 'pages/LoginPage.php';
 
 sec_session_start();
 ?>

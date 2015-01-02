@@ -1,5 +1,5 @@
 <?php
-include_once 'classes/AnalysisPage.php';
+include_once 'pages/AnalysisPage.php';
 
 sec_session_start();
 ?>

@@ -1,6 +1,6 @@
 <?php
 include_once 'Page.php';
-include_once 'Table.php';
+include_once __DIR__ . '/../ui/Table.php';
 
 class PlayerPage extends Page{
 

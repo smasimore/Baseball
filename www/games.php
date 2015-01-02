@@ -2,7 +2,7 @@
 include_once 'includes/db_connect.php';
 include_once 'includes/functions.php';
 include_once 'includes/ui_elements.php';
-include_once 'classes/GamesPage.php';
+include_once 'pages/GamesPage.php';
 
 sec_session_start();
 ?>

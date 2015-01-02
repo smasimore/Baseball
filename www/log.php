@@ -1,7 +1,7 @@
 <?php
 include_once 'includes/db_connect.php';
 include_once 'includes/functions.php';
-include_once 'classes/LogPage.php';
+include_once 'pages/LogPage.php';
 
 sec_session_start();
 ?>

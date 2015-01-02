@@ -1,5 +1,5 @@
 <?php
-include_once 'classes/PlayerPage.php';
+include_once 'pages/PlayerPage.php';
 
 sec_session_start();
 ?>
