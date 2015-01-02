@@ -21,8 +21,8 @@ class Team:
         self.storedBatterStats = {}
 
     def getBatterStats(self, batter, inning, outs, bases, winning):
-        # TODO(smas): Include inning due to reliever and use multidim dict.
-        index = str(batter) + str(outs) + str(bases)
+        pitcher_type = self.__getPitcherType(inning)
+        index = str(batter) + str(outs) + str(bases) + pitcher_type
         if self.weightsMutator:
             self.__setCategoryWeights(inning, outs, bases, winning)
 
@@ -49,17 +49,7 @@ class Team:
             else:
                 # Remove 'p_' prefix to get pitcher stats.
                 p_stat = stat[2:]
-                # Starting pitcher stats. Or if no reliever stats.
-                if (inning <= self.pitchingData['avg_innings'] or
-                    Pitcher.RELIEVER not in self.pitchingData or
-                    not self.pitchingData[Pitcher.RELIEVER]):
-                    stats_to_average[stat] = (
-                        self.pitchingData[Pitcher.STARTER][p_stat]
-                    )
-                else:
-                    stats_to_average[stat] = (
-                        self.pitchingData[Pitcher.RELIEVER][p_stat]
-                    )
+                stats_to_average[stat] = self.pitchingData[pitcher_type][p_stat]
 
         weighted_batter_stats = self.__calculateWeightedBatterStats(
             stat_weights,
@@ -147,7 +137,7 @@ class Team:
             ]
 
         if StatCategories.B_PITCHER_ERA_BAND in self.categoryWeights.keys():
-            if inning <= self.pitchingData['avg_innings']:
+            if self.__getPitcherType(inning) == Pitcher.STARTER:
                 stat_weights[self.__getPitcherERABand()] = (
                     self.categoryWeights[StatCategories.B_PITCHER_ERA_BAND]
                 )
@@ -237,3 +227,11 @@ class Team:
             return Situations.SCORING_POS_2O
 
         return Bases.BASES_TO_SITUATION[bases]
+
+    def __getPitcherType(self, inning):
+        if (inning <= self.pitchingData['avg_innings'] or
+            Pitcher.RELIEVER not in self.pitchingData or
+            not self.pitchingData[Pitcher.RELIEVER]):
+            return Pitcher.STARTER
+
+        return Pitcher.RELIEVER
