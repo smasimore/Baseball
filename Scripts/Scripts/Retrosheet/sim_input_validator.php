@@ -25,6 +25,7 @@ const SIM_INPUT_TABLE = 'sim_input';
 const GAMES_TABLE = 'games';
 const EVENTS_TABLE = 'events';
 const STAT_DIFFERENCE = .001;
+const SEASON_GAP_EXCEPTION = 'Player Has A Gap Of > 5 Years';
 
 $numTestDates = 1;
 $maxYear = 1962;
@@ -52,7 +53,6 @@ $splits = array(
 
 function pullSimInput($test_days, $seasons) {
     global $statsYear, $statsType;
-    $season = substr($ds, 0, 4);
     $sql = "SELECT *
         FROM " . SIM_INPUT_TABLE . "
         WHERE season in($seasons)
@@ -126,13 +126,41 @@ function pullPlateAppearances(
     return $pas;
 }
 
-function assertTrue($truth, $game_id, $stat, $error = null) {
+function checkException($player) {
+    // 1) Does this player have a 5+ year gap in their history?
+    $sql = "SELECT DISTINCT season
+        FROM " . EVENTS_TABLE .
+        " WHERE bat_id = '$player'
+        OR pit_id = '$player'
+        ORDER BY season";
+    $data = exe_sql(DATABASE, $sql);
+    $seasons = array();
+    foreach ($data as $row) {
+        $season = $row['season'];
+        $seasons[$season] = $season;
+    }
+    $prev_season = null;
+    foreach ($seasons as $season) {
+        $season_gap = $prev_season ? $season - $prev_season : 0;
+        $prev_season = $season;
+        if ($season_gap > 5) {
+            return SEASON_GAP_EXCEPTION;
+        }
+    }
+}
+
+function assertTrue($truth, $game_id, $player, $stat, $error = null) {
     global $silenceSuccess, $splitsTested, $cache;
     $message = "GAMEID: $game_id => $stat \t \t \t";
     if (!$truth) {
-        print_r($cache['Query1']);
-        print_r($cache['Query2']);
-        exit("\n \n \n $message FAILED -- $error \n \n \n");
+        $exception = checkException($player);
+        if ($exception) {
+            echo "Exception for $player: $exception \n";
+        } else {
+            print_r($cache['Query1']);
+            print_r($cache['Query2']);
+            exit("\n \n \n $message FAILED -- $error \n \n \n");
+        }
     } else {
         $splitsTested[$stat] =
             isset($splitsTested[$stat]) ? ($splitsTested[$stat] + 1) : 1;
@@ -164,6 +192,7 @@ function validateBatter($lineup, $batter_id, $home_away, $lineup_pos) {
         assertTrue(
             ($pas < MIN_AT_BATS),
             $game_id,
+            $actual_batter,
             'batter_joe_average',
             "$actual_batter !== 'joe_average'"
         );
@@ -171,6 +200,7 @@ function validateBatter($lineup, $batter_id, $home_away, $lineup_pos) {
         assertTrue(
             ($actual_batter == $batter_id),
             $game_id,
+            $actual_batter,
             "batter_$home_away",
             "$actual_batter !== $batter_id"
         );
@@ -194,6 +224,7 @@ function validatePitcher($game_id, $pitcher_id, $home_away) {
         assertTrue(
             ($pas < MIN_AT_BATS),
             $game_id,
+            $actual_pitcher,
             'pitcher_joe_average',
             "$actual_pitcher !== 'joe_average'"
         );
@@ -201,6 +232,7 @@ function validatePitcher($game_id, $pitcher_id, $home_away) {
         assertTrue(
             ($actual_pitcher == $pitcher_id),
             $game_id,
+            $actual_pitcher,
             "pitcher_$home_away",
             "$actual_pitcher !== $pitcher_id"
         );
@@ -445,6 +477,7 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
             assertTrue(
                 ($difference < STAT_DIFFERENCE),
                 $game_id,
+                $player_id,
                 $split,
                 "$split_index error: $sql_stat !== $stat for
                     $player_id in $season"
