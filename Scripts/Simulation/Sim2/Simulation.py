@@ -15,7 +15,7 @@ class Simulation:
     __AT_BAT_IMPACT_TABLE = 'at_bat_impact'
     __OUTPUT_TABLE = 'sim_output'
     __AT_BAT_IMPACT_INDEX = ['start_outs', 'start_bases', 'event_name']
-    __THREADS = 1
+    __THREADS = 10
 
     ########## COLUMN LISTS ##########
     SIM_OUTPUT_COLUMNS = [
@@ -81,8 +81,8 @@ class Simulation:
 
     STATS_YEAR = [
         'career',
-        'current',
-        'previous',
+        'season',
+        'last_season',
     ]
 
 
@@ -104,7 +104,7 @@ class Simulation:
     def __init__(self,
         weights,
         season = time.strftime("%Y"),
-        stats_year = 'current',
+        stats_year = 'season',
         stats_type = 'basic'):
 
         self.startTime = datetime.datetime.now()
@@ -221,10 +221,13 @@ class Simulation:
                 processes[t].join()
             rows_completed = rows_completed + threads
 
-        self.simResults = sim_results
+            # Print status.
+            print (str(round(
+                float(rows_completed) / len(self.inputData) * 100, 2)) +
+                '% COMPLETE'
+            )
 
-        # Print status.
-        print str(rows_completed / len(self.inputData) * 100) + '% COMPLETE'
+        self.simResults = sim_results
 
     def __addWeightsIndex(self):
         self.weightsIndex = 0
@@ -270,7 +273,7 @@ class Simulation:
 
         query = (
             """SELECT *
-            FROM %s %s LIMIT 1"""
+            FROM %s %s"""
             % (table, self.queryWhere)
         )
 
@@ -426,6 +429,7 @@ class Simulation:
         self.validateTestRun(test_run)
         self.testRun = test_run
 
+    # TODO(smas): If changed, this will override non-mutated data.
     def setWeightsMutator(self, weights_mutator):
         self.validateWeightsMutator(weights_mutator)
         self.weightsMutator = weights_mutator

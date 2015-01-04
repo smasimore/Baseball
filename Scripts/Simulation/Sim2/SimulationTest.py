@@ -34,7 +34,7 @@ class SimulationTestCase(unittest.TestCase):
         }]
 
         # Season doesn't matter since it's a test run.
-        game = Simulation(weights, 2014, 'current', 'basic')
+        game = Simulation(weights, 2014, 'season', 'basic')
         game.setAnalysisRuns(10)
         game.setTestRun(True)
         game.setInputData(input_data)
@@ -89,7 +89,7 @@ class SimulationTestCase(unittest.TestCase):
                 None,
                 'h_test',
                 'a_test',
-                'current',
+                'season',
                 1.0,
                 6,
                 'b_total_100',
