@@ -128,7 +128,7 @@ function insert($database, $table, $data_array) {
 		echo 'THIS FAILED 10 TIMES!!'."\n";
 		echo 'sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart'."\n";
 		echo '////////////////////////////////////////////////'."\n";
-		email(mysqli_connect_error(), "sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart");
+		//email(mysqli_connect_error(), "sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart");
 		return false;
 	}
 
@@ -203,10 +203,10 @@ function add_partition($database, $table, $partition_keys) {
         echo 'THIS FAILED 10 TIMES!!'."\n";
         echo 'sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart'."\n";
         echo '////////////////////////////////////////////////'."\n";
-        email(
-            mysqli_connect_error(),
-            "sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart"
-        );
+        //email(
+        //    mysqli_connect_error(),
+        //    "sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart"
+        //);
         exit("FAILED partition_add into $table");
     }
     mysqli_select_db($mysql_connect, $database);
@@ -275,10 +275,10 @@ function drop_partition($database, $table, $partition_keys) {
         echo 'THIS FAILED 10 TIMES!!'."\n";
         echo 'sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart'."\n";
         echo '////////////////////////////////////////////////'."\n";
-        email(
-            mysqli_connect_error(),
-            "sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart"
-        );
+        //email(
+        //    mysqli_connect_error(),
+        //    "sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart"
+        //);
         exit("FAILED partition_drop into $table");
     }
     mysqli_select_db($mysql_connect, $database);
@@ -348,10 +348,10 @@ function multi_insert($database, $table, $data_array, $colheads) {
         echo 'THIS FAILED 10 TIMES!!'."\n";
         echo 'sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart'."\n";
         echo '////////////////////////////////////////////////'."\n";
-        email(
-            mysqli_connect_error(), 
-            "sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart"
-        );
+        //email(
+        //    mysqli_connect_error(), 
+        //    "sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart"
+        //);
         exit("FAILED multi_insert into $table");
     }
     mysqli_select_db($mysql_connect, $database);
@@ -480,10 +480,10 @@ function update(
         echo 'THIS FAILED 10 TIMES!!'."\n";
         echo 'sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart'."\n";
         echo '////////////////////////////////////////////////'."\n";
-		email(
-			mysqli_error($mysql_connect),
-			"sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart"
-		);
+		//email(
+		//	mysqli_error($mysql_connect),
+		//	"sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart"
+		//);
         return false;
     }
 
@@ -584,10 +584,10 @@ function exe_sql($database, $sql, $delete = null) {
 		echo 'THIS FAILED 10 TIMES!!'."\n";
 		echo 'sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart'."\n";
 		echo '////////////////////////////////////////////////'."\n";
-		email(
-			mysqli_error($mysql_connect), 
-			"sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart"
-		);
+		//email(
+		//	mysqli_error($mysql_connect), 
+		//	"sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart"
+		//);
 		return false;
 	}
 	mysqli_select_db($mysql_connect, $database);
