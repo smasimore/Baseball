@@ -879,3 +879,11 @@ function array_column($array, $key) {
     }
     return $ret_array;
 }
+
+function idx($array, $i, $default = null) {
+    if (isset($array[$i])) {
+        return $array[$i];
+    }
+
+    return $default;
+}
