@@ -35,9 +35,7 @@ $statsType = BASIC;
 $silenceSuccess = true;
 $skipJoeAverage = false;
 $splitsTested = array();
-$cache = array(
-    'hits' => 0
-);
+$cache = array();
 $splits = array(
     'Total',
     'Home',
@@ -76,7 +74,6 @@ function pullRecentPlayers($game_id, $type) {
         AND substr(game_id, 8, 4) < $ds)";
     if (isset($cache['recentPlayers'][$sql])) {
         $data = $cache['recentPlayers'][$sql];
-        $cache['hits'] += 1;
     } else {
         $data = exe_sql(DATABASE, $sql);
         $cache['recentPlayers'][$sql] = $data;
@@ -117,7 +114,6 @@ function pullPlateAppearances(
         OR (season = $season && substr(game_id,8,4) < $ds))";
     if (isset($cache['plateAppearances'][$sql])) {
         $data = $cache['plateAppearances'][$sql];
-        $cache['hits'] += 1;
     } else {
         $data = reset(exe_sql(DATABASE, $sql));
         $cache['plateAppearances'][$sql] = $data;
@@ -302,18 +298,20 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
     }
     // Create second copy of $where for use in Joe Average logic.
     $original_where = $where;
-    $is_joe_average = null;
+    $is_joe_average =
+        ($stats['player_id'] == JOE_AVERAGE || $player_id == JOE_AVERAGE)
+        ? 1 : 0;
     $pas =
         isset($stats['plate_appearances'])
         ? $stats['plate_appearances'] : 0;
     // Check to see if player has enough PA's to have stats, otherwise check
     // defaulting logic.
-    if ($pas < MIN_AT_BATS) {
+    if ($pas < MIN_AT_BATS || $is_joe_average) {
         if ($statsYear == 'season') {
     // DEFAULT 1: Season - Total Split
             $where = 'TRUE';
             $pas = pullPlateAppearances($player_where, $game_id);
-            if ($pas < MIN_AT_BATS) {
+            if ($pas < MIN_AT_BATS || $is_joe_average) {
     // DEFAULT 2: Career - Original Split
     // Move to career stats (set $prev_season to include all previous years)
                 $prev_season = "season < $season";
@@ -325,7 +323,7 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
                     $where
                     );
                 $pas = pullPlateAppearances($player_where, $game_id);
-                if ($pas < MIN_AT_BATS) {
+                if ($pas < MIN_AT_BATS || $is_joe_average) {
     // DEFAULT 3: Career - Total Split
                     $where = 'TRUE';
                     $pas = pullPlateAppearances(
@@ -333,7 +331,7 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
                         $game_id,
                         CAREER
                     );
-                    if ($pas < MIN_AT_BATS) {
+                    if ($pas < MIN_AT_BATS || $is_joe_average) {
     // DEFAULT 4: Season - Joe Average - Original Split
     // Set $where back to $original_where (for original split) and remove
     // $player_where (i.e. search all players to get joe_average)
@@ -383,7 +381,7 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
     // DEFAULT 1: Career - Total Split
             $where = 'TRUE';
             $pas = pullPlateAppearances($player_where, $game_id);
-            if ($pas < MIN_AT_BATS) {
+            if ($pas < MIN_AT_BATS || $is_joe_average) {
     // DEFAULT 2: Career - Joe Average - Original Split
                 $is_joe_average = 1;
                 if (!$skipJoeAverage) {
@@ -453,7 +451,6 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
     // To save processing time don't re-run Joe Average queries
     if ($is_joe_average && isset($cache['joeAverages'][$sql])) {
         $data = $cache['joeAverages'][$sql];
-        $cache['hits'] += 1;
     } else if ($is_joe_average && $skipJoeAverage) {
         // do nothing
     } else {
@@ -565,6 +562,6 @@ asort($splitsTested);
 print_r($splitsTested);
 $days_tested = count($days_tested);
 echo "\n \n \n SUCCESS => $days_tested DAYS TESTED \n \n";
-echo "Cache Hits = " . $cache['hits'] . "\n \n";
+print_r($days_tested);
 
 ?>
