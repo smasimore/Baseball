@@ -398,7 +398,11 @@ class Simulation:
             delete_query = (
                 """DELETE
                 FROM %s %s"""
-                % (self.__OUTPUT_TABLE, self.queryWhere)
+                % (
+                    self.__OUTPUT_TABLE,
+                    self.queryWhere +
+                        ' AND weights_i = ' + str(self.weightsIndex)
+                )
             )
             MySQL.delete(delete_query)
             MySQL.addPartition(

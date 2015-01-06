@@ -7,7 +7,7 @@ weights = {
 
 season_start = 1950
 season_end = 1951
-stats_year = 'season'
+stats_year = 'career'
 stats_type = 'basic'
 
 for season in range(season_start, season_end + 1):
