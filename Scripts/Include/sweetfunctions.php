@@ -762,6 +762,13 @@ function convertPctToOdds($pct) {
     return $odds;
 }
 
+function idx($array, $key, $default = null) {
+    if (isset($array[$key])) {
+        return $array[$key];
+    }
+    return $default;
+}
+
 function convertOddsToPct($odds) {
     if ($odds < 0) {
         $pct = (-1)*$odds / ((-1)*$odds + 100);
@@ -793,12 +800,8 @@ function findSimilarName($name, $date) {
     return $likely_name['player_name'];
 }
 
-function elvis($var, $default) {
-    if ($var === null) {
-        return $default;
-    } else {
-        return $var;
-    }
+function elvis($var, $default = null) {
+    return isset($var) ? $var : $default;
 }
 
 function ds_modify($date, $day_change) {
