@@ -14,6 +14,7 @@ const MIN_AT_BATS = 18;
 const PITCHER = 'pitcher';
 const BATTER = 'batter';
 const SEASON = 'season';
+const PREV_SEASON = 'prev_season';
 const CAREER = 'career';
 const BASIC = 'basic';
 const HOME = 'home';
@@ -31,6 +32,7 @@ $numTestDates = 1;
 $maxYear = 1962;
 $statsYear = CAREER;
             //SEASON;
+            //PREV_SEASON;
 $statsType = BASIC;
 $silenceSuccess = true;
 $skipJoeAverage = false;
@@ -47,6 +49,22 @@ $splits = array(
     'ScoringPos',
     'ScoringPos2Out',
     'BasesLoaded'
+);
+$defaultMap = array(
+    CAREER => array(
+        RetrosheetDefaults::CAREER_TOTAL,
+        RetrosheetDefaults::CAREER_JOE_AVERAGE_ACTUAL,
+        RetrosheetDefaults::CAREER_JOE_AVERAGE_TOTAL
+    ),
+    PREV_SEASON => array(
+        RetrosheetDefaults::PREV_YEAR_TOTAL,
+        RetrosheetDefaults::CAREER_ACTUAL,
+        RetrosheetDefaults::CAREER_TOTAL,
+        RetrosheetDefaults::PREV_SEASON_JOE_AVERAGE_ACTUAL,
+        RetrosheetDefaults::PREV_SEASON_JOE_AVERAGE_TOTAL,
+        RetrosheetDefaults::CAREER_JOE_AVERAGE_ACTUAL,
+        RetrosheetDefaults::CAREER_JOE_AVERAGE_TOTAL
+    )
 );
 
 function pullSimInput($test_days, $seasons) {
@@ -98,10 +116,7 @@ function pullPlateAppearances(
     $ds = substr($game_id, 7, 4);
     // Use $statsYear unless overwritten in function input.
     $stats_year = $stats_year ?: $statsYear;
-    // If stats_year == 'career' add previous season(s) to query.
-    $prev_season =
-        ($stats_year == CAREER)
-        ? "season < $season" : 'FALSE';
+    $season_where = getSeasonWhere($stats_year, $season, $ds);
     // If a where clause is given in function input use it, otherwise
     // omit where clause using WHERE = 'TRUE'.
     $where = $where ?: 'TRUE';
@@ -110,8 +125,7 @@ function pullPlateAppearances(
         WHERE $player_where
         AND $where
         AND event_cd in(" . implode(',', RetrosheetBatting::getAllEvents()) . ")
-        AND ($prev_season
-        OR (season = $season && substr(game_id,8,4) < $ds))";
+        AND $season_where";
     if (isset($cache['plateAppearances'][$sql])) {
         $data = $cache['plateAppearances'][$sql];
     } else {
@@ -236,12 +250,9 @@ function validatePitcher($game_id, $pitcher_id, $home_away) {
 }
 
 function validateSplit($stats, $player_id, $split, $game_id, $type) {
-    global $statsYear, $skipJoeAverage, $cache;
+    global $statsYear, $skipJoeAverage, $cache, $defaultMap;
     $season = substr($game_id, 3, 4);
     $ds = substr($game_id, 7, 4);
-    $prev_season =
-        ($statsYear == CAREER)
-        ? "season < $season" : 'FALSE';
     // Unlike batters, when a pitcher is home the bat_id = 0 since it
     // refers to the opposing batter.
     switch ($type) {
@@ -297,111 +308,117 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
             break;
     }
     // Create second copy of $where for use in Joe Average logic.
-    $original_where = $where;
     $is_joe_average =
         ($stats['player_id'] == JOE_AVERAGE || $player_id == JOE_AVERAGE)
         ? 1 : 0;
-    $pas =
-        isset($stats['plate_appearances'])
-        ? $stats['plate_appearances'] : 0;
-    // Check to see if player has enough PA's to have stats, otherwise check
-    // defaulting logic.
-    if ($pas < MIN_AT_BATS || $is_joe_average) {
-        if ($statsYear == 'season') {
-    // DEFAULT 1: Season - Total Split
-            $where = 'TRUE';
-            $pas = pullPlateAppearances($player_where, $game_id);
-            if ($pas < MIN_AT_BATS || $is_joe_average) {
-    // DEFAULT 2: Career - Original Split
-    // Move to career stats (set $prev_season to include all previous years)
-                $prev_season = "season < $season";
-                $where = $original_where;
-                $pas = pullPlateAppearances(
-                    $player_where,
-                    $game_id,
-                    CAREER,
-                    $where
-                    );
-                $pas = pullPlateAppearances($player_where, $game_id);
-                if ($pas < MIN_AT_BATS || $is_joe_average) {
-    // DEFAULT 3: Career - Total Split
-                    $where = 'TRUE';
-                    $pas = pullPlateAppearances(
-                        $player_where,
-                        $game_id,
-                        CAREER
-                    );
-                    if ($pas < MIN_AT_BATS || $is_joe_average) {
-    // DEFAULT 4: Season - Joe Average - Original Split
-    // Set $where back to $original_where (for original split) and remove
-    // $player_where (i.e. search all players to get joe_average)
-                        $is_joe_average = 1;
-                        if (!$skipJoeAverage) {
-                            $recent_players =
-                                pullRecentPlayers($game_id, $type);
-                            $player_where = "$type_id in($recent_players)";
-                            $where = $original_where;
-                            $prev_season = 'FALSE';
-                            $pas = pullPlateAppearances(
-                                $player_where,
-                                $game_id,
-                                SEASON,
-                                $where
-                            );
-                            if ($pas < MIN_AT_BATS) {
-    // DEFAULT 5 - Career - Joe Average - Original Split
-                                $prev_season = "season < $season";
-                                $pas = pullPlateAppearances(
-                                    $player_where,
-                                    $game_id,
-                                    CAREER,
-                                    $where
-                                );
-                                if ($pas < MIN_AT_BATS) {
-    // DEFAULT 6: Season - Joe Average - Total
-    // Remove the $where to revert back to total split
-                                    $where = 'TRUE';
-                                    $prev_season = 'FALSE';
-                                    $pas = pullPlateAppearances(
-                                        $player_where,
-                                        $game_id
-                                    );
-                                    if ($pas < MIN_AT_BATS) {
-    // DEFAULT 7: Career - Joe Average - Total
-    // Add back $prev_season for career stats
-                                        $prev_season = "season < $season";
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        } else {
-    // DEFAULT 1: Career - Total Split
-            $where = 'TRUE';
-            $pas = pullPlateAppearances($player_where, $game_id);
-            if ($pas < MIN_AT_BATS || $is_joe_average) {
-    // DEFAULT 2: Career - Joe Average - Original Split
-                $is_joe_average = 1;
-                if (!$skipJoeAverage) {
-                    $where = $original_where;
-                    $recent_players = pullRecentPlayers($game_id, $type);
-                    $player_where = "$type_id in($recent_players)";
-                    $is_joe_average = 1;
-                    $pas = pullPlateAppearances(
-                        $player_where,
-                        $game_id,
-                        CAREER,
-                        $where
-                    );
-                    if ($pas < MIN_AT_BATS) {
-    // DEFAULT 3: Career - Joe Average - Total Split
-                        $where = 'TRUE';
-                    }
-                }
+    $pas = elvis($stats['plate_appearances'], 0);
+    $default_step = 0;
+    $sql_data = array(
+        'player_where' => $player_where,
+        'stats_year' => $statsYear,
+        'where' => $where,
+        'original_where' => $where
+    );
+    $is_filled = ($pas >= MIN_AT_BATS && !$is_joe_average);
+    while (!$is_filled) {
+        $default_routing = $statsYear == SEASON
+            ? $default_step :$defaultMap[$statsYear][$default_step];
+        // If player is Joe Average skip non Joe Average Defaults
+        if ($is_joe_average) {
+            if ($default_routing <
+                RetrosheetDefaults::SEASON_JOE_AVERAGE_ACTUAL) {
+                continue;
             }
         }
+        $sql_data = addDefaultData($default_routing, $sql_data);
+        $pas = pullPlateAppearances(
+            $sql_data['player_where'],
+            $game_id,
+            $sql_data['stats_year'],
+            $sql_data['where']
+        );
+        $is_filled = $pas >= MIN_AT_BATS;
+        $default_step += 1;
+    }
+    // Update SQL params if they've changed in defaulting.
+    $where = $sql_data['where'];
+    $player_where = $sql_data['player_where'];
+    $season_where = getSeasonWhere($sql_data['stats_year'], $season, $ds);
+}
+
+function getSeasonWhere($stats_year, $season, $ds) {
+    switch ($stats_year) {
+        case SEASON:
+            return "(season = $season AND substr(game_id,8,4) < $ds)";
+            break;
+        case CAREER:
+            return "((season = $season AND substr(game_id,8,4) < $ds)
+                    OR season < $season)";
+            break;
+        case PREV_SEASON:
+            $prev_season = $season - 1;
+            return "season = $prev_season";
+            break;
+    }
+}
+
+function addDefaultData($default_step, $sql_data) {
+    switch ($default_step) {
+        case RetrosheetDefaults::SEASON_TOTAL:
+            // DEFAULT 0: Season Total Split
+            $sql_data['where'] = 'TRUE';
+            break;
+        case RetrosheetDefaults::PREV_YEAR_ACTUAL:
+            // DEFAULT 1: Prev Year Actual Split
+            $sql_data['where'] = $sql_data['original_where'];
+            $sql_data['stats_year'] = PREV_SEASON;
+            break;
+        case RetrosheetDefaults::PREV_YEAR_TOTAL:
+            // DEFAULT 2: Prev Year Total Split
+            $sql_data['where'] = 'TRUE';
+            break;
+        case RetrosheetDefaults::CAREER_ACTUAL:
+            // DEFAULT 3: Career Actual Split
+            $sql_data['where'] = $sql_data['original_where'];
+            $sql_data['stats_year'] = CAREER;
+            break;
+        case RetrosheetDefaults::CAREER_TOTAL:
+            // DEFAULT 4: Career Total Split
+            $sql_data['where'] = 'TRUE';
+            break;
+        case RetrosheetDefaults::SEASON_JOE_AVERAGE_ACTUAL:
+            // DEFAULT 5: Season Joe Average Actual Split
+            $recent_players = pullRecentPlayers($game_id, $type);
+            $sql_data['where'] = $sql_data['original_where'];
+            $sql_data['stats_year'] = SEASON;
+            $sql_data['player_where'] = "$type_id in($recent_players)";
+            break;
+        case RetrosheetDefaults::SEASON_JOE_AVERAGE_TOTAL:
+            // DEFAULT 6: Season Joe Average Total Split
+            $sql_data['where'] = 'TRUE';
+            break;
+        case RetrosheetDefaults::PREV_SEASON_JOE_AVERAGE_ACTUAL:
+            // DEFAULT 7: Prev Season Joe Average Actual Split
+            $recent_players = pullRecentPlayers($game_id, $type);
+            $sql_data['where'] = $sql_data['original_where'];
+            $sql_data['stats_year'] = PREV_SEASON;
+            $sql_data['player_where'] = "$type_id in($recent_players)";
+            break;
+        case RetrosheetDefaults::PREV_SEASON_JOE_AVERAGE_TOTAL:
+            // DEFAULT 8: Prev Season Joe Average Total Split
+            $sql_data['where'] = 'TRUE';
+            break;
+        case RetrosheetDefaults::CAREER_JOE_AVERAGE_ACTUAL:
+            // DEFAULT 9: Career Joe Average Actual Split
+            $recent_players = pullRecentPlayers($game_id, $type);
+            $sql_data['where'] = $sql_data['original_where'];
+            $sql_data['stats_year'] = CAREER;
+            $sql_data['player_where'] = "$type_id in($recent_players)";
+            break;
+        case RetrosheetDefaults::CAREER_JOE_AVERAGE_TOTAL:
+            // DEFAULT 10: Career Joe Average Total Split
+            $sql_data['where'] = 'TRUE';
+            break;
     }
     $sql =
         "SELECT a.event_name,
@@ -431,9 +448,8 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
             JOIN lkup_cd_event b ON a.event_cd = b.value_cd
             AND $player_where
             AND $where
-            AND ((season = $season AND substr(game_id,8,4) < $ds)
-                OR $prev_season)
-                AND event_cd in(" .
+            AND $season_where
+            AND event_cd in(" .
                 implode(',', RetrosheetBatting::getAllEvents()) . ")
             GROUP BY event_name, dummy) a
         JOIN
@@ -442,8 +458,7 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
            FROM events a
            WHERE $player_where
            AND $where
-           AND ((season = $season AND substr(game_id,8,4) < $ds)
-                OR $prev_season)
+           AND $season_where
            AND event_cd in(" . implode(',', RetrosheetBatting::getAllEvents()) . ")
            ) b
         ON a.dummy = b.dummy

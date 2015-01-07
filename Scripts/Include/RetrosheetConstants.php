@@ -56,4 +56,19 @@ class RetrosheetHomeAway {
     const AWAY = 0;
 }
 
+class RetrosheetDefaults {
+
+    const SEASON_TOTAL = 0;
+    const PREV_YEAR_ACTUAL = 1;
+    const PREV_YEAR_TOTAL = 2;
+    const CAREER_ACTUAL = 3;
+    const CAREER_TOTAL = 4;
+    const SEASON_JOE_AVERAGE_ACTUAL = 5;
+    const SEASON_JOE_AVERAGE_TOTAL = 6;
+    const PREV_SEASON_JOE_AVERAGE_ACTUAL = 7;
+    const PREV_SEASON_JOE_AVERAGE_TOTAL = 8;
+    const CAREER_JOE_AVERAGE_ACTUAL = 9;
+    const CAREER_JOE_AVERAGE_TOTAL = 10;
+}
+
 ?>
