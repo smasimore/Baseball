@@ -28,7 +28,7 @@ const EVENTS_TABLE = 'events';
 const STAT_DIFFERENCE = .001;
 const SEASON_GAP_EXCEPTION = 'Player Has A Gap Of > 5 Years';
 
-$numTestDates = 1;
+$numTestDates = 5;
 $maxYear = 1962;
 $statsYear = CAREER;
             //SEASON;
@@ -575,8 +575,8 @@ foreach ($sim_input as $game) {
 echo "\n \n VARS VALIDATED: ";
 asort($splitsTested);
 print_r($splitsTested);
-$days_tested = count($days_tested);
-echo "\n \n \n SUCCESS => $days_tested DAYS TESTED \n \n";
+$num_days_tested = count($days_tested);
+echo "\n \n \n SUCCESS => $num_days_tested DAYS TESTED \n \n";
 print_r($days_tested);
 
 ?>

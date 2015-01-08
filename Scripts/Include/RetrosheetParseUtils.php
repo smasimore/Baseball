@@ -23,10 +23,14 @@ class RetrosheetParseUtils {
 
         $season_vars = array(
             'season_start' => $season_dates[$season]['start'],
-            'season_end' => $season_dates[$season]['end'],
-            'previous_season_start' => $season_dates[$prev_season]['start'],
-            'previous_season_end' => $season_dates[$prev_season]['end']
+            'season_end' => $season_dates[$season]['end']
         );
+        if (isset($season_dates[$prev_season])) {
+            $season_vars['previous_season_start'] =
+                $season_dates[$prev_season]['start'];
+            $season_vars['previous_season_end'] =
+                $season_dates[$prev_season]['end'];
+        }
         return $season_vars;
     }
 }

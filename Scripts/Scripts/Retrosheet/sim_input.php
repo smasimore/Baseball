@@ -9,14 +9,21 @@ ini_set('mysqli.reconnect', '1');
 include('/Users/constants.php');
 include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
 
-$startScript = '1950';
-$endScript  = '2014';
+const SEASON = 'season';
+const PREVIOUS = 'previous';
+const CAREER = 'career';
+const BASIC = 'basic';
+const MAGIC = 'magic';
+
 $statsYear =
-    'season';
-    //'career';
+    //SEASON;
+    //PREVIOUS;
+    CAREER;
 $statsType =
-    'basic';
-    //'magic';
+    BASIC;
+    //MAGIC;
+$startScript = $statsYear == PREVIOUS ? 1951 : 1950;
+$endScript  = '2014';
 
 function updateSeasonVars($season) {
     $season_sql =
@@ -53,7 +60,7 @@ function pullSeasonData($season, $ds, $table) {
 function fillPitchers($pitcher, $stats, $type) {
     $pitcher = json_decode($pitcher, true);
     $player_id = $pitcher['id'];
-    return array(
+    return  array(
         'player_id' =>
             isset($pitcher['id']) ? $pitcher['id'] : 'joe_average',
         'player_name' =>
@@ -69,10 +76,7 @@ function fillPitchers($pitcher, $stats, $type) {
         'avg_innings' =>
             isset($pitcher[$type.'_avg_innings'])
             ? $pitcher[$type.'_avg_innings'] : null,
-        'pitcher_vs_batter' =>
-            isset($stats[$player_id])
-            ? json_decode($stats[$player_id]['stats'], true)
-            : json_decode($stats['joe_average']['stats'], true),
+        'pitcher_vs_batter' => pullJoeAverageCascade($stats, $player_id), 
         'reliever_vs_batter' => null
     );
 }
@@ -83,15 +87,35 @@ function fillLineups($lineup, $stats) {
     foreach ($lineup as $lpos => $player) {
         $pos = trim($lpos, "L");
         $player_id = $player['player_id'];
-        $batter_v_pitcher =
-            isset($stats[$player_id])
-            ? json_decode($stats[$player_id]['stats'], true)
-            : json_decode($stats['joe_average']['stats'], true);
-        $batter_v_pitcher['hand'] = 
-            isset($player['hand']) ? $player['hand'] : null;
+        $batter_v_pitcher = pullJoeAverageCascade($stats, $player_id);
+        $batter_v_pitcher['hand'] = idx($player, 'hand');
         $filled_lineups[$pos] = $batter_v_pitcher;
     }
     return $filled_lineups;
+}
+
+function pullJoeAverageCascade($stats, $player_id) {
+    switch (true) {
+        case isset($stats[$player_id]):
+            $data = 
+                json_decode($stats[$player_id]['stats'], true);
+            break;
+        case isset($stats['joe_average']):
+            $data = 
+                json_decode($stats['joe_average']['stats'], true);
+            break;
+        case isset($stats['joe_average_prev_season']):
+            $data = json_decode(
+                $stats['joe_average_prev_season']['stats'],
+                true
+            );
+            break;
+        default:
+            $data = 
+                json_decode($stats['joe_average_career']['stats'], true);
+            break;
+    }    
+    return $data;
 }
 
 $test = false;
