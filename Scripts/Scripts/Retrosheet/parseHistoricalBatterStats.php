@@ -346,6 +346,10 @@ for ($season = $season_vars['start_script'];
 
         $player_career = updateMissingSplits(
             $player_career,
+            $average_career,
+            /* prev_season */ null,
+            /* player_career */ null,
+            /* avg_prev_season */ null,
             $average_career
         );
         $player_prev_season = updateMissingSplits(
