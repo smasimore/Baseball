@@ -523,6 +523,9 @@ function update(
 mem_exe_sql($database, $sql, $memcached, $retention)
 -------------------------------------------------------------
 TODO(cert): Fill this in later
+$memcache = new Memcached();
+$memcache->addServer('localhost', 11211);
+^^ $memcache can then be passed into this function
 ***********************************************************************/
 function mem_exe_sql($database, $sql, $memcached, $retention = null) {
 
