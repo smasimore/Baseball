@@ -21,9 +21,12 @@ class RetrosheetParseUtils {
         $season_dates = exe_sql(DATABASE, $season_sql);
         $season_dates = index_by($season_dates, 'season');
 
-        $season_vars = array(
-            'season_start' => $season_dates[$season]['start'],
-            'season_end' => $season_dates[$season]['end']
+        $season_vars = array_merge(
+            $season_vars,
+            array(
+                'season_start' => $season_dates[$season]['start'],
+                'season_end' => $season_dates[$season]['end']
+            )
         );
         if (isset($season_dates[$prev_season])) {
             $season_vars['previous_season_start'] =
