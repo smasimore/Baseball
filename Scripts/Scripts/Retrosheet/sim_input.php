@@ -14,16 +14,19 @@ const PREVIOUS = 'previous';
 const CAREER = 'career';
 const BASIC = 'basic';
 const MAGIC = 'magic';
+const INPUT_TABLE = 'sim_input';
 
-$statsYear =
-    //SEASON;
-    //PREVIOUS;
-    CAREER;
+$statsYears = array(
+    SEASON,
+    PREVIOUS,
+    CAREER
+);
 $statsType =
     BASIC;
     //MAGIC;
-$startScript = $statsYear == PREVIOUS ? 1951 : 1950;
+$startScript = $stats_year == PREVIOUS ? 1951 : 1950;
 $endScript  = '2014';
+$insertTable = INPUT_TABLE;
 
 function updateSeasonVars($season) {
     $season_sql =
@@ -120,12 +123,6 @@ function pullJoeAverageCascade($stats, $player_id) {
 
 $test = false;
 
-$tables = array(
-    'batter' => "historical_$statsYear"."_batting",
-    'pitcher' => "historical_$statsYear"."_pitching"
-);
-
-$insert_table = "sim_input";
 $colheads = array(
     'rand_bucket' => '!',
     'gameid' => '!',
@@ -147,81 +144,88 @@ for ($season = $startScript;
     $season < $endScript;
     $season++) {
 
-    // Drop and re-add partitions for this season/type/year combo.
-    $partitions = array(
-        $season => 'int',
-        $statsType => 'string',
-        $statsYear => 'string'
-    );
-    drop_partition(DATABASE, $insert_table, $partitions);
-    add_partition(DATABASE, $insert_table, $partitions);
-    list($season_start, $season_end) = updateSeasonVars($season);
-    $season_lineup = pullSeasonLineup($season);
+    foreach ($statsYears as $stats_year) {
 
-    for ($ds = $season_start;
-        $ds <= $season_end;
-        $ds = ds_modify($ds, '+1 day')) {
+        $tables = array(
+            'batter' => "historical_$stats_year"."_batting",
+            'pitcher' => "historical_$stats_year"."_pitching"
+        );
+        // Drop and re-add partitions for this season/type/year combo.
+        $partitions = array(
+            $season => 'int',
+            $statsType => 'string',
+            $stats_year => 'string'
+        );
+        drop_partition(DATABASE, $insertTable, $partitions);
+        add_partition(DATABASE, $insertTable, $partitions);
+        list($season_start, $season_end) = updateSeasonVars($season);
+        $season_lineup = pullSeasonLineup($season);
 
-        $sim_input_data = array();
-        $batter_stats = pullSeasonData($season, $ds, $tables['batter']);
-        $pitcher_stats = pullSeasonData($season, $ds, $tables['pitcher']);
-        if (!$batter_stats || !$pitcher_stats) {
-            echo "Missing Data For $ds \n";
-            continue;
-        }
-        if (!isset($season_lineup[$ds])) {
-            echo "No Games On $ds \n";
-            continue;
-        }
-        echo "$ds \n";
-        foreach ($season_lineup[$ds] as $i => $lineup) {
-            $sim_input_data[$i] = array(
-                'rand_bucket' => $lineup['rand_bucket'],
-                'gameid' => $lineup['game_id'],
-                'home' => $lineup['home'],
-                'away' => $lineup['away'],
-                'season' => $lineup['season'],
-                'game_date' => $lineup['game_date'],
-                'stats_year' => $statsYear,
-                'stats_type' => $statsType,
-                'error_rate_h' => null,
-                'error_rate_a' => null,
-                'pitching_h' =>  
-                    json_encode(
-                        fillPitchers(
-                            $lineup['pitcher_h'],
-                            $pitcher_stats,
-                            $statsYear
+        for ($ds = $season_start;
+            $ds <= $season_end;
+            $ds = ds_modify($ds, '+1 day')) {
+
+            $sim_input_data = array();
+            $batter_stats = pullSeasonData($season, $ds, $tables['batter']);
+            $pitcher_stats = pullSeasonData($season, $ds, $tables['pitcher']);
+            if (!$batter_stats || !$pitcher_stats) {
+                echo "Missing Data For $ds \n";
+                continue;
+            }
+            if (!isset($season_lineup[$ds])) {
+                echo "No Games On $ds \n";
+                continue;
+            }
+            echo "$ds \n";
+            foreach ($season_lineup[$ds] as $i => $lineup) {
+                $sim_input_data[$i] = array(
+                    'rand_bucket' => $lineup['rand_bucket'],
+                    'gameid' => $lineup['game_id'],
+                    'home' => $lineup['home'],
+                    'away' => $lineup['away'],
+                    'season' => $lineup['season'],
+                    'game_date' => $lineup['game_date'],
+                    'stats_year' => $stats_year,
+                    'stats_type' => $statsType,
+                    'error_rate_h' => null,
+                    'error_rate_a' => null,
+                    'pitching_h' =>
+                        json_encode(
+                            fillPitchers(
+                                $lineup['pitcher_h'],
+                                $pitcher_stats,
+                                $stats_year
+                            )
+                        ),
+                    'pitching_a' =>
+                        json_encode(
+                            fillPitchers(
+                                $lineup['pitcher_a'],
+                                $pitcher_stats,
+                                $stats_year
+                            )
+                        ),
+                    'batting_h' =>
+                        json_encode(
+                            fillLineups($lineup['lineup_h'], $batter_stats)
+                        ),
+                    'batting_a' =>
+                        json_encode(
+                            fillLineups($lineup['lineup_a'], $batter_stats)
                         )
-                    ),
-                'pitching_a' =>
-                    json_encode(
-                        fillPitchers(
-                            $lineup['pitcher_a'],
-                            $pitcher_stats,
-                            $statsYear
-                        )
-                    ),
-                'batting_h' =>
-                    json_encode(
-                        fillLineups($lineup['lineup_h'], $batter_stats)
-                    ),
-                'batting_a' =>
-                    json_encode(
-                        fillLineups($lineup['lineup_a'], $batter_stats)
-                    )
-            );
-        }
+                );
+            }
 
-        if (!$test && isset($sim_input_data)) {
-            multi_insert(
-                DATABASE,
-                $insert_table,
-                $sim_input_data,
-                $colheads
-            );
-        } else if ($test) {
-            print_r($sim_input_data); exit();
+            if (!$test && isset($sim_input_data)) {
+                multi_insert(
+                    DATABASE,
+                    $insertTable,
+                    $sim_input_data,
+                    $colheads
+                );
+            } else if ($test) {
+                print_r($sim_input_data); exit();
+            }
         }
     }
 }

@@ -8,6 +8,7 @@ ini_set('mysqli.connect_timeout', -1);
 ini_set('mysqli.reconnect', '1');
 include('/Users/constants.php');
 include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
+include(HOME_PATH.'Scripts/Include/RetrosheetConstants.php');
 include(HOME_PATH.'Scripts/Include/RetrosheetParseUtils.php');
 
 const MIN_PLATE_APPEARANCE = 18;
@@ -116,7 +117,6 @@ function updateMissingSplits(
                 $default_step = 0;
                 $is_filled = isset($player_season[$player_id][$date][$split]);
                 while (!$is_filled) {
-                    $default_step += 1;
                     $player_season[$player_id][$date][$split] = addDefaultData(
                         $default_step,
                         $player_id,
@@ -130,6 +130,7 @@ function updateMissingSplits(
                         $average_career
                     );
                     $is_filled = isset($player_season[$player_id][$date][$split]);
+                    $default_step += 1;
                     $player_season[$player_id][$date][$split]['plate_appearances'] = 0;
                 }
             }
@@ -153,54 +154,43 @@ function addDefaultData(
 
     $default_data = null;
     switch ($default_step) {
-        case 1:
-            // OPTION 1: Season Total Split
+        case RetrosheetDefaults::SEASON_TOTAL:
             $default_data = elvis($player_season[$player_id][$date][TOTAL]);
             break;
-        case 2:
-            // OPTION 2: Prev Year Actual Split
+        case RetrosheetDefaults::PREV_YEAR_ACTUAL:
             $default_data =
                 elvis($player_prev_season[$player_id][$date][$split]);
             break;
-        case 3:
-            // OPTION 3: Prev Year Total Split
+        case RetrosheetDefaults::PREV_YEAR_TOTAL:
             $default_data =
                 elvis($player_prev_season[$player_id][$date][TOTAL]);
             break;
-        case 4:
-            // OPTION 4: Career Actual Split
+        case RetrosheetDefaults::CAREER_ACTUAL:
             $default_data = elvis($player_career[$player_id][$date][$split]);
             break;
-        case 5:
-            // OPTION 5: Career Total Split
+        case RetrosheetDefaults::CAREER_TOTAL:
             $default_data = elvis($player_career[$player_id][$date][TOTAL]);
             break;
-        case 6:
-            // OPTION 6: Season Joe Average Actual Split
+        case RetrosheetDefaults::SEASON_JOE_AVERAGE_ACTUAL:
             $default_data = elvis($average_season[$date][$split]);
             break;
-        case 7:
-            // OPTION 7: Season Joe Average Total Split
+        case RetrosheetDefaults::SEASON_JOE_AVERAGE_TOTAL:
             $default_data = elvis($average_season[$date][TOTAL]);
             break;
-        case 8:
-            // OPTION 8: Prev Season Joe Average Actual Split
+        case RetrosheetDefaults::PREV_SEASON_JOE_AVERAGE_ACTUAL:
             $default_data = elvis($average_prev_season[$date][$split]);
             break;
-        case 9:
-            // OPTION 9: Prev Season Joe Average Total Split
+        case RetrosheetDefaults::PREV_SEASON_JOE_AVERAGE_TOTAL:
             $default_data = elvis($average_prev_season[$date][TOTAL]);
             break;
-        case 10:
-            // OPTION 10: Career Joe Average Actual Split
+        case RetrosheetDefaults::CAREER_JOE_AVERAGE_ACTUAL:
             $default_data = elvis($average_career[$date][$split]);
             break;
-        case 11:
-            // OPTION 11: Career Joe Average Total Split
+        case RetrosheetDefaults::CAREER_JOE_AVERAGE_TOTAL:
             $default_data = elvis($average_career[$date][TOTAL]);
             break;
-        case 12:
-            exit("$player_id GOT TO CASE 12");
+        case 11:
+            exit("$player_id GOT TO CASE 11");
     }
     $pas = idx($default_data, 'plate_appearances', 0);
     return $pas >= MIN_PLATE_APPEARANCE ? $default_data : null;
