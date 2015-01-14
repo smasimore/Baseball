@@ -14,13 +14,17 @@ const MIN_AT_BATS = 18;
 const PITCHER = 'pitcher';
 const BATTER = 'batter';
 const SEASON = 'season';
-const PREV_SEASON = 'prev_season';
+const PREV_SEASON = 'previous';
 const CAREER = 'career';
 const BASIC = 'basic';
 const HOME = 'home';
 const AWAY = 'away';
 const HOME_ABBR = 'h';
 const AWAY_ABBR = 'a';
+const BAT_ID = 'BAT_ID';
+const PIT_ID = 'PIT_ID';
+const BAT_HAND_CD = 'BAT_HAND_CD';
+const PIT_HAND_CD = 'PIT_HAND_CD';
 const JOE_AVERAGE = 'joe_average';
 const SIM_INPUT_TABLE = 'sim_input';
 const GAMES_TABLE = 'games';
@@ -28,8 +32,8 @@ const EVENTS_TABLE = 'events';
 const STAT_DIFFERENCE = .001;
 const SEASON_GAP_EXCEPTION = 'Player Has A Gap Of > 5 Years';
 
-$numTestDates = 5;
-$maxYear = 1962;
+$numTestDates = 10;
+$maxYear = 1988;
 $statsYear = CAREER;
             //SEASON;
             //PREV_SEASON;
@@ -83,7 +87,7 @@ function pullRecentPlayers($game_id, $type) {
     $season = substr($game_id, 3, 4);
     $ds = substr($game_id, 7, 4);
     $five_ago = $season - 4;
-    $type_id = $type == BATTER ? 'BAT_ID' : 'PIT_ID';
+    $type_id = $type == BATTER ? BAT_ID : PIT_ID;
     $sql = "SELECT DISTINCT $type_id
         FROM " . EVENTS_TABLE . "
         WHERE (season < $season
@@ -136,12 +140,12 @@ function pullPlateAppearances(
     return $pas;
 }
 
-function checkException($player) {
+function checkException($player, $type_id, $exception_where) {
     // 1) Does this player have a 5+ year gap in their history?
     $sql = "SELECT DISTINCT season
         FROM " . EVENTS_TABLE .
-        " WHERE bat_id = '$player'
-        OR pit_id = '$player'
+        " WHERE ($type_id = '$player'
+        OR $exception_where)
         ORDER BY season";
     $data = exe_sql(DATABASE, $sql);
     $seasons = array();
@@ -159,11 +163,20 @@ function checkException($player) {
     }
 }
 
-function assertTrue($truth, $game_id, $player, $stat, $error = null) {
+function assertTrue(
+    $truth,
+    $game_id,
+    $player,
+    $stat,
+    $error = null,
+    $type_id = null
+) {
     global $silenceSuccess, $splitsTested, $cache;
     $message = "GAMEID: $game_id => $stat \t \t \t";
     if (!$truth) {
-        $exception = checkException($player);
+        $exception_where = $type_id ? 'FALSE' : "PIT_ID = '$player'";
+        $type_id = elvis($type_id, BAT_ID);
+        $exception = checkException($player, $type_id, $exception_where);
         if ($exception) {
             echo "Exception for $player: $exception \n";
         } else {
@@ -249,103 +262,6 @@ function validatePitcher($game_id, $pitcher_id, $home_away) {
     }
 }
 
-function validateSplit($stats, $player_id, $split, $game_id, $type) {
-    global $statsYear, $skipJoeAverage, $cache, $defaultMap;
-    $season = substr($game_id, 3, 4);
-    $ds = substr($game_id, 7, 4);
-    // Unlike batters, when a pitcher is home the bat_id = 0 since it
-    // refers to the opposing batter.
-    switch ($type) {
-        case PITCHER:
-            $type_id = 'PIT_ID';
-            $player_where = "$type_id = '$player_id'";
-            $opp_hand = 'BAT_HAND_CD';
-            $bat_home_id = RetrosheetHomeAway::AWAY;
-            break;
-        case BATTER:
-            $type_id = 'BAT_ID';
-            $player_where = "$type_id = '$player_id'";
-            $opp_hand = 'PIT_HAND_CD';
-            $bat_home_id = RetrosheetHomeAway::HOME;
-            break;
-    }
-    // Create a WHERE statement based on split
-    switch ($split) {
-        case "Total":
-            $where = 'TRUE';
-            break;
-        case "Home":
-            $where = "BAT_HOME_ID = $bat_home_id";
-            break;
-        case "Away":
-            $away_id = 1 - $bat_home_id;
-            $where = "BAT_HOME_ID = $away_id";
-            break;
-        case "VsLeft":
-            $where = "$opp_hand = 'L'";
-            break;
-        case "VsRight":
-            $where = "$opp_hand = 'R'";
-            break;
-        case "NoneOn":
-            $where = "START_BASES_CD = " . RetrosheetBases::BASES_EMPTY;
-            break;
-        case "RunnersOn":
-            $where = "START_BASES_CD = " . RetrosheetBases::FIRST;
-            break;
-        case "ScoringPos":
-            $where = "START_BASES_CD >= " . RetrosheetBases::SECOND .
-                " AND START_BASES_CD != " . RetrosheetBases::BASES_LOADED .
-                " AND OUTS_CT < 2";
-            break;
-        case "ScoringPos2Out":
-            $where = "START_BASES_CD >= " . RetrosheetBases::SECOND .
-            " AND OUTS_CT = 2";
-            break;
-        case "BasesLoaded":
-            $where = "START_BASES_CD = " . RetrosheetBases::BASES_LOADED .
-                " AND OUTS_CT < 2";
-            break;
-    }
-    // Create second copy of $where for use in Joe Average logic.
-    $is_joe_average =
-        ($stats['player_id'] == JOE_AVERAGE || $player_id == JOE_AVERAGE)
-        ? 1 : 0;
-    $pas = elvis($stats['plate_appearances'], 0);
-    $default_step = 0;
-    $sql_data = array(
-        'player_where' => $player_where,
-        'stats_year' => $statsYear,
-        'where' => $where,
-        'original_where' => $where
-    );
-    $is_filled = ($pas >= MIN_AT_BATS && !$is_joe_average);
-    while (!$is_filled) {
-        $default_routing = $statsYear == SEASON
-            ? $default_step :$defaultMap[$statsYear][$default_step];
-        // If player is Joe Average skip non Joe Average Defaults
-        if ($is_joe_average) {
-            if ($default_routing <
-                RetrosheetDefaults::SEASON_JOE_AVERAGE_ACTUAL) {
-                continue;
-            }
-        }
-        $sql_data = addDefaultData($default_routing, $sql_data);
-        $pas = pullPlateAppearances(
-            $sql_data['player_where'],
-            $game_id,
-            $sql_data['stats_year'],
-            $sql_data['where']
-        );
-        $is_filled = $pas >= MIN_AT_BATS;
-        $default_step += 1;
-    }
-    // Update SQL params if they've changed in defaulting.
-    $where = $sql_data['where'];
-    $player_where = $sql_data['player_where'];
-    $season_where = getSeasonWhere($sql_data['stats_year'], $season, $ds);
-}
-
 function getSeasonWhere($stats_year, $season, $ds) {
     switch ($stats_year) {
         case SEASON:
@@ -353,7 +269,7 @@ function getSeasonWhere($stats_year, $season, $ds) {
             break;
         case CAREER:
             return "((season = $season AND substr(game_id,8,4) < $ds)
-                    OR season < $season)";
+                OR season < $season)";
             break;
         case PREV_SEASON:
             $prev_season = $season - 1;
@@ -362,7 +278,7 @@ function getSeasonWhere($stats_year, $season, $ds) {
     }
 }
 
-function addDefaultData($default_step, $sql_data) {
+function addDefaultData($default_step, $game_id, $sql_data, $type, $type_id) {
     switch ($default_step) {
         case RetrosheetDefaults::SEASON_TOTAL:
             // DEFAULT 0: Season Total Split
@@ -420,6 +336,112 @@ function addDefaultData($default_step, $sql_data) {
             $sql_data['where'] = 'TRUE';
             break;
     }
+    return $sql_data;
+}
+
+function validateSplit($stats, $player_id, $split, $game_id, $type) {
+    global $statsYear, $skipJoeAverage, $cache, $defaultMap;
+    $season = substr($game_id, 3, 4);
+    $ds = substr($game_id, 7, 4);
+    // Unlike batters, when a pitcher is home the bat_id = 0 since it
+    // refers to the opposing batter.
+    switch ($type) {
+        case PITCHER:
+            $type_id = PIT_ID;
+            $player_where = "$type_id = '$player_id'";
+            $opp_hand = BAT_HAND_CD;
+            $bat_home_id = RetrosheetHomeAway::AWAY;
+            break;
+        case BATTER:
+            $type_id = BAT_ID;
+            $player_where = "$type_id = '$player_id'";
+            $opp_hand = PIT_HAND_CD;
+            $bat_home_id = RetrosheetHomeAway::HOME;
+            break;
+    }
+    // Create a WHERE statement based on split
+    switch ($split) {
+        case "Total":
+            $where = 'TRUE';
+            break;
+        case "Home":
+            $where = "BAT_HOME_ID = $bat_home_id";
+            break;
+        case "Away":
+            $away_id = 1 - $bat_home_id;
+            $where = "BAT_HOME_ID = $away_id";
+            break;
+        case "VsLeft":
+            $where = "$opp_hand = 'L'";
+            break;
+        case "VsRight":
+            $where = "$opp_hand = 'R'";
+            break;
+        case "NoneOn":
+            $where = "START_BASES_CD = " . RetrosheetBases::BASES_EMPTY;
+            break;
+        case "RunnersOn":
+            $where = "START_BASES_CD = " . RetrosheetBases::FIRST;
+            break;
+        case "ScoringPos":
+            $where = "START_BASES_CD >= " . RetrosheetBases::SECOND .
+                " AND START_BASES_CD != " . RetrosheetBases::BASES_LOADED .
+                " AND OUTS_CT < 2";
+            break;
+        case "ScoringPos2Out":
+            $where = "START_BASES_CD >= " . RetrosheetBases::SECOND .
+            " AND OUTS_CT = 2";
+            break;
+        case "BasesLoaded":
+            $where = "START_BASES_CD = " . RetrosheetBases::BASES_LOADED .
+                " AND OUTS_CT < 2";
+            break;
+    }
+    // Create second copy of $where for use in Joe Average logic.
+    $is_joe_average =
+        ($stats['player_id'] == JOE_AVERAGE || $player_id == JOE_AVERAGE)
+        ? 1 : 0;
+    $pas = elvis($stats['plate_appearances'], 0);
+    $default_step = 0;
+    $sql_data = array(
+        'player_where' => $player_where,
+        'stats_year' => $statsYear,
+        'where' => $where,
+        'original_where' => $where
+    );
+    $is_filled = ($pas >= MIN_AT_BATS && !$is_joe_average);
+    while (!$is_filled) {
+        $default_routing = $statsYear == SEASON
+            ? $default_step : $defaultMap[$statsYear][$default_step];
+        // If player is Joe Average skip non Joe Average Defaults
+        if ($is_joe_average) {
+            if ($default_routing <
+                RetrosheetDefaults::SEASON_JOE_AVERAGE_ACTUAL) {
+                $default_step += 1;
+                continue;
+            }
+        }
+        $sql_data = addDefaultData(
+            $default_routing,
+            $game_id,
+            $sql_data,
+            $type,
+            $type_id
+        );
+        $pas = pullPlateAppearances(
+            $sql_data['player_where'],
+            $game_id,
+            $sql_data['stats_year'],
+            $sql_data['where']
+        );
+        $is_filled = $pas >= MIN_AT_BATS;
+        $default_step += 1;
+    }
+    // Update SQL params if they've changed in defaulting.
+    $where = $sql_data['where'];
+    $player_where = $sql_data['player_where'];
+    $season_where = getSeasonWhere($sql_data['stats_year'], $season, $ds);
+
     $sql =
         "SELECT a.event_name,
         b.denom AS plate_appearances,
@@ -492,7 +514,8 @@ function addDefaultData($default_step, $sql_data) {
                 $player_id,
                 $split,
                 "$split_index error: $sql_stat !== $stat for
-                    $player_id in $season"
+                    $player_id in $season",
+                $type_id
             );
         }
     }
