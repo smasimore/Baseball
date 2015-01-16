@@ -16,6 +16,7 @@ class Team:
 
         # Initialize.
         self.weightsMutator = None
+        self.useReliever = True
 
         # Used to speed up getBatterStats.
         self.storedBatterStats = {}
@@ -112,6 +113,9 @@ class Team:
 
     def setWeightsMutator(self, weights_mutator):
         self.weightsMutator = weights_mutator
+
+    def setUseReliever(self, use_reliever):
+        self.useReliever = use_reliever
 
 
 
@@ -229,7 +233,8 @@ class Team:
         return Bases.BASES_TO_SITUATION[bases]
 
     def __getPitcherType(self, inning):
-        if (inning <= self.pitchingData['avg_innings'] or
+        if (not self.useReliever or
+            inning <= self.pitchingData['avg_innings'] or
             Pitcher.RELIEVER not in self.pitchingData or
             not self.pitchingData[Pitcher.RELIEVER]):
             return Pitcher.STARTER

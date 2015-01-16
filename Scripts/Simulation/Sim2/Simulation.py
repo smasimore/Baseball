@@ -34,7 +34,8 @@ class Simulation:
         'weights',
         'weights_mutator',
         'analysis_runs',
-        'sim_game_date'
+        'sim_game_date',
+        'use_reliever'
     ]
 
     DEBUG_COLUMNS = [
@@ -55,6 +56,7 @@ class Simulation:
         'weights_mutator',
         'analysis_runs',
         'sim_game_date',
+        'use_reliever',
         'test_run'
     ]
 
@@ -93,7 +95,8 @@ class Simulation:
                      # Timespan not currently available.
     TEST_RUN = False
     WEIGHTS_MUTATOR = None
-    DEBUG_LOGGING = False
+    DEBUG_LOGGING = True
+    USE_RELIEVER = True
 
     # Input data split into 30 rand groups.
     SAMPLE_MIN = 0
@@ -128,6 +131,7 @@ class Simulation:
                                      # data rather than MySQL.
         self.weightsMutator = self.WEIGHTS_MUTATOR
         self.debugLoggingOn = self.DEBUG_LOGGING
+        self.useReliever = self.USE_RELIEVER
         self.sampleMin = self.SAMPLE_MIN
         self.sampleMax = self.SAMPLE_MAX
 
@@ -160,6 +164,7 @@ class Simulation:
         # instead of passing in an additional parameter.
         game.setWeightsMutator(self.weightsMutator)
         game.setLogging(self.debugLoggingOn)
+        game.setUseReliever(self.useReliever)
 
         game_results = []
         for analysis_run in range(0, self.analysisRuns):
@@ -395,13 +400,21 @@ class Simulation:
             results.append(game)
 
         if not self.testRun:
+            delete_where = (
+                self.queryWhere +
+                """ AND weights_i = %d AND
+                use_reliever = %d"""
+                % (
+                    self.weightsIndex,
+                    self.useReliever
+                )
+            )
             delete_query = (
                 """DELETE
                 FROM %s %s"""
                 % (
                     self.__OUTPUT_TABLE,
-                    self.queryWhere +
-                        ' AND weights_i = ' + str(self.weightsIndex)
+                    delete_where
                 )
             )
             MySQL.delete(delete_query)
@@ -451,6 +464,10 @@ class Simulation:
         self.validateDebugLogging(log)
         self.debugLoggingOn = log
 
+    def setUseReliever(self, use_reliever):
+        self.validateUseReliever(use_reliever)
+        self.useReliever = use_reliever
+
     def __getSimParams(self):
         weights_readable = self.__getReadableWeights()
         return [
@@ -461,7 +478,8 @@ class Simulation:
             weights_readable,
             self.weightsMutator,
             self.analysisRuns,
-            self.gameDate
+            self.gameDate,
+            self.useReliever
         ]
 
     ########## PARAM VALIDATION FUNCTIONS ##########
@@ -544,3 +562,9 @@ class Simulation:
             raise ValueError(
                 'Debug logging param needs to be a bool. %s is not.'
                 % log)
+
+    def validateUseReliever(self, use_reliever):
+        if not isinstance(use_reliever, bool):
+            raise ValueError(
+                'Use Reliever param needs to be a bool. %s is not.'
+                % use_reliever)

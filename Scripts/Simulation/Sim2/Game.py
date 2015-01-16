@@ -169,3 +169,7 @@ class Game:
 
     def setLogging(self, log):
         self.loggingOn = log
+
+    def setUseReliever(self, use_reliever):
+        self.teams[self.HOME].setUseReliever(use_reliever)
+        self.teams[self.AWAY].setUseReliever(use_reliever)

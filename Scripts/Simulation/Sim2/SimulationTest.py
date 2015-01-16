@@ -20,7 +20,8 @@ class SimulationTestCase(unittest.TestCase):
         batting_h,
         batting_a,
         pitching_h,
-        pitching_a):
+        pitching_a,
+        use_reliever = True):
         input_data = [{
             'gameid' : 'test',
             'game_date' : 'test',
@@ -38,6 +39,7 @@ class SimulationTestCase(unittest.TestCase):
         game.setAnalysisRuns(10)
         game.setTestRun(True)
         game.setInputData(input_data)
+        game.setUseReliever(use_reliever)
         return game.run()
 
     def test_b_total(self):
@@ -709,6 +711,57 @@ class SimulationTestCase(unittest.TestCase):
         }
 
         results = self.__runGame(weights, b_h, b_a, p_h, p_a)
+        self.assertEqual(
+            [
+                results['home_win_pct'],
+                results['weights_i'],
+                results['weights'],
+            ],
+            [
+                1.0,
+                7,
+                'p_total_100',
+            ]
+        )
+
+    def test_p_total_force_no_reliever(self):
+        weights = {StatCategories.P_TOTAL : 1.0}
+        b_h = {}
+        b_a = {}
+        p_h = {
+            'handedness' : 'L',
+            'avg_innings' : 0,
+            'bucket' : '25',
+            'pitcher_vs_batter' : {
+                Total.TOTAL : {
+                    u'pct_strikeout': 1,
+                }
+            },
+            'reliever_vs_batter' : {
+                Total.TOTAL : {
+                    u'pct_single': 0.5,
+                    u'pct_strikeout': 0.5,
+                }
+            }
+        }
+        p_a = {
+            'handedness' : 'R',
+            'avg_innings' : 0,
+            'bucket' : '50',
+            'pitcher_vs_batter' : {
+                Total.TOTAL : {
+                    u'pct_single': 0.5,
+                    u'pct_strikeout': 0.5,
+                }
+            },
+            'reliever_vs_batter' : {
+                Total.TOTAL : {
+                    u'pct_strikeout': 1.0,
+                }
+            }
+        }
+
+        results = self.__runGame(weights, b_h, b_a, p_h, p_a, False)
         self.assertEqual(
             [
                 results['home_win_pct'],
