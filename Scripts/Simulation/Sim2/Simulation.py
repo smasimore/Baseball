@@ -417,7 +417,7 @@ class Simulation:
                     delete_where
                 )
             )
-            MySQL.delete(delete_query)
+            print MySQL.delete(delete_query)
             MySQL.addPartition(
                 self.__OUTPUT_TABLE,
                 str(self.season)+str(self.weightsIndex),
