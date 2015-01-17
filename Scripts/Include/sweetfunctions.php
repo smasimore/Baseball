@@ -303,11 +303,7 @@ $splits = array(
     'RunnersOn', 
     'ScoringPos', 
     'ScoringPos2Out', 
-    'BasesLoaded', 
-    25, 
-    50, 
-    75, 
-    100
+    'BasesLoaded'
 );
 
 $pctStats = array(

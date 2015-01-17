@@ -20,6 +20,7 @@ const ERA_TABLE = 'retrosheet_historical_eras';
 const ERA_CAREER_TABLE = 'retrosheet_historical_eras_career';
 const DAILY_ROSTERS_TABLE = 'retrosheet_historical_pitching_rosters';
 const SEASON_RELIEVER_TABLE = 'historical_season_relievers';
+const PREVIOUS_RELIEVER_TABLE = 'historical_previous_relievers';
 const CAREER_RELIEVER_TABLE = 'historical_career_relievers';
 const SEASON_PITCHING_TABLE = 'retrosheet_historical_pitching';
 const CAREER_PITCHING_TABLE = 'retrosheet_historical_pitching_career';
@@ -109,9 +110,11 @@ function getPitchingData(
     $rosters,
     $starters,
     $pitching_data,
-    $pitching_pct_data
+    $pitching_pct_data,
+    $last_season_end = null
 ) {
     $starters = implode(',', $starters[$ds]);
+    $ds = $last_season_end ?: $ds;
     $query =
         "SELECT a.*
         FROM (SELECT
@@ -202,53 +205,7 @@ function updatePitchingArray(
     return array($player_stats, $average_stats);
 }
 
-function updateMissingSplits(
-    $player_season,
-    $average_season,
-    $player_career = null
-) {
-    global $splits;
-    if (!isset($player_season)) {
-        return null;
-    }
-    $player_season['joe_average'] = $average_season;
-    foreach ($player_season as $player_id => $dates) {
-        foreach ($dates as $date => $split_data) {
-            // Note: We are cycling through ALL splits (per the global var).
-            foreach ($splits as $split) {
-                // OPTION 1: Use Batter's Total Split.
-                // OPTION 2: Use Batter's Career Split.
-                // OPTION 3: User Batter' Career Total Split.
-                // OPTION 4: Use Average Stats For That Split.
-                if (isset($player_season[$player_id][$date][$split])) {
-                    continue;
-                } else {
-                    $player_season[$player_id][$date][$split] =
-                        $player_season[$player_id][$date][TOTAL];
-                }
-                if (!$player_season[$player_id][$date][$split] &&
-                    $player_career[$player_id][$date]) {
-                    $player_season[$player_id][$date][$split] =
-                        $player_career[$player_id][$date][$split] ?
-                        $player_career[$player_id][$date][$split] :
-                        $player_career[$player_id][$date][TOTAL];
-                }
-                if (!$player_season[$player_id][$date][$split]) {
-                    $player_season[$player_id][$date][$split] =
-                        $average_season[$date][$split]['plate_appearances'] >=
-                            MIN_PLATE_APPEARANCE
-                        ? $average_season[$date][$split]
-                        : $average_season[$date][TOTAL];
-                }
-                $player_season[$player_id][$date][$split]
-                    ['plate_appearances'] = 0;
-            }
-        }
-    }
-    return $player_season;
-}
-
-function prepareMultiInsert($player_season, $season) {
+function prepareMultiInsert($player_season, $season, $ds) {
     if (!isset($player_season)) {
         return null;
     }
@@ -256,9 +213,9 @@ function prepareMultiInsert($player_season, $season) {
     foreach ($player_season as $player => $dates) {
         $player_insert = array();
         foreach ($dates as $date => $splits) {
-            $player_insert[$player][$date] = array(
+            $player_insert[$player][$ds] = array(
                 'team_id' => $player,
-                'ds' => $date,
+                'ds' => $ds,
                 'season' => $season
             );
             $final_splits = array();
@@ -266,9 +223,9 @@ function prepareMultiInsert($player_season, $season) {
                 $split['team_id'] = $player;
                 $final_splits[$split_name] = $split;
             }
-            $player_insert[$player][$date]['stats'] =
+            $player_insert[$player][$ds]['stats'] =
                 json_encode($final_splits);
-            $final_insert[] = $player_insert[$player][$date];
+            $final_insert[] = $player_insert[$player][$ds];
         }
     }
     return $final_insert;
@@ -276,6 +233,9 @@ function prepareMultiInsert($player_season, $season) {
 
 function convertSeasonToPct($average_season) {
     global $pctStats;
+    if (!$average_season) {
+        return null;
+    }
     foreach ($average_season as $ds => $splits) {
         foreach ($splits as $split_name => $split) {
             $plate_appearances =
@@ -287,20 +247,24 @@ function convertSeasonToPct($average_season) {
                     $average_pcts[$ds][$split_name][$stat_pct_name] =
                         number_format($pct_stat, NUM_DECIMALS);
                 }
+                $average_pcts[$ds][$split_name]['plate_appearances'] =
+                    $plate_appearances;
             }
         }
     }
     return $average_pcts;
 }
 
-$test = false;
+$test = true;
 
 $season_vars = array(
     'start_script' => 1950,
     'end_script' => 2014,
     'season_start' => null,
     'season_end' => null,
+    'previous_season_end' => null
 );
+$season_vars['start_script'] = $test ? 1951 : $season_vars['start_script'];
 
 $colheads = array(
     'team_id',
@@ -310,6 +274,7 @@ $colheads = array(
 );
 
 $season_insert_table = SEASON_RELIEVER_TABLE;
+$previous_insert_table = PREVIOUS_RELIEVER_TABLE;
 $career_insert_table = CAREER_RELIEVER_TABLE;
 $season_table = SEASON_PITCHING_TABLE;
 $career_table = CAREER_PITCHING_TABLE;
@@ -319,7 +284,7 @@ for ($season = $season_vars['start_script'];
     $season++) {
 
     $starting_pitchers = getStartingPitchers($season);
-    $season_vars = RetrosheetParse::updateSeasonVars(
+    $season_vars = RetrosheetParseUtils::updateSeasonVars(
         $season,
         $season_vars,
         $season_table
@@ -330,8 +295,10 @@ for ($season = $season_vars['start_script'];
         $ds = ds_modify($ds, '+1 day')) {
         echo $ds."\n";
         $player_season = null;
+        $player_previous = null;
         $player_career = null;
         $average_season = null;
+        $average_previous = null;
         $average_career = null;
 
         $team_rosters = getPitchingRosters($season, $ds);
@@ -351,6 +318,18 @@ for ($season = $season_vars['start_script'];
             $career_table,
             ERA_CAREER_TABLE
         );
+        if ($season > 1950) {
+            $prev_season = $season - 1;
+            $previous_data = getPitchingData(
+                $prev_season,
+                $ds,
+                $team_rosters,
+                $starting_pitchers,
+                $season_table,
+                ERA_TABLE,
+                $season_vars['previous_season_end']
+            );
+        }
 
         if (!$career_data) {
             echo "No Data For $ds \n";
@@ -363,8 +342,16 @@ for ($season = $season_vars['start_script'];
                 $player_career,
                 $average_career
             );
-            $season_split =
-                isset($season_data[$index]) ? $season_data[$index] : null;
+            $previous_split = idx($previous_data, $index);
+            if ($previous_split) {
+                list($player_previous, $average_previous) =
+                    updatePitchingArray(
+                        $previous_split,
+                        $player_previous,
+                        $average_previous
+                    );
+            }
+            $season_split = idx($season_data, $index);
             if ($season_split) {
                 list($player_season, $average_season) = updatePitchingArray(
                     $season_split,
@@ -374,25 +361,51 @@ for ($season = $season_vars['start_script'];
             }
         }
         $average_season = convertSeasonToPct($average_season);
+        $average_previous = convertSeasonToPct($average_previous);
         $average_career = convertSeasonToPct($average_career);
-        $player_career =
-            updateMissingSplits(
-                $player_career,
-                $average_career
-            );
-        $player_season =
-            updateMissingSplits(
-                $player_season,
-                $average_season,
-                $player_career
-            );
-        $player_season = prepareMultiInsert($player_season, $season);
-        $player_career = prepareMultiInsert($player_career, $season);
+
+        $player_career = RetrosheetParseUtils::updateMissingSplits(
+            $player_career,
+            $average_career,
+            /* player_previous */ null,
+            /* player_career */ null,
+            /* average_previous */ null,
+            $average_career
+        );
+        $player_previous = RetrosheetParseUtils::updateMissingSplits(
+            $player_previous,
+            $average_previous,
+            /* player_previous */ null,
+            $player_career,
+            /* average_previous */ null,
+            $average_career
+        );
+        $player_season = RetrosheetParseUtils::updateMissingSplits(
+            $player_season,
+            $average_season,
+            $player_previous,
+            $player_career,
+            $average_previous,
+            $average_career
+        );
+
+        $player_season = prepareMultiInsert($player_season, $season, $ds);
+        $player_previous = prepareMultiInsert($player_previous, $season, $ds);
+        $player_career = prepareMultiInsert($player_career, $season, $ds);
+
         if (!$test && isset($player_season)) {
             multi_insert(
                 DATABASE,
                 $season_insert_table,
                 $player_season,
+                $colheads
+            );
+        }
+        if (!$test && isset($player_previous)) {
+            multi_insert(
+                DATABASE,
+                $previous_insert_table,
+                $player_previous,
                 $colheads
             );
         }
