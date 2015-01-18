@@ -40,6 +40,7 @@ class SimulationTestCase(unittest.TestCase):
         game.setTestRun(True)
         game.setInputData(input_data)
         game.setUseReliever(use_reliever)
+        game.setDebugLogging(False)
         return game.run()
 
     def test_b_total(self):

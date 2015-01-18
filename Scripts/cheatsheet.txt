@@ -92,3 +92,9 @@ git rm $(git ls-files --deleted)
 
 # Profile processing cost for Python
 python -m cProfile test.py
+
+# Merge conflict in binary
+git checkout --ours -- <path to file>
+git add .
+git commit -m "resolve"
+arc land
