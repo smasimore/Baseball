@@ -7,7 +7,6 @@ ini_set('max_execution_time', -1);
 ini_set('mysqli.connect_timeout', -1);
 ini_set('mysqli.reconnect', '1');
 include('/Users/constants.php');
-include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
 include(HOME_PATH.'Scripts/Include/RetrosheetParseUtils.php');
 
 const MIN_AT_BATS = 18;
@@ -34,13 +33,14 @@ const SEASON_GAP_EXCEPTION = 'Player Has A Gap Of > 5 Years';
 
 $numTestDates = 10;
 $maxYear = 2013;
-$minYear = 1950;
+$minYear = 1951;
 $statsYear = CAREER;
             //SEASON;
             //PREV_SEASON;
 $statsType = BASIC;
 $silenceSuccess = true;
 $skipJoeAverage = false;
+$joeAverage = null;
 $splitsTested = array();
 $cache = array();
 $splits = RetrosheetSplits::getSplits();
@@ -417,6 +417,7 @@ if (!isset($sim_input)) {
 $start_message = "\n Testing...";
 foreach ($sim_input as $game) {
     echo $start_message . $game['gameid'] . "\n";
+    $joeAverage = RetrosheetParseUtils::getJoeAverageStats($game['season']);
     echo '                        pitching_h ';
     validatePitching($game, HOME_ABBR);
     echo "SUCCESS! \n";

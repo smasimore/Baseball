@@ -373,7 +373,7 @@ function multi_insert($database, $table, $data_array, $colheads) {
 	$sql = array(); 
 	foreach ($data_array as $row) {
         $insert_row = array();
-        foreach ($colheads as $col) {
+		foreach ($colheads as $col) {
             $insert_data = null;
 			if (!array_key_exists($col, $row) || is_null($row[$col])) {
 				if (in_array($col, $nullable_colheads)) {

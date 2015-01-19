@@ -1,7 +1,10 @@
 <?php
 //Copyright 2014, Saber Tooth Ventures, LLC
 
-include('/Users/constants.php');
+if (!defined('HOME_PATH')) {
+    include('/Users/constants.php');
+}
+include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
 include(HOME_PATH.'Scripts/Include/RetrosheetConstants.php');
 
 class RetrosheetParseUtils {
@@ -38,6 +41,14 @@ class RetrosheetParseUtils {
                 $season_dates[$prev_season]['end'];
         }
         return $season_vars;
+    }
+
+    public static function getJoeAverageStats($season) {
+        $sql =
+            "SELECT stats
+            FROM historical_joe_average
+            WHERE season = $season";
+        return reset(exe_sql(DATABASE, $sql));
     }
 
     public static function getPlateAppearanceQuery(

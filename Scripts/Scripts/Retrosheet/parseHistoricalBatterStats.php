@@ -196,32 +196,6 @@ function addDefaultData(
     return $pas >= MIN_PLATE_APPEARANCE ? $default_data : null;
 }
 
-function prepareMultiInsert($player_season, $season, $ds) {
-    if (!isset($player_season)) {
-        return null;
-    }
-    $final_insert = array();
-    foreach ($player_season as $player => $dates) {
-        $player_insert = array();
-        foreach ($dates as $date => $splits) {
-            $player_insert[$player][$ds] = array(
-                'player_id' => $player,
-                'ds' => $ds,
-                'season' => $season
-            );
-            $final_splits = array();
-            foreach ($splits as $split_name => $split) {
-                $split['player_id'] = $player;
-                $final_splits[$split_name] = $split;
-            }
-            $player_insert[$player][$ds]['stats'] =
-                json_encode($final_splits);
-            $final_insert[] = $player_insert[$player][$ds];
-        }
-    }
-    return $final_insert;
-}
-
 function convertSeasonToPct($average_season) {
     global $pctStats;
     if (!$average_season) {

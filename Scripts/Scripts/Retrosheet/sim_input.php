@@ -7,7 +7,7 @@ ini_set('max_execution_time', -1);
 ini_set('mysqli.connect_timeout', -1);
 ini_set('mysqli.reconnect', '1');
 include('/Users/constants.php');
-include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
+include(HOME_PATH.'Scripts/Include/RetrosheetParseUtils.php');
 
 const SEASON = 'season';
 const PREVIOUS = 'previous';
@@ -24,9 +24,9 @@ $statsYears = array(
 $statsType =
     BASIC;
     //MAGIC;
-$startScript = $stats_year == PREVIOUS ? 1951 : 1950;
+$startScript = 1951;
 $endScript  = '2014';
-$insertTable = INPUT_TABLE;
+$joeAverage = null;
 
 function updateSeasonVars($season) {
     $season_sql =
@@ -61,6 +61,7 @@ function pullSeasonData($season, $ds, $table) {
 }
 
 function fillPitchers($pitcher, $stats, $type) {
+    global $joeAverage;
     $pitcher = json_decode($pitcher, true);
     $player_id = $pitcher['id'];
     return  array(
@@ -79,46 +80,27 @@ function fillPitchers($pitcher, $stats, $type) {
         'avg_innings' =>
             isset($pitcher[$type.'_avg_innings'])
             ? $pitcher[$type.'_avg_innings'] : null,
-        'pitcher_vs_batter' => pullJoeAverageCascade($stats, $player_id), 
+        'pitcher_vs_batter' => isset($stats[$player_id])
+            ? json_decode($stats[$player_id]['stats'], true)
+            : json_decode($joeAverage['stats'], true),
         'reliever_vs_batter' => null
     );
 }
 
 function fillLineups($lineup, $stats) {
+    global $joeAverage;
     $lineup = json_decode($lineup, true);
     $filled_lineups = array();
     foreach ($lineup as $lpos => $player) {
         $pos = trim($lpos, "L");
         $player_id = $player['player_id'];
-        $batter_v_pitcher = pullJoeAverageCascade($stats, $player_id);
+        $batter_v_pitcher = isset($stats[$player_id])
+            ? json_decode($stats[$player_id]['stats'], true)
+            : json_decode($joeAverage['stats'], true);
         $batter_v_pitcher['hand'] = idx($player, 'hand');
         $filled_lineups[$pos] = $batter_v_pitcher;
     }
     return $filled_lineups;
-}
-
-function pullJoeAverageCascade($stats, $player_id) {
-    switch (true) {
-        case isset($stats[$player_id]):
-            $data = 
-                json_decode($stats[$player_id]['stats'], true);
-            break;
-        case isset($stats['joe_average']):
-            $data = 
-                json_decode($stats['joe_average']['stats'], true);
-            break;
-        case isset($stats['joe_average_prev_season']):
-            $data = json_decode(
-                $stats['joe_average_prev_season']['stats'],
-                true
-            );
-            break;
-        default:
-            $data = 
-                json_decode($stats['joe_average_career']['stats'], true);
-            break;
-    }    
-    return $data;
 }
 
 $test = false;
@@ -144,6 +126,7 @@ for ($season = $startScript;
     $season < $endScript;
     $season++) {
 
+    $joeAverage = RetrosheetParseUtils::getJoeAverageStats($season);
     foreach ($statsYears as $stats_year) {
 
         $tables = array(
@@ -156,8 +139,10 @@ for ($season = $startScript;
             $statsType => 'string',
             $stats_year => 'string'
         );
-        drop_partition(DATABASE, $insertTable, $partitions);
-        add_partition(DATABASE, $insertTable, $partitions);
+        if (!$test) {
+            drop_partition(DATABASE, INPUT_TABLE, $partitions);
+            add_partition(DATABASE, INPUT_TABLE, $partitions);
+        }
         list($season_start, $season_end) = updateSeasonVars($season);
         $season_lineup = pullSeasonLineup($season);
 
@@ -219,7 +204,7 @@ for ($season = $startScript;
             if (!$test && isset($sim_input_data)) {
                 multi_insert(
                     DATABASE,
-                    $insertTable,
+                    INPUT_TABLE,
                     $sim_input_data,
                     $colheads
                 );

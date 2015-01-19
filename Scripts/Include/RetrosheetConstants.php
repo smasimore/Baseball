@@ -1,6 +1,9 @@
 <?php
 //Copyright 2014, Saber Tooth Ventures, LLC
 
+if (!defined('HOME_PATH')) {
+    include('/Users/constants.php');
+}
 include(HOME_PATH.'Scripts/Include/Enum.php');
 
 class RetrosheetBatting extends Enum {

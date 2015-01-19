@@ -26,7 +26,7 @@ $season_vars = array(
 $colheads = array(
     'player_id',
     'stats',
-    'season',
+    'season'
 );
 $splits = RetrosheetSplits::getSplits();
 
@@ -35,6 +35,7 @@ for ($season = $season_vars['start_script'];
     $season++
 ) {
 
+    echo "$season \n";
     $season_where = RetrosheetParseUtils::getSeasonWhere(
         SEASON,
         $season
@@ -57,11 +58,12 @@ for ($season = $season_vars['start_script'];
         }
     }
     $insert_data = array();
+    // 1951 Joe Average is from 1950's data so insert_season = $season + 1
     $insert_season = $season + 1;
     $insert_data['player_id'] = JOE_AVERAGE;
     $insert_data['season'] = $insert_season;
     $insert_data['stats'] = json_encode($split_data);
-
+    $insert_data = array($insert_data);
 
     if (!$test && isset($insert_data)) {
         multi_insert(
