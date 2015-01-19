@@ -13,7 +13,7 @@ sec_session_start();
             href="http://icons.iconarchive.com/icons/custom-icon-design/pretty-office-6/256/baseball-icon.png">
         <link rel="stylesheet" href="css/index.css" />
         <script type="text/JavaScript" src="js/tables.js"></script>
-         <script type="text/JavaScript" src="js/slider.js"></script>
+        <script type="text/JavaScript" src="js/slider.js"></script>
         <script type="text/JavaScript" src="js/ChartNew/ChartNew.js"></script>
         <script type="text/JavaScript" src="js/graph.js"></script>
     </head>

@@ -17,7 +17,8 @@ class Slider extends UIElement {
         $value,
         $min,
         $max,
-        $tick_increment
+        $tick_increment,
+        $class = null
     ) {
         $this->title = $title;
         $this->name = $name;
@@ -25,6 +26,7 @@ class Slider extends UIElement {
         $this->min = $min;
         $this->max = $max;
         $this->increment = $tick_increment;
+        $this->class = $class;
         $this->setHTML();
         return $this;
     }
@@ -32,12 +34,13 @@ class Slider extends UIElement {
     protected function setHTML() {
         $html =
             "<div>
-                <table style='table-layout:auto;width:300px'><tr><td>
-                    <font size='2' color='blue'>
+                <table class='slider_table'><tr><td class='slider_title_cell'>
+                    <font class='helvetica' size='2' color='#2B96E8'>
                         $this->title
                     </font>
                 </td><td>
                     <input
+                        class='slider'
                         type='range'
                         name=$this->name
                         id=$this->name

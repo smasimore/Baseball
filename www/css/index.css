@@ -1,4 +1,41 @@
-/* list */
+/* GENERAL */
+.center {
+    text-align: center;
+}
+
+.helvetica {
+    font-family: "Helvetica", Helvetic, sans-serif;
+}
+
+.alignleft {
+    float: left;
+}
+
+.alignright {
+    float: right;
+}
+
+.bottom_border {
+    border-bottom:1px solid #ccc;
+}
+
+.auto_width {
+    width: auto;
+}
+
+.small_w {
+    width: 150px;
+}
+
+.medium_w {
+    width: 250px;
+}
+
+.width_full {
+    width: 100%;
+}
+
+/* LIST */
 ul {
   list-style: none;
   padding: 5px;
@@ -10,7 +47,7 @@ li {
 }
 
 
-/* background-color added bc div was overlapping */
+/* TABLE */
 table {
   width: 100%;
   height: 100%;
@@ -19,7 +56,8 @@ table {
   border: 1px solid #535353;
   border-left: 2px solid #535353;
   border-right: 2px solid #535353;
-  background-color: transparent;
+  background-color: transparent; /* background-color added bc
+                                    div was overlapping */
   text-align: center; 
   table-layout: fixed;
 }
@@ -47,7 +85,57 @@ table td {
     text-align: center; 
 }  
 
-/* General page stuff */
+/* BUTTON */
+.button {
+border : solid 0px #ffffff;
+    border : solid 1px #bababa;
+    border-radius : 2px 1px 1px 1px ;
+    moz-border-radius : 2px 1px 1px 1px ;
+    font-size : 12px;
+    color : #786c78;
+    padding : 2px 20px;
+    background : #ffffff;
+    background : -webkit-gradient(
+        linear,
+        left top,
+        left bottom,
+        color-stop(0%,#ffffff), color-stop(100%,#ffffff)
+    );
+    background : -moz-linear-gradient(top, #ffffff 0%, #ffffff 100%);
+    background : -webkit-linear-gradient(top, #ffffff 0%, #ffffff 100%);
+    background : -o-linear-gradient(top, #ffffff 0%, #ffffff 100%);
+    background : -ms-linear-gradient(top, #ffffff 0%, #ffffff 100%);
+    background : linear-gradient(top, #ffffff 0%, #ffffff 100%);
+    filter : progid:DXImageTransform.Microsoft.gradient(
+        startColorstr='#ffffff',
+        endColorstr='#ffffff',
+        GradientType=0
+    );
+}
+
+.button:hover {
+    cursor:pointer;
+    background : #f0f0f0;
+    background : -webkit-gradient(
+        linear,
+        left top,
+        left bottom,
+        color-stop(0%,#f0f0f0),
+        color-stop(100%,#f7f7f7)
+    );
+    background : -moz-linear-gradient(top, #f0f0f0 0%, #f7f7f7 100%);
+    background : -webkit-linear-gradient(top, #f0f0f0 0%, #f7f7f7 100%);
+    background : -o-linear-gradient(top, #f0f0f0 0%, #f7f7f7 100%);
+    background : -ms-linear-gradient(top, #f0f0f0 0%, #f7f7f7 100%);
+    background : linear-gradient(top, #f0f0f0 0%, #f7f7f7 100%);
+    filter : progid:DXImageTransform.Microsoft.gradient(
+        startColorstr='#f0f0f0',
+        endColorstr='#f7f7f7',
+        GradientType=0
+    );
+}
+
+/* Page */
 .page {
   background-color: #ffffff;
 }
@@ -112,20 +200,18 @@ table td {
 }
 
 /* Error formatting */
-
 .errorbox {
     border-radius : 2px 1px 1px 1px;
     moz-border-radius : 2px 1px 1px 1px;
-    width: 150px;
     margin: 10px auto;
-    padding:15px 10px 15px 50px;
+    padding:15px 20px;
     background-color: #FFBABA;
     color: red;
     font-family: helvetica;
     font-size: 12pt;
 }
 
-/* Games page */
+/* GamesPage */
 .games_container {
   background-color: white;
   overflow: hidden;
@@ -173,27 +259,6 @@ table td {
   background: #6495ed;
 }
 
-/* General */
-.helvetica {
-    font-family: "Helvetica", Helvetic, sans-serif;
-}
-
-.alignleft {
-    float: left;
-}
-
-.alignright {
-    float: right;
-}
-
-.bottom_border {
-    border-bottom:1px solid #ccc;
-}
-
-.auto_width {
-    width: auto;
-}
-
 /* Login */
 .loginbox {
     margin: auto;
@@ -201,51 +266,49 @@ table td {
     text-align:center;
 }
 
-.loginbutton {
-border : solid 0px #ffffff;
-    border : solid 1px #bababa;
-    border-radius : 2px 1px 1px 1px ;
-    moz-border-radius : 2px 1px 1px 1px ;
-    font-size : 12px;
-    color : #786c78;
-    padding : 2px 20px;
-    background : #ffffff;
-    background : -webkit-gradient(
-        linear,
-        left top,
-        left bottom,
-        color-stop(0%,#ffffff), color-stop(100%,#ffffff)
-    );
-    background : -moz-linear-gradient(top, #ffffff 0%, #ffffff 100%);
-    background : -webkit-linear-gradient(top, #ffffff 0%, #ffffff 100%);
-    background : -o-linear-gradient(top, #ffffff 0%, #ffffff 100%);
-    background : -ms-linear-gradient(top, #ffffff 0%, #ffffff 100%);
-    background : linear-gradient(top, #ffffff 0%, #ffffff 100%);
-    filter : progid:DXImageTransform.Microsoft.gradient(
-        startColorstr='#ffffff',
-        endColorstr='#ffffff',
-        GradientType=0
-    );
+/* Slider */
+.slider {
+    width: 100%;
 }
 
-.loginbutton:hover {
-    cursor:pointer;
-    background : #f0f0f0;
-    background : -webkit-gradient(
-        linear,
-        left top,
-        left bottom,
-        color-stop(0%,#f0f0f0),
-        color-stop(100%,#f7f7f7)
-    );
-    background : -moz-linear-gradient(top, #f0f0f0 0%, #f7f7f7 100%);
-    background : -webkit-linear-gradient(top, #f0f0f0 0%, #f7f7f7 100%);
-    background : -o-linear-gradient(top, #f0f0f0 0%, #f7f7f7 100%);
-    background : -ms-linear-gradient(top, #f0f0f0 0%, #f7f7f7 100%);
-    background : linear-gradient(top, #f0f0f0 0%, #f7f7f7 100%);
-    filter : progid:DXImageTransform.Microsoft.gradient(
-        startColorstr='#f0f0f0',
-        endColorstr='#f7f7f7',
-        GradientType=0
-    );
+.slider_title_cell {
+}
+
+.slider_table {
+    table-layout: auto;
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* SimPerformancePage */
+.sim_perf form {
+    text-align: center;
+}
+
+.sim_perf select {
+   width: auto;
+   padding: 5px;
+   font-size: 12px;
+   font-family: Helvetica;
+   line-height: 1;
+   border-radius: 0;
+   height: 34px;
+}
+
+.sim_perf .blue_list {
+    margin: auto;
+    background-color: #2B96E8;
+    text-align: center;
+    padding-bottom: 5px;
+    display: table;
+}
+
+.sim_perf .list_title {
+    font-family: Helvetica;
+    color: white;
+    padding: 10px;
+}
+
+.sim_perf .params_list {
+    margin: 0 auto;
 }

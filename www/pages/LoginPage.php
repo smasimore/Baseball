@@ -44,7 +44,7 @@ class LoginPage extends Page {
                             />
                         </p>
                         <input
-                            class='loginbutton'
+                            class='button'
                             type='button'
                             value='Login'
                             id='form_submit'
@@ -53,7 +53,7 @@ class LoginPage extends Page {
                     </div>
                 </form>";
             if ($this->error) {
-                echo "<div class='errorbox'>Try again sucka!</div>";
+                echo "<div class='errorbox small_w'>Try again sucka!</div>";
             }
         } else {
             $list = new UOList(array(

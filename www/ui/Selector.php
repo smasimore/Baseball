@@ -25,10 +25,10 @@ class Selector extends UIElement {
 
     protected function setHTML() {
         $html =
-            "<div>
-                <table style='table-layout:auto;width:300px'><tr>
+            "<div style='text-align:center;'>
+                <table style='table-layout:auto;width:auto;margin:auto;'><tr>
                     <td>
-                        <font size='2' color='blue'>
+                        <font class='helvetica' size='2' color='#2B96E8'>
                             $this->title
                         </font>
                     </td>
