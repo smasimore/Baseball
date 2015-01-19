@@ -40,6 +40,50 @@ class RetrosheetParseUtils {
         return $season_vars;
     }
 
+    public static function getPlateAppearanceQuery(
+        $player_where,
+        $where,
+        $season_where
+    ) {
+        return
+            "SELECT count(1) as plate_appearances
+            FROM events
+            WHERE $player_where
+            AND $where
+            AND event_cd in(" . implode(',', RetrosheetBatting::getAllEvents()) . ")
+            AND $season_where";
+    }
+
+    public static function prepareStatsMultiInsert(
+        $player_season,
+        $season,
+        $ds = null
+    ) {
+        if (!isset($player_season)) {
+            return null;
+        }
+        $final_insert = array();
+        foreach ($player_season as $player => $dates) {
+            $player_insert = array();
+            foreach ($dates as $date => $splits) {
+                $player_insert[$player][$ds] = array(
+                    'player_id' => $player,
+                    'ds' => $ds,
+                    'season' => $season
+                );
+                $final_splits = array();
+                foreach ($splits as $split_name => $split) {
+                    $split['player_id'] = $player;
+                    $final_splits[$split_name] = $split;
+                }
+                $player_insert[$player][$ds]['stats'] =
+                    json_encode($final_splits);
+                $final_insert[] = $player_insert[$player][$ds];
+            }
+        }
+        return $final_insert;
+    }
+
     public static function addDefaultData(
         $default_step,
         $player_id,
@@ -147,6 +191,118 @@ class RetrosheetParseUtils {
             }
         }
         return $player_season;
+    }
+
+    public static function getEventsByBatterQuery(
+        $player_where,
+        $where,
+        $season_where
+    ) {
+
+        return
+        "SELECT a.event_name,
+        b.denom AS plate_appearances,
+        a.instances,
+        a.instances/b.denom AS pct
+        FROM
+          (SELECT CASE
+              WHEN event_cd
+                  in(" . implode(',', RetrosheetBatting::getWalkEvents()) . ")
+                  THEN 'walk'
+              WHEN event_cd in(".
+                  RetrosheetBatting::GENERIC_OUT . "," .
+                  RetrosheetBatting::FIELDERS_CHOICE . "
+              ) AND battedball_cd = 'G' THEN 'ground_out'
+              WHEN event_cd in(" .
+                  RetrosheetBatting::GENERIC_OUT . "," .
+                  RetrosheetBatting::FIELDERS_CHOICE . "
+              ) AND battedball_cd != 'G' THEN 'fly_out'
+              WHEN event_cd = ". RetrosheetBatting::HOME_RUN .
+              " THEN 'home_run'
+              ELSE lower(longname_tx)
+              END AS event_name,
+              1 AS dummy,
+              count(1) AS instances
+            FROM events a
+            JOIN lkup_cd_event b ON a.event_cd = b.value_cd
+            WHERE $player_where
+            AND $where
+            AND $season_where
+            AND event_cd in(" .
+                implode(',', RetrosheetBatting::getAllEvents()) . ")
+            GROUP BY event_name, dummy) a
+        JOIN
+          (SELECT count(1) AS denom,
+                  1 AS dummy
+           FROM events a
+           WHERE $player_where
+           AND $where
+           AND $season_where
+           AND event_cd in(" . implode(',', RetrosheetBatting::getAllEvents()) . ")
+           ) b
+        ON a.dummy = b.dummy
+        ORDER BY 1-pct";
+    }
+
+    public static function getSeasonWhere($stats_year, $season, $ds = 1231) {
+        switch ($stats_year) {
+            case SEASON:
+                return "(season = $season AND substr(game_id,8,4) < $ds)";
+                break;
+            case CAREER:
+                return "((season = $season AND substr(game_id,8,4) < $ds)
+                    OR season < $season)";
+                break;
+            case PREV_SEASON:
+                $prev_season = $season - 1;
+                return "season = $prev_season";
+                break;
+        }
+    }
+
+    public static function getWhereBySplit(
+        $split,
+        $bat_home_id = RetrosheetHomeAway::HOME,
+        $opp_hand = 'PIT_HAND_CD'
+    ) {
+        switch ($split) {
+            case RetrosheetSplits::TOTAL:
+                $where = 'TRUE';
+                break;
+            case RetrosheetSplits::HOME:
+                $where = "BAT_HOME_ID = $bat_home_id";
+                break;
+            case RetrosheetSplits::AWAY:
+                $away_id = 1 - $bat_home_id;
+                $where = "BAT_HOME_ID = $away_id";
+                break;
+            case RetrosheetSplits::VSLEFT:
+                $where = "$opp_hand = 'L'";
+                break;
+            case RetrosheetSplits::VSRIGHT:
+                $where = "$opp_hand = 'R'";
+                break;
+            case RetrosheetSplits::NONEON:
+                $where = "START_BASES_CD = " . RetrosheetBases::BASES_EMPTY;
+                break;
+            case RetrosheetSplits::RUNNERSON:
+                $where = "START_BASES_CD = " . RetrosheetBases::FIRST;
+                break;
+            case RetrosheetSplits::SCORINGPOS:
+                $where = "START_BASES_CD >= " . RetrosheetBases::SECOND .
+                    " AND START_BASES_CD != " . RetrosheetBases::BASES_LOADED .
+                    " AND OUTS_CT < 2";
+                break;
+            case RetrosheetSplits::SCORINGPOS2OUT:
+                $where = "START_BASES_CD >= " . RetrosheetBases::SECOND .
+                " AND OUTS_CT = 2";
+                break;
+            case RetrosheetSplits::BASESLOADED:
+                $where = "START_BASES_CD = " . RetrosheetBases::BASES_LOADED .
+                    " AND OUTS_CT < 2";
+                break;
+        }
+        return $where;
     }
 }
 

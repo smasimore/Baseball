@@ -359,10 +359,21 @@ for ($season = $season_vars['start_script'];
             $average_career
         );
 
-        $player_season = prepareMultiInsert($player_season, $season, $ds);
-        $player_prev_season =
-            prepareMultiInsert($player_prev_season, $season, $ds);
-        $player_career = prepareMultiInsert($player_career, $season, $ds);
+        $player_season = RetrosheetParseUtils::prepareStatsMultiInsert(
+            $player_season,
+            $season,
+            $ds
+        );
+        $player_prev_season = RetrosheetParseUtils::prepareStatsMultiInsert(
+            $player_prev_season,
+            $season,
+            $ds
+        );
+        $player_career = RetrosheetParseUtils::prepareStatsMultiInsert(
+            $player_career,
+            $season,
+            $ds
+        );
 
         if (!$test && isset($player_season)) {
             multi_insert(

@@ -8,7 +8,7 @@ ini_set('mysqli.connect_timeout', -1);
 ini_set('mysqli.reconnect', '1');
 include('/Users/constants.php');
 include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
-include(HOME_PATH.'Scripts/Include/RetrosheetConstants.php');
+include(HOME_PATH.'Scripts/Include/RetrosheetParseUtils.php');
 
 const MIN_AT_BATS = 18;
 const PITCHER = 'pitcher';
@@ -33,7 +33,8 @@ const STAT_DIFFERENCE = .001;
 const SEASON_GAP_EXCEPTION = 'Player Has A Gap Of > 5 Years';
 
 $numTestDates = 10;
-$maxYear = 1988;
+$maxYear = 2013;
+$minYear = 1950;
 $statsYear = CAREER;
             //SEASON;
             //PREV_SEASON;
@@ -42,18 +43,7 @@ $silenceSuccess = true;
 $skipJoeAverage = false;
 $splitsTested = array();
 $cache = array();
-$splits = array(
-    'Total',
-    'Home',
-    'Away',
-    'VsLeft',
-    'VsRight',
-    'NoneOn',
-    'RunnersOn',
-    'ScoringPos',
-    'ScoringPos2Out',
-    'BasesLoaded'
-);
+$splits = RetrosheetSplits::getSplits();
 $defaultMap = array(
     CAREER => array(
         RetrosheetDefaults::CAREER_TOTAL,
@@ -73,6 +63,7 @@ $defaultMap = array(
 
 function pullSimInput($test_days, $seasons) {
     global $statsYear, $statsType;
+    echo "Pulling Sim Data... \n";
     $sql = "SELECT *
         FROM " . SIM_INPUT_TABLE . "
         WHERE season in($seasons)
@@ -120,24 +111,27 @@ function pullPlateAppearances(
     $ds = substr($game_id, 7, 4);
     // Use $statsYear unless overwritten in function input.
     $stats_year = $stats_year ?: $statsYear;
-    $season_where = getSeasonWhere($stats_year, $season, $ds);
+    $season_where = RetrosheetParseUtils::getSeasonWhere(
+        $stats_year,
+        $season,
+        $ds
+    );
     // If a where clause is given in function input use it, otherwise
     // omit where clause using WHERE = 'TRUE'.
     $where = $where ?: 'TRUE';
-    $sql = "SELECT count(1) as plate_appearances
-        FROM events
-        WHERE $player_where
-        AND $where
-        AND event_cd in(" . implode(',', RetrosheetBatting::getAllEvents()) . ")
-        AND $season_where";
-    if (isset($cache['plateAppearances'][$sql])) {
-        $data = $cache['plateAppearances'][$sql];
+    $sql = RetrosheetParseUtils::getPlateAppearanceQuery(
+        $player_where,
+        $where,
+        $season_where
+    );
+    $sql_hash = md5($sql);
+    if (isset($cache['plateAppearances'][$sql_hash])) {
+        $data = $cache['plateAppearances'][$sql_hash];
     } else {
         $data = reset(exe_sql(DATABASE, $sql));
-        $cache['plateAppearances'][$sql] = $data;
+        $cache['plateAppearances'][$sql_hash] = $data;
     }
-    $pas = $data ? $data['plate_appearances'] : 0;
-    return $pas;
+    return idx($data, 'plate_appearances', 0);
 }
 
 function checkException($player, $type_id, $exception_where) {
@@ -262,83 +256,6 @@ function validatePitcher($game_id, $pitcher_id, $home_away) {
     }
 }
 
-function getSeasonWhere($stats_year, $season, $ds) {
-    switch ($stats_year) {
-        case SEASON:
-            return "(season = $season AND substr(game_id,8,4) < $ds)";
-            break;
-        case CAREER:
-            return "((season = $season AND substr(game_id,8,4) < $ds)
-                OR season < $season)";
-            break;
-        case PREV_SEASON:
-            $prev_season = $season - 1;
-            return "season = $prev_season";
-            break;
-    }
-}
-
-function addDefaultData($default_step, $game_id, $sql_data, $type, $type_id) {
-    switch ($default_step) {
-        case RetrosheetDefaults::SEASON_TOTAL:
-            // DEFAULT 0: Season Total Split
-            $sql_data['where'] = 'TRUE';
-            break;
-        case RetrosheetDefaults::PREV_YEAR_ACTUAL:
-            // DEFAULT 1: Prev Year Actual Split
-            $sql_data['where'] = $sql_data['original_where'];
-            $sql_data['stats_year'] = PREV_SEASON;
-            break;
-        case RetrosheetDefaults::PREV_YEAR_TOTAL:
-            // DEFAULT 2: Prev Year Total Split
-            $sql_data['where'] = 'TRUE';
-            break;
-        case RetrosheetDefaults::CAREER_ACTUAL:
-            // DEFAULT 3: Career Actual Split
-            $sql_data['where'] = $sql_data['original_where'];
-            $sql_data['stats_year'] = CAREER;
-            break;
-        case RetrosheetDefaults::CAREER_TOTAL:
-            // DEFAULT 4: Career Total Split
-            $sql_data['where'] = 'TRUE';
-            break;
-        case RetrosheetDefaults::SEASON_JOE_AVERAGE_ACTUAL:
-            // DEFAULT 5: Season Joe Average Actual Split
-            $recent_players = pullRecentPlayers($game_id, $type);
-            $sql_data['where'] = $sql_data['original_where'];
-            $sql_data['stats_year'] = SEASON;
-            $sql_data['player_where'] = "$type_id in($recent_players)";
-            break;
-        case RetrosheetDefaults::SEASON_JOE_AVERAGE_TOTAL:
-            // DEFAULT 6: Season Joe Average Total Split
-            $sql_data['where'] = 'TRUE';
-            break;
-        case RetrosheetDefaults::PREV_SEASON_JOE_AVERAGE_ACTUAL:
-            // DEFAULT 7: Prev Season Joe Average Actual Split
-            $recent_players = pullRecentPlayers($game_id, $type);
-            $sql_data['where'] = $sql_data['original_where'];
-            $sql_data['stats_year'] = PREV_SEASON;
-            $sql_data['player_where'] = "$type_id in($recent_players)";
-            break;
-        case RetrosheetDefaults::PREV_SEASON_JOE_AVERAGE_TOTAL:
-            // DEFAULT 8: Prev Season Joe Average Total Split
-            $sql_data['where'] = 'TRUE';
-            break;
-        case RetrosheetDefaults::CAREER_JOE_AVERAGE_ACTUAL:
-            // DEFAULT 9: Career Joe Average Actual Split
-            $recent_players = pullRecentPlayers($game_id, $type);
-            $sql_data['where'] = $sql_data['original_where'];
-            $sql_data['stats_year'] = CAREER;
-            $sql_data['player_where'] = "$type_id in($recent_players)";
-            break;
-        case RetrosheetDefaults::CAREER_JOE_AVERAGE_TOTAL:
-            // DEFAULT 10: Career Joe Average Total Split
-            $sql_data['where'] = 'TRUE';
-            break;
-    }
-    return $sql_data;
-}
-
 function validateSplit($stats, $player_id, $split, $game_id, $type) {
     global $statsYear, $skipJoeAverage, $cache, $defaultMap;
     $season = substr($game_id, 3, 4);
@@ -360,44 +277,7 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
             break;
     }
     // Create a WHERE statement based on split
-    switch ($split) {
-        case "Total":
-            $where = 'TRUE';
-            break;
-        case "Home":
-            $where = "BAT_HOME_ID = $bat_home_id";
-            break;
-        case "Away":
-            $away_id = 1 - $bat_home_id;
-            $where = "BAT_HOME_ID = $away_id";
-            break;
-        case "VsLeft":
-            $where = "$opp_hand = 'L'";
-            break;
-        case "VsRight":
-            $where = "$opp_hand = 'R'";
-            break;
-        case "NoneOn":
-            $where = "START_BASES_CD = " . RetrosheetBases::BASES_EMPTY;
-            break;
-        case "RunnersOn":
-            $where = "START_BASES_CD = " . RetrosheetBases::FIRST;
-            break;
-        case "ScoringPos":
-            $where = "START_BASES_CD >= " . RetrosheetBases::SECOND .
-                " AND START_BASES_CD != " . RetrosheetBases::BASES_LOADED .
-                " AND OUTS_CT < 2";
-            break;
-        case "ScoringPos2Out":
-            $where = "START_BASES_CD >= " . RetrosheetBases::SECOND .
-            " AND OUTS_CT = 2";
-            break;
-        case "BasesLoaded":
-            $where = "START_BASES_CD = " . RetrosheetBases::BASES_LOADED .
-                " AND OUTS_CT < 2";
-            break;
-    }
-    // Create second copy of $where for use in Joe Average logic.
+    $where = RetrosheetParseUtils::getWhereBySplit($split);
     $is_joe_average =
         ($stats['player_id'] == JOE_AVERAGE || $player_id == JOE_AVERAGE)
         ? 1 : 0;
@@ -421,7 +301,7 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
                 continue;
             }
         }
-        $sql_data = addDefaultData(
+        $sql_data = RetrosheetParseUtils::addDefaultData(
             $default_routing,
             $game_id,
             $sql_data,
@@ -440,51 +320,17 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
     // Update SQL params if they've changed in defaulting.
     $where = $sql_data['where'];
     $player_where = $sql_data['player_where'];
-    $season_where = getSeasonWhere($sql_data['stats_year'], $season, $ds);
+    $season_where = RetrosheetParseUtils::getSeasonWhere(
+        $sql_data['stats_year'],
+        $season,
+        $ds
+    );
 
-    $sql =
-        "SELECT a.event_name,
-        b.denom AS plate_appearances,
-        a.instances,
-        a.instances/b.denom AS pct
-        FROM
-          (SELECT CASE
-              WHEN event_cd
-                  in(" . implode(',', RetrosheetBatting::getWalkEvents()) . ")
-                  THEN 'walk'
-              WHEN event_cd in(".
-                  RetrosheetBatting::GENERIC_OUT . "," .
-                  RetrosheetBatting::FIELDERS_CHOICE . "
-              ) AND battedball_cd = 'G' THEN 'ground_out'
-              WHEN event_cd in(" .
-                  RetrosheetBatting::GENERIC_OUT . "," .
-                  RetrosheetBatting::FIELDERS_CHOICE . "
-              ) AND battedball_cd != 'G' THEN 'fly_out'
-              WHEN event_cd = ". RetrosheetBatting::HOME_RUN .
-              " THEN 'home_run'
-              ELSE lower(longname_tx)
-              END AS event_name,
-              1 AS dummy,
-              count(1) AS instances
-            FROM events a
-            JOIN lkup_cd_event b ON a.event_cd = b.value_cd
-            AND $player_where
-            AND $where
-            AND $season_where
-            AND event_cd in(" .
-                implode(',', RetrosheetBatting::getAllEvents()) . ")
-            GROUP BY event_name, dummy) a
-        JOIN
-          (SELECT count(1) AS denom,
-                  1 AS dummy
-           FROM events a
-           WHERE $player_where
-           AND $where
-           AND $season_where
-           AND event_cd in(" . implode(',', RetrosheetBatting::getAllEvents()) . ")
-           ) b
-        ON a.dummy = b.dummy
-        ORDER BY 1-pct";
+    $sql = RetrosheetParseUtils::getEventsByBatterQuery(
+        $player_where,
+        $where,
+        $season_where
+    );
     // To save processing time don't re-run Joe Average queries
     if ($is_joe_average && isset($cache['joeAverages'][$sql])) {
         $data = $cache['joeAverages'][$sql];
@@ -553,29 +399,21 @@ $days_tested = array();
 $test_days = array();
 $test_seasons = array();
 for ($i = 0; $i < $numTestDates; $i++) {
-    $rand_season = rand(1950, $maxYear);
+    $rand_season = rand($minYear, $maxYear);
     $rand_month = formatDayMonth(rand(4, 9));
     $rand_day = formatDayMonth(rand(1, 31));
     $rand_ds = "'$rand_season-$rand_month-$rand_day'";
     $test_seasons[$rand_season] = $rand_season;
     $test_days[$rand_ds] = $rand_ds;
 }
-// Override $test_days for now since all data isn't filled
-/* Leaving this in here for when I test on my computer :)
-$test_days = array(
-    "'1950-04-27'" => "'1950-04-27'",
-    "'1950-05-02'" => "'1950-05-02'"
-);
-$test_seasons = array(1950 => 1950);
-*/
-//////////////////////////////////////////////////////////
-
 $test_days = implode(',', $test_days);
 $test_seasons = implode(',', $test_seasons);
+
 $sim_input = pullSimInput($test_days, $test_seasons);
 if (!isset($sim_input)) {
     exit("No Valid Game Days in $test_days \n");
 }
+
 $start_message = "\n Testing...";
 foreach ($sim_input as $game) {
     echo $start_message . $game['gameid'] . "\n";
