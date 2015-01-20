@@ -63,6 +63,7 @@ class SimPerformancePage extends Page {
         $this->display();
     }
 
+
     private function fetchData() {
         $param_query =
             "SELECT DISTINCT
