@@ -36,8 +36,8 @@ php backfill.php 2014-04-01 2014-05-27 Simulation sql_to_csv.php sim_nomagic_201
 sudo vim /etc/my.cnf
 
 # Unclog Phabricator Queue
-# Can see backlog in .../daemon
-bin/phd restart
+# Can see backlog in http://phabricator.sabertoothventures.com/daemon/
+~/Phabricator/phabricator/bin/phd restart
 
 # Restart mail server
 sudo postfix start
@@ -98,3 +98,12 @@ git checkout --ours -- <path to file>
 git add .
 git commit -m "resolve"
 arc land
+
+# ps aux but cooler
+top
+
+# clear out inactive ram (cached)
+purge
+
+# Get mysql table sizes in mb
+SELECT TABLE_NAME, table_rows, data_length, index_length,  round(((data_length + index_length) / 1024 / 1024),2) "Size in MB" FROM information_schema.TABLES ORDER BY (data_length + index_length) DESC;
