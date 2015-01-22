@@ -95,6 +95,50 @@ class RetrosheetParseUtils {
         return $final_insert;
     }
 
+    public static function getDefaultVars(
+        $default_step,
+        $game_id,
+        $sql_data,
+        $type,
+        $type_id
+    ) {
+
+        switch ($default_step) {
+            case RetrosheetDefaults::SEASON_TOTAL:
+                // DEFAULT 0: Season Total Split
+                $sql_data['where'] = 'TRUE';
+                break;
+            case RetrosheetDefaults::PREV_YEAR_ACTUAL:
+                // DEFAULT 1: Prev Year Actual Split
+                $sql_data['where'] = $sql_data['original_where'];
+                $sql_data['stats_year'] = RetrosheetStatsYear::PREVIOUS;
+                break;
+            case RetrosheetDefaults::PREV_YEAR_TOTAL:
+                // DEFAULT 2: Prev Year Total Split
+                $sql_data['where'] = 'TRUE';
+                break;
+            case RetrosheetDefaults::CAREER_ACTUAL:
+                // DEFAULT 3: Career Actual Split
+                $sql_data['where'] = $sql_data['original_where'];
+                $sql_data['stats_year'] = RetrosheetStatsYear::CAREER;
+                break;
+            case RetrosheetDefaults::CAREER_TOTAL:
+                // DEFAULT 4: Career Total Split
+                $sql_data['where'] = 'TRUE';
+                break;
+            case RetrosheetDefaults::JOE_AVERAGE_ACTUAL:
+                // DEFAULT 5: Actual Joe Average
+                $sql_data['where'] = $sql_data['original_where'];
+                $sql_data['stats_year'] = RetrosheetStatsYear::PREVIOUS;
+                $sql_data['player_where'] = 'TRUE';
+                break;
+            case RetrosheetDefaults::JOE_AVERAGE_TOTAL:
+                $sql_data['where'] = 'TRUE';
+                break;
+        }
+        return $sql_data;
+    }
+
     public static function addDefaultData(
         $default_step,
         $player_id,
@@ -257,14 +301,14 @@ class RetrosheetParseUtils {
 
     public static function getSeasonWhere($stats_year, $season, $ds = 1231) {
         switch ($stats_year) {
-            case SEASON:
+            case RetrosheetStatsYear::SEASON:
                 return "(season = $season AND substr(game_id,8,4) < $ds)";
                 break;
-            case CAREER:
+            case RetrosheetStatsYear::CAREER:
                 return "((season = $season AND substr(game_id,8,4) < $ds)
                     OR season < $season)";
                 break;
-            case PREV_SEASON:
+            case RetrosheetStatsYear::PREVIOUS:
                 $prev_season = $season - 1;
                 return "season = $prev_season";
                 break;
