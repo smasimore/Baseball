@@ -25,7 +25,7 @@ $statsType =
     BASIC;
     //MAGIC;
 $startScript = 1951;
-$endScript  = '2014';
+$endScript  = 2014;
 $joeAverage = null;
 
 function updateSeasonVars($season) {
@@ -82,7 +82,7 @@ function fillPitchers($pitcher, $stats, $type) {
             ? $pitcher[$type.'_avg_innings'] : null,
         'pitcher_vs_batter' => isset($stats[$player_id])
             ? json_decode($stats[$player_id]['stats'], true)
-            : json_decode($joeAverage['stats'], true),
+            : json_decode($joeAverage['pitcher_stats'], true),
         'reliever_vs_batter' => null
     );
 }
@@ -96,7 +96,7 @@ function fillLineups($lineup, $stats) {
         $player_id = $player['player_id'];
         $batter_v_pitcher = isset($stats[$player_id])
             ? json_decode($stats[$player_id]['stats'], true)
-            : json_decode($joeAverage['stats'], true);
+            : json_decode($joeAverage['batter_stats'], true);
         $batter_v_pitcher['hand'] = idx($player, 'hand');
         $filled_lineups[$pos] = $batter_v_pitcher;
     }
@@ -151,6 +151,7 @@ for ($season = $startScript;
             $ds = ds_modify($ds, '+1 day')) {
 
             $sim_input_data = array();
+
             $batter_stats = pullSeasonData($season, $ds, $tables['batter']);
             $pitcher_stats = pullSeasonData($season, $ds, $tables['pitcher']);
             if (!$batter_stats || !$pitcher_stats) {
@@ -163,7 +164,8 @@ for ($season = $startScript;
             }
             echo "$ds \n";
             foreach ($season_lineup[$ds] as $i => $lineup) {
-                $sim_input_data[$i] = array(
+                $index = $i."_$ds";
+                $sim_input_data[$index] = array(
                     'rand_bucket' => $lineup['rand_bucket'],
                     'gameid' => $lineup['game_id'],
                     'home' => $lineup['home'],
@@ -200,19 +202,19 @@ for ($season = $startScript;
                         )
                 );
             }
-
-            if (!$test && isset($sim_input_data)) {
-                multi_insert(
-                    DATABASE,
-                    INPUT_TABLE,
-                    $sim_input_data,
-                    $colheads
-                );
-            } else if ($test) {
-                print_r($sim_input_data); exit();
-            }
+        if (!$test && isset($sim_input_data)) {
+            multi_insert(
+                DATABASE,
+                INPUT_TABLE,
+                $sim_input_data,
+                $colheads
+            );
+        } else if ($test) {
+            print_r($sim_input_data); exit();
+        }
         }
     }
 }
+
 
 ?>

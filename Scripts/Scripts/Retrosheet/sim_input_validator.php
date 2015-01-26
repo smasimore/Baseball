@@ -33,9 +33,9 @@ const SEASON_GAP_EXCEPTION = 'Player Has A Gap Of > 5 Years';
 
 $numTestDates = 10;
 $maxYear = 2013;
-$minYear = 1951;
-$statsYear = CAREER;
-            //SEASON;
+$minYear = 1960;
+$statsYear = //CAREER;
+            SEASON;
             //PREV_SEASON;
 $statsType = BASIC;
 $silenceSuccess = true;
@@ -47,17 +47,15 @@ $splits = RetrosheetSplits::getSplits();
 $defaultMap = array(
     CAREER => array(
         RetrosheetDefaults::CAREER_TOTAL,
-        RetrosheetDefaults::CAREER_JOE_AVERAGE_ACTUAL,
-        RetrosheetDefaults::CAREER_JOE_AVERAGE_TOTAL
+        RetrosheetDefaults::JOE_AVERAGE_ACTUAL,
+        RetrosheetDefaults::JOE_AVERAGE_TOTAL
     ),
     PREV_SEASON => array(
         RetrosheetDefaults::PREV_YEAR_TOTAL,
         RetrosheetDefaults::CAREER_ACTUAL,
         RetrosheetDefaults::CAREER_TOTAL,
-        RetrosheetDefaults::PREV_SEASON_JOE_AVERAGE_ACTUAL,
-        RetrosheetDefaults::PREV_SEASON_JOE_AVERAGE_TOTAL,
-        RetrosheetDefaults::CAREER_JOE_AVERAGE_ACTUAL,
-        RetrosheetDefaults::CAREER_JOE_AVERAGE_TOTAL
+        RetrosheetDefaults::JOE_AVERAGE_ACTUAL,
+        RetrosheetDefaults::JOE_AVERAGE_TOTAL
     )
 );
 
@@ -71,33 +69,6 @@ function pullSimInput($test_days, $seasons) {
         AND stats_type = '$statsType'
         AND stats_year = '$statsYear'";
     return exe_sql(DATABASE, $sql);
-}
-
-function pullRecentPlayers($game_id, $type) {
-    global $cache;
-    $season = substr($game_id, 3, 4);
-    $ds = substr($game_id, 7, 4);
-    $five_ago = $season - 4;
-    $type_id = $type == BATTER ? BAT_ID : PIT_ID;
-    $sql = "SELECT DISTINCT $type_id
-        FROM " . EVENTS_TABLE . "
-        WHERE (season < $season
-        AND season >= $five_ago)
-        OR (season = $season
-        AND substr(game_id, 8, 4) < $ds)";
-    if (isset($cache['recentPlayers'][$sql])) {
-        $data = $cache['recentPlayers'][$sql];
-    } else {
-        $data = exe_sql(DATABASE, $sql);
-        $cache['recentPlayers'][$sql] = $data;
-    }
-    $players = array();
-    foreach ($data as $player) {
-        $name = $player[$type_id];
-        $players[] = "'$name'";
-    }
-    $players = implode(',', $players);
-    return $players;
 }
 
 function pullPlateAppearances(
@@ -124,6 +95,7 @@ function pullPlateAppearances(
         $where,
         $season_where
     );
+    echo $sql;
     $sql_hash = md5($sql);
     if (isset($cache['plateAppearances'][$sql_hash])) {
         $data = $cache['plateAppearances'][$sql_hash];
@@ -277,11 +249,9 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
             break;
     }
     // Create a WHERE statement based on split
-    $where = RetrosheetParseUtils::getWhereBySplit($split);
-    $is_joe_average =
-        ($stats['player_id'] == JOE_AVERAGE || $player_id == JOE_AVERAGE)
-        ? 1 : 0;
-    $pas = elvis($stats['plate_appearances'], 0);
+    $where = RetrosheetParseUtils::getWhereBySplit($split, $bat_home_id, $opp_hand);
+    $is_joe_average = $player_id == JOE_AVERAGE;
+    $pas = idx($stats, 'plate_appearances', 0);
     $default_step = 0;
     $sql_data = array(
         'player_where' => $player_where,
@@ -296,12 +266,12 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
         // If player is Joe Average skip non Joe Average Defaults
         if ($is_joe_average) {
             if ($default_routing <
-                RetrosheetDefaults::SEASON_JOE_AVERAGE_ACTUAL) {
+                RetrosheetDefaults::JOE_AVERAGE_ACTUAL) {
                 $default_step += 1;
                 continue;
             }
         }
-        $sql_data = RetrosheetParseUtils::addDefaultData(
+        $sql_data = RetrosheetParseUtils::getDefaultVars(
             $default_routing,
             $game_id,
             $sql_data,
@@ -331,6 +301,7 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
         $where,
         $season_where
     );
+    echo $sql."\n";
     // To save processing time don't re-run Joe Average queries
     if ($is_joe_average && isset($cache['joeAverages'][$sql])) {
         $data = $cache['joeAverages'][$sql];
@@ -386,7 +357,9 @@ function validateBatting($game, $home_away) {
     $lineup = pullLineup($game_id);
     for ($i = 1; $i < 10; $i++) {
         $player_data = $batting_data[$i];
-        $batter_id = $player_data['Total']['player_id'];
+        $batter_id = isset($player_data['Total']['player_id'])
+            ? $player_data['Total']['player_id']
+            : JOE_AVERAGE;
         validateBatter($lineup, $batter_id, $home_away, $i);
         foreach ($splits as $split) {
             $stats = $player_data[$split];
@@ -406,6 +379,8 @@ for ($i = 0; $i < $numTestDates; $i++) {
     $test_seasons[$rand_season] = $rand_season;
     $test_days[$rand_ds] = $rand_ds;
 }
+$test_days = array('l1' => "'1990-09-16'");
+$test_seasons = array(1=>1990);
 $test_days = implode(',', $test_days);
 $test_seasons = implode(',', $test_seasons);
 
