@@ -63,6 +63,10 @@ sudo kill -9 <pid>
 # start mysql - this command is better than one at top because it shows
 # you an error message
 sudo /usr/local/mysql/support-files/mysql.server start
+# No PIDs for mysql running and still getting error?
+sudo mv /etc/my.cnf /etc/my.cnf.backup
+sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart
+sudo mv /etc/my.cnf.backup /etc/my.cnf
 
 # MySQL info
 SHOW VARIABLES;
