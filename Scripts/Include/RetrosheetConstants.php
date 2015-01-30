@@ -97,6 +97,12 @@ class RetrosheetStatsYear {
     const CAREER = 'career';
 }
 
+class RetrosheetStatsType {
+
+    const BASIC = 'basic';
+    const MAGIC = 'magic';
+}
+
 class RetrosheetDefaults extends Enum {
 
     const SEASON_TOTAL = 0;
@@ -106,6 +112,18 @@ class RetrosheetDefaults extends Enum {
     const CAREER_TOTAL = 4;
     const JOE_AVERAGE_ACTUAL = 5;
     const JOE_AVERAGE_TOTAL = 6;
+}
+
+class RetrosheetTables {
+
+    const HISTORICAL_SEASON_BATTING = 'historical_season_batting';
+    const HISTORICAL_SEASON_PITCHING = 'historical_season_pitching';
+    const HISTORICAL_PREVIOUS_BATTING = 'historical_previous_batting';
+    const HISTORICAL_PREVIOUS_PITCHING = 'historical_previous_pitching';
+    const HISTORICAL_CAREER_BATTING = 'historical_career_batting';
+    const HISTORICAL_CAREER_PITCHING = 'historical_career_pitching';
+
+    const SIM_INPUT = 'sim_input';
 }
 
 ?>

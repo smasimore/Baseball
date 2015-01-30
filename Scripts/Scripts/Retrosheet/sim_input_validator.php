@@ -7,14 +7,11 @@ ini_set('max_execution_time', -1);
 ini_set('mysqli.connect_timeout', -1);
 ini_set('mysqli.reconnect', '1');
 include('/Users/constants.php');
-include(HOME_PATH.'Scripts/Include/RetrosheetParseUtils.php');
+include(HOME_PATH.'Scripts/Include/Include.php');
 
 const MIN_AT_BATS = 18;
 const PITCHER = 'pitcher';
 const BATTER = 'batter';
-const SEASON = 'season';
-const PREV_SEASON = 'previous';
-const CAREER = 'career';
 const BASIC = 'basic';
 const HOME = 'home';
 const AWAY = 'away';
@@ -34,9 +31,9 @@ const SEASON_GAP_EXCEPTION = 'Player Has A Gap Of > 5 Years';
 $numTestDates = 10;
 $maxYear = 2013;
 $minYear = 1960;
-$statsYear = //CAREER;
-            SEASON;
-            //PREV_SEASON;
+$statsYear = //RetrosheetStatsYear::CAREER;
+            RetrosheetStatsYear::SEASON;
+            //RetrosheetStatsYear::PREVIOUS;
 $statsType = BASIC;
 $silenceSuccess = true;
 $skipJoeAverage = false;
@@ -45,12 +42,12 @@ $splitsTested = array();
 $cache = array();
 $splits = RetrosheetSplits::getSplits();
 $defaultMap = array(
-    CAREER => array(
+    RetrosheetStatsYear::CAREER => array(
         RetrosheetDefaults::CAREER_TOTAL,
         RetrosheetDefaults::JOE_AVERAGE_ACTUAL,
         RetrosheetDefaults::JOE_AVERAGE_TOTAL
     ),
-    PREV_SEASON => array(
+    RetrosheetStatsYear::PREVIOUS => array(
         RetrosheetDefaults::PREV_YEAR_TOTAL,
         RetrosheetDefaults::CAREER_ACTUAL,
         RetrosheetDefaults::CAREER_TOTAL,
@@ -261,7 +258,7 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
     );
     $is_filled = ($pas >= MIN_AT_BATS && !$is_joe_average);
     while (!$is_filled) {
-        $default_routing = $statsYear == SEASON
+        $default_routing = $statsYear == RetrosheetStatsYear::SEASON
             ? $default_step : $defaultMap[$statsYear][$default_step];
         // If player is Joe Average skip non Joe Average Defaults
         if ($is_joe_average) {
