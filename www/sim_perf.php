@@ -22,10 +22,26 @@ sec_session_start();
             list($hist_actual, $hist_games) = $page->getHistData();
         ?>
         <script type="text/JavaScript">
-            var type = <?php echo json_encode('overall'); ?>;
-            var hist_actual =
-                <?php echo json_encode($hist_actual['overall']); ?>;
+            type = <?php echo json_encode('overall'); ?>;
+            hist =
+                <?php
+                    echo json_encode($hist_actual['overall']);
+                    unset($hist_actual['overall']);
+                ?>;
+            samples =
+                <?php
+                    echo json_encode($hist_games['overall']);
+                    unset($hist_games['overall']);
+                ?>;
             drawHistogram();
+            drawHistograms(
+                <?php
+                    echo json_encode(array(
+                        'hist' => $hist_actual,
+                        'sample' => $hist_games
+                    ));
+                ?>
+            );
         </script>
     </body>
 </html>

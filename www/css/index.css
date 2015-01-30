@@ -46,6 +46,24 @@ li {
   list-style-type: none;
 }
 
+/* SELECTOR */
+.selector {
+    width: auto;
+    margin: auto;
+}
+
+.selector .table {
+    table-layout:auto;
+    margin: 0;
+}
+
+.selector .table .leftcell {
+    text-align: left;
+}
+
+.selector .table .rightcell {
+    text-align: right;
+}
 
 /* TABLE */
 table {
@@ -142,7 +160,7 @@ border : solid 0px #ffffff;
 
 .page_nav:hover .nav_list {
     transition-delay: 400ms;
-    height: 30px;
+    height: 100%;
     cursor: pointer;
     visibility: visible;
     padding-top:15px 0;
@@ -272,6 +290,7 @@ border : solid 0px #ffffff;
 }
 
 .slider_title_cell {
+    text-align: left;
 }
 
 .slider_table {
@@ -296,6 +315,7 @@ border : solid 0px #ffffff;
 }
 
 .sim_perf .blue_list {
+    width: auto;
     margin: auto;
     background-color: #2B96E8;
     text-align: center;
@@ -309,6 +329,16 @@ border : solid 0px #ffffff;
     padding: 10px;
 }
 
-.sim_perf .params_list {
-    margin: 0 auto;
+.sim_perf .list_item {
+    margin: 3px 0;
+}
+
+.histogram_canvas {
+    min-width: 310px;
+    height: 400px;
+    margin: 0 auto
+}
+.histogram_list_item {
+    border-bottom:1px solid #ccc;
+    padding: 100px 0;
 }

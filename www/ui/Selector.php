@@ -8,31 +8,34 @@ class Selector extends UIElement {
     private $name;
     private $value;
     private $options;
+    private $class;
 
     public function __construct(
         $title,
         $name,
         $value,
-        $options
+        $options,
+        $class = null
     ) {
         $this->title = $title;
         $this->name = $name;
-        $this->value = $value;
+        $this->value = (string)$value;
         $this->options = $options;
+        $this->class = $class;
         $this->setHTML();
         return $this;
     }
 
     protected function setHTML() {
         $html =
-            "<div style='text-align:center;'>
-                <table style='table-layout:auto;width:auto;margin:auto;'><tr>
-                    <td>
+            "<div class='$this->class selector'>
+                <table class='table'><tr>
+                    <td class='leftcell'>
                         <font class='helvetica' size='2' color='#2B96E8'>
                             $this->title
                         </font>
                     </td>
-                    <td>
+                    <td class='rightcell'>
                         <select
                             name=$this->name
                             value=$this->value>";

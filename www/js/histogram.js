@@ -1,19 +1,34 @@
-function drawHistogram() {
-    console.log(type);
-    console.log(hist_actual);
+var type;
+var hist;
+var samples;
 
+function drawHistograms(data, sample) {
+    hist_data = data['hist'];
+    sample_data = data['sample'];
+    for (var key in hist_data) {
+        type = key;
+        hist = hist_data[key];
+        samples = sample_data[key];
+        drawHistogram();
+    }
+}
+
+
+function drawHistogram() {
     var values = [];
     var bin_min = 100;
     var bin_max = 0;
-    for (var bin in hist_actual) {
-        if (hist_actual[bin]) {
+    for (var bin in hist) {
+        if (samples[bin]) {
             if (bin < bin_min) {
                 bin_min = +bin;
             }
             if (bin > bin_max) {
                 bin_max = +bin;
             }
-            values.push(hist_actual[bin]);
+            values.push({
+                y: Math.round(hist[bin]),
+                samples: samples[bin]});
         }
     }
 
@@ -35,32 +50,36 @@ function drawHistogram() {
         },
         yAxis: {
             min: 0,
+            max: 100,
             title: {
                 text: 'Actual'
             }
         },
         tooltip: {
-            headerFormat:
-                '<span style="font-size:10px">{point.key}</span><table>',
-            pointFormat:
-                '<tr>' +
-                    '<td style="color:{series.color};padding:0">' +
-                        '{series.name}: ' +
-                    '</td>' +
-                '<td style="padding:0"><b>{point.y:.1f} mm</b></td></tr>',
-            footerFormat: '</table>'
+            formatter: function() {return ' ' +
+                'Bin: ' + this.point.category + '<br />' +
+                'Actual: ' + this.point.y + '<br />' +
+                'Sample Size: ' + this.point.samples;
+            }
         },
         plotOptions: {
             column: {
                 pointPadding: 0.2,
-                borderWidth: 0
+                borderWidth: 0,
+            },
+            series: {
+                dataLabels: {
+                    enabled: true,
+                    formatter: function() {
+                        return this.point.y;
+                    }
+                }
             }
         },
         series: [
             {
                 name: type,
                 data: values
-
             }
         ]
     });

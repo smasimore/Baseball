@@ -11,10 +11,7 @@ class LoginPage extends Page {
         parent::__construct($logged_in, true);
         $this->loggedIn = $logged_in;
         $this->error = $error;
-        $this->setHeader(
-            'Sabertooth Ventures',
-            'Not breaking MySQL since 2014'
-        );
+        $this->setHeader(' ');
         $this->display();
     }
 

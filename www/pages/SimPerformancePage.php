@@ -12,8 +12,8 @@ class SimPerformancePage extends Page {
     private $groupSwitchPerc;
     private $firstSeason;
     private $lastSeason;
-    private $bucketStart;
-    private $bucketEnd;
+    private $firstBucket;
+    private $lastBucket;
 
     // Params that vary by group.
     private $weights;
@@ -39,10 +39,10 @@ class SimPerformancePage extends Page {
         $this->setHeader(' ');
 
         $this->groupSwitchPerc = idx($params, 'group_switch_perc', 50);
-        $this->firstSeason = idx($params, 'first_season', 1950);
-        $this->lastSeason = idx($params, 'last_season', 1950);
-        $this->bucketStart = idx($params, 'bucket_start', 0);
-        $this->bucketEnd = idx($params, 'bucket_end', 9);
+        $this->firstSeason = idx($params, 'first_season', 1951);
+        $this->lastSeason = idx($params, 'last_season', 1951);
+        $this->firstBucket = idx($params, 'first_bucket', 0);
+        $this->lastBucket = idx($params, 'last_bucket', 9);
 
         $this->weights = array(
             0 => idx($params, 'weights_0', 'b_total_100'),
@@ -111,8 +111,8 @@ class SimPerformancePage extends Page {
                 a.analysis_runs = 5000 AND
                 a.season >= $this->firstSeason AND
                 a.season <= $this->lastSeason AND
-                a.rand_bucket >= $this->bucketStart AND
-                a.rand_bucket <= $this->bucketEnd AND ";
+                a.rand_bucket >= $this->firstBucket AND
+                a.rand_bucket <= $this->lastBucket AND ";
 
         $results_0 = exe_sql(
             DATABASE,
@@ -303,7 +303,21 @@ class SimPerformancePage extends Page {
 
         print_r($this->perfScores);
 
-        $this->renderHistogram('overall');
+        $histograms = array($this->getHistogram('overall'));
+        foreach (array_keys($this->perfScores) as $type) {
+            // Overriding so we don't show overall twice. Manually rendering
+            // so it's at the top.
+            if ($type !== 'overall') {
+                $histograms[] = $this->getHistogram($type);
+            }
+        }
+
+        $hist_list = new UOList(
+            $histograms,
+            null,
+            'histogram_list_item bottom_border'
+        );
+        $hist_list->display();
     }
 
     private function getSimParamList() {
@@ -311,8 +325,41 @@ class SimPerformancePage extends Page {
             'Group Switch Perc',
             'group_switch_perc',
             $this->groupSwitchPerc,
-            0, 100, 25,
-            'params_list'
+            0, 100, 25
+        );
+
+        $possible_seasons = array_unique(
+            array_column($this->possibleParams, 'season')
+        );
+        asort($possible_seasons);
+        $first_season = new Selector(
+            'First Season',
+            'first_season',
+            $this->firstSeason,
+            $possible_seasons
+        );
+        $last_season = new Selector(
+            'Last Season',
+            'last_season',
+            $this->lastSeason,
+            $possible_seasons
+        );
+
+        $possible_buckets = array_unique(
+            array_column($this->possibleParams, 'rand_bucket')
+        );
+        asort($possible_buckets);
+        $first_bucket = new Selector(
+            'First Bucket',
+            'first_bucket',
+            $this->firstBucket,
+            $possible_buckets
+        );
+        $last_bucket = new Selector(
+            'Last Bucket',
+            'last_bucket',
+            $this->lastBucket,
+            $possible_buckets
         );
 
         $list = new UOList(
@@ -320,10 +367,14 @@ class SimPerformancePage extends Page {
                 "<font class='list_title'>
                     Overall Params
                 </font>",
-                $group_switch_slider->getHTML()
+                $group_switch_slider->getHTML(),
+                $first_season->getHTML(),
+                $last_season->getHTML(),
+                $first_bucket->getHTML(),
+                $last_bucket->getHTML()
             ),
             null,
-            'params_list'
+            'list_item'
         );
 
         return $list->getHTML();
@@ -337,27 +388,42 @@ class SimPerformancePage extends Page {
             $this->weights[$group],
             array_unique(array_column($this->possibleParams, 'weights'))
         );
-        $weights_selector = $weights_selector->getHTML();
+
+        $stats_year_selector = new Selector(
+            'Stats Year',
+            'stats_year_' . $group,
+            $this->statsYear[$group],
+            array_unique(array_column($this->possibleParams, 'stats_year'))
+        );
+
+        $stats_type_selector = new Selector(
+            'Stats Type',
+            'stats_type_' . $group,
+            $this->statsType[$group],
+            array_unique(array_column($this->possibleParams, 'stats_type'))
+        );
 
         $param_list = new UOList(
             array(
                 "<font class='list_title'>
                     Group $group
                 </font>",
-                $weights_selector
+                $weights_selector->getHTML(),
+                $stats_year_selector->getHTML(),
+                $stats_type_selector->getHTML()
             ),
             null,
-            'params_list'
+            'list_item'
         );
 
         return $param_list->getHTML();
     }
 
-    private function renderHistogram($type) {
-        echo
+    private function getHistogram($type) {
+        return
             "<div
                 id=$type
-                style='min-width: 310px; height: 400px; margin: 0 auto'>
+                class='histogram_canvas'>
             </div>";
     }
 }

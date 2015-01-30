@@ -9,11 +9,22 @@ class LogPage extends Page {
     public function __construct($logged_in, $user) {
         parent::__construct($logged_in, true);
         $this->name = $user;
-        $this->setHeader("Everything's gonna be alright.");
+        $this->setHeader(' ');
         $this->display();
     }
 
     public function display() {
+        if (!$this->name) {
+           $logs = new UOList(
+                array(
+                    "<a href='log.php?name=sarah'>Sarah's Log</a>",
+                    "<a href='log.php?name=dan'>Dan's Log</a>"
+                )
+            );
+            echo $logs->getHTML();
+            return;
+        }
+
         $html = "<div style='height:300px;width:100%;border:3px solid #000000;
             font:16px/26px Georgia, Garamond, Serif;overflow:auto;'>";
 

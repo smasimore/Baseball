@@ -125,7 +125,8 @@ class PageHeader {
 
         $nav = new UOList(
             array(
-                "<a class='nav_item' href='analysis.php'>Analysis</a>"
+                "<a class='nav_item' href='sim_perf.php'>Sim Perf</a>",
+                "<a class='nav_item' href='log.php'>Log</a>"
             ),
             'nav_list'
         );
