@@ -126,4 +126,11 @@ class RetrosheetTables {
     const SIM_INPUT = 'sim_input';
 }
 
+class RetrosheetGameTypes extends Enum {
+
+    const SINGLE_GAME = 0;
+    const DOUBLE_HEADER_FIRST = 1;
+    const DOUBLE_HEADER_SECOND = 2;
+}
+
 ?>

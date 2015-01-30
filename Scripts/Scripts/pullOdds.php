@@ -8,6 +8,7 @@ ini_set('mysqli.connect_timeout', -1);
 ini_set('mysqli.reconnect', '1');
 include('/Users/constants.php');
 include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
+include(HOME_PATH.'Scripts/Include/Teams.php');
 
 function get_html($url) {
     $ch = curl_init();
@@ -119,7 +120,7 @@ $team_num = 1;
 $odd = 0;
 foreach ($teams as $team) {
 	$team = correctTeam($team);
-	$team = $team_mapping[$team];
+	$team = Teams::$teamAbbreviations[$team];
 	if ($odd === 0) {
 		$final_array[$team_num]['away'] = $team;
 		$odd = 1;

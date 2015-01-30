@@ -8,6 +8,7 @@ ini_set('default_socket_timeout', '-1');
 ini_set('max_execution_time', '-1');
 include('/Users/constants.php'); 
 include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
+include(HOME_PATH.'Scripts/Include/Teams.php');
 $database = 'baseball';
 
 //global variables
@@ -198,7 +199,7 @@ function pullLineups() {
     return($lineups);
 }
 
-function pullOdds($team_mapping) {
+function pullOdds(Teams::$teamAbbreviations) {
 
    $odds = array();
 
@@ -253,7 +254,7 @@ function pullOdds($team_mapping) {
                 } elseif ($team == "Chi White Sox") {
                     $team = "Chicago Sox";
                 }
-                $team = $team_mapping[$team];
+                $team = Teams::$teamAbbreviations[$team];
                 array_push($odds_team_format, $team);
             }
 
@@ -301,7 +302,7 @@ function pullOdds($team_mapping) {
 
 //run code
 $teams = getTeams();
-$odds = pullOdds($team_mapping);
+$odds = pullOdds(Teams::$teamAbbreviations);
 $lineups = pullLineups();
 $schedules = pullSchedules($data, $teams, $lineups, $odds);
 

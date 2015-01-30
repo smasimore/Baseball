@@ -8,6 +8,7 @@ ini_set('mysqli.connect_timeout', -1);
 ini_set('mysqli.reconnect', '1');
 include('/Users/constants.php'); 
 include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
+include(HOME_PATH.'Scripts/Include/Teams.php');
 
 function get_html($url) {
     $ch = curl_init();
@@ -209,10 +210,10 @@ if (!$games) {
 foreach ($games as $game) {
 	$home_abbr = strtoupper($game['home']);
 	$away_abbr = strtoupper($game['away']);
-	$home_city = array_search($home_abbr, $team_mapping);
-	$away_city = array_search($away_abbr, $team_mapping);
-	$home_team = strtolower($team_names[$home_city]);
-	$away_team = strtolower($team_names[$away_city]);
+	$home_city = array_search($home_abbr, Teams::$teamAbbreviations);
+	$away_city = array_search($away_abbr, Teams::$teamAbbreviations);
+	$home_team = strtolower(Teams::$teamNames[$home_city]);
+	$away_team = strtolower(Teams::$teamNames[$away_city]);
 	// Correct the abbreviations AFTER all the above mapping
 	$home_abbr = correctAbbr($home_abbr);
 	$away_abbr = correctAbbr($away_abbr);

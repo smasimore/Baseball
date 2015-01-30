@@ -51,6 +51,18 @@ class RetrosheetParseUtils {
         return reset(exe_sql(DATABASE, $sql));
     }
 
+    public static function getGameID(
+        $ds, 
+        $home, 
+        $gamenum = RetrosheetGameTypes::SINGLE_GAME
+    ) {
+        $season = substr($ds, 0, 4);
+        $month = return_between($ds, "-", "-", EXCL);
+        $day = substr($ds, -2);
+        $gameid = $home.$season.$month.$day.$gamenum;
+        return $gameid;
+    }
+
     public static function getPlateAppearanceQuery(
         $player_where,
         $where,

@@ -327,7 +327,12 @@ function multi_insert($database, $table, $data_array, $colheads) {
         format_log_data('multi_insert', $table, count($data_array)),
         3,
         '/Users/Logs/MySQL_requests.log'
-    );
+	);
+
+	# If table is empty return false
+	if (!isset($data_array)) {
+		throw new Exception("No data provided for multi_insert into $table");
+	}
 
     # Connect to MySQL server and select database
     $attempts = 0;

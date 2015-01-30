@@ -8,6 +8,7 @@ ini_set('mysqli.connect_timeout', -1);
 ini_set('mysqli.reconnect', '1');
 include('/Users/constants.php'); 
 include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
+include(HOME_PATH.'Scripts/Include/Teams.php');
 $database = 'baseball';
 
 $all_players = exe_sql($database,
@@ -48,7 +49,7 @@ foreach ($all_players as $player) {
 			continue;
 		}
 		$teamname = return_between($source_code, "selected=\"selected\">", "</option>", EXCL);
-		$team_abbr = $team_mapping[$teamname];
+		$team_abbr = Teams::getTeamAbbreviationFromName($teamname);
 
 		$stats_start = "<td class=\"textright\">";
 		$stats_end = "</td>";
