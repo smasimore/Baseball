@@ -84,7 +84,7 @@ class Simulation:
     STATS_YEAR = [
         'career',
         'season',
-        'last_season',
+        'previous',
     ]
 
 
@@ -225,6 +225,10 @@ class Simulation:
             for t in range (threads):
                 processes[t].join()
             rows_completed = rows_completed + threads
+
+            # Only log on first run through loop. Needs to be set here since
+            # setting within thread doesn't carry over.
+            self.debugLoggingOn = False
 
             # Print status.
             print (str(round(
@@ -417,7 +421,7 @@ class Simulation:
                     delete_where
                 )
             )
-            print MySQL.delete(delete_query)
+            MySQL.delete(delete_query)
             MySQL.addPartition(
                 self.__OUTPUT_TABLE,
                 str(self.season)+str(self.weightsIndex),
