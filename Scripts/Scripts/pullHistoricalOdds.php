@@ -7,30 +7,36 @@ ini_set('max_execution_time', -1);
 ini_set('mysqli.connect_timeout', -1);
 ini_set('mysqli.reconnect', '1');
 include('/Users/constants.php');
-include(HOME_PATH.'Scripts/Include/Include.php');
+include(HOME_PATH.'Scripts/Include/RetrosheetInclude.php');
+include(HOME_PATH.'Scripts/Include/Odds.php');
 
 const GAMEDATE = 0;
 const OPPONENT = 1;
+const SCORE = 2;
 const MONEYLINE = 5;
 const HOME = 'home';
 const AWAY = 'away';
-const ODDS_INSERT = 'historical_odds';
-const ERROR = 
-	'The file you requested has moved or does not exist on our system.';
+const WIN = 'W';
+const ERROR =
+    'The file you requested has moved or does not exist on our system.';
 
+$startYear = 1999;
 $colheads = array(
 	'gameid',
 	'home',
 	'away',
 	'home_odds',
 	'away_odds',
+	'home_pct_win',
+	'away_pct_win',
+	'home_team_winner',
 	'season',
 	'game_date'
 );
 
 $test = false;
 
-for ($season = 1999; $season < 2015; $season++) {
+for ($season = $startYear; $season < 2015; $season++) {
 	echo "$season \n";
 
 	// Teams are represented on Covers.com from numbers 2955-2985.
@@ -64,6 +70,7 @@ for ($season = 1999; $season < 2015; $season++) {
 		$game_num = 1;
 		$team_odds = array();
 		$game_date = null;
+		$home_away = null;
 		foreach ($page_elements as $n => $data) {
 			$data = trim($data);
 			// Reset game_num every 7th page element since each game has 6
@@ -94,11 +101,22 @@ for ($season = 1999; $season < 2015; $season++) {
 					$team_odds[$game_date][$game_num][HOME] = $home_team;
 					$team_odds[$game_date][$game_num][AWAY] = $away_team;
 					break;
+				case SCORE:
+					$win_loss = substr($data, 0, 1);
+					$team_odds[$game_date][$game_num]['home_team_winner'] =
+						$home_away === HOME
+						? $win_loss === WIN
+						: $win_loss !== WIN;
+					break;
 				case MONEYLINE:
 					$line = trim($data, 'W');
 					$line = trim($line, 'L');
+					$line = (int)trim($line);
 					$ml_index = $home_away."_odds";
-					$team_odds[$game_date][$game_num][$ml_index] = (int)trim($line);
+					$pct_index = $home_away."_pct_win";
+					$team_odds[$game_date][$game_num][$ml_index] = $line;
+					$team_odds[$game_date][$game_num][$pct_index] =
+						Odds::convertOddsToPct($line);
 					break;
 			}
 		}
@@ -110,6 +128,7 @@ for ($season = 1999; $season < 2015; $season++) {
 					$gameid = RetrosheetParseUtils::getGameID(
 						$game['game_date'],
 						$game[HOME],
+						$game[AWAY],
 						$num == 1 ? RetrosheetGameTypes::DOUBLE_HEADER_SECOND
 						: RetrosheetGameTypes::DOUBLE_HEADER_FIRST
 					);
@@ -121,7 +140,8 @@ for ($season = 1999; $season < 2015; $season++) {
 			} else {
 				$gameid = RetrosheetParseUtils::getGameID(
 					$date[1]['game_date'],
-					$date[1][HOME]
+					$date[1][HOME],
+					$date[1][AWAY]
 				);
 				$date[1]['gameid'] = $gameid;
 				$insert_table[$gameid] =
@@ -145,7 +165,7 @@ for ($season = 1999; $season < 2015; $season++) {
 	if (!$test && isset($insert_table)) {
 		multi_insert(
 			DATABASE,
-			ODDS_INSERT,
+			Odds::HISTORICAL_ODDS_TABLE,
 			$insert_table,
 			$colheads
 		);

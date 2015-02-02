@@ -9,6 +9,10 @@ include(HOME_PATH.'Scripts/Include/RetrosheetConstants.php');
 
 class RetrosheetParseUtils {
 
+    private $gameidExceptions = array(
+        'CLE2000-09-25' => 'MIN'
+    );
+
     public static function updateSeasonVars($season, $season_vars, $table) {
         $prev_season = $season - 1;
         if ($season > $season_vars['start_script']) {
@@ -54,11 +58,19 @@ class RetrosheetParseUtils {
     public static function getGameID(
         $ds, 
         $home, 
+        $away,
         $gamenum = RetrosheetGameTypes::SINGLE_GAME
     ) {
         $season = substr($ds, 0, 4);
         $month = return_between($ds, "-", "-", EXCL);
         $day = substr($ds, -2);
+        // Modify exception games (i.e. where there is a double
+        // header for one team with different opponents.
+        if (idx($gameidExceptions, $home.$ds)) {
+            $gamenum = $away === $gameidExceptions[$home.$ds]
+                ? RetrosheetGameTypes::DOUBLE_HEADER_SECOND
+                : RetrosheetGameTypes::DOUBLE_HEADER_FIRST;
+        }
         $gameid = $home.$season.$month.$day.$gamenum;
         return $gameid;
     }

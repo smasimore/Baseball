@@ -4,6 +4,9 @@ home VARCHAR(5),
 away VARCHAR(5),
 home_odds INT(5),
 away_odds INT(5),
+home_pct_win FLOAT(5),
+away_pct_win FLOAT(5),
+home_team_winner BOOLEAN,
 season INT(4),
 game_date DATE
 )
