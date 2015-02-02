@@ -7,7 +7,7 @@ ini_set('max_execution_time', -1);
 ini_set('mysqli.connect_timeout', -1);
 ini_set('mysqli.reconnect', '1');
 include('/Users/constants.php');
-include(HOME_PATH.'Scripts/Include/Include.php');
+include(HOME_PATH.'Scripts/Include/RetrosheetInclude.php');
 
 // Using a more aggresive MIN_PLATE_APPEARANCE here to
 // weed out data from 1950's.
@@ -28,8 +28,8 @@ $colheads = array(
     'pitcher_stats'
 );
 $run_type = array(
-    Constants::BATTER,
-    Constants::PITCHER
+    RetrosheetConstants::BATTER,
+    RetrosheetConstants::PITCHER
 );
 $splits = RetrosheetSplits::getSplits();
 
@@ -46,10 +46,10 @@ for ($season = $season_vars['start_script'];
     $player_where = 'TRUE';
     $split_data = array();
     foreach ($run_type as $type) {
-        $bat_home_id = $type == Constants::BATTER
+        $bat_home_id = $type == RetrosheetConstants::BATTER
         ? RetrosheetHomeAway::HOME : RetrosheetHomeAway::AWAY;
-        $opp_hand = $type == Constants::BATTER
-        ? RetrosheetEventColumns::PITCH_HAND_CD
+        $opp_hand = $type == RetrosheetConstants::BATTER
+        ? RetrosheetEventColumns::PIT_HAND_CD
         : RetrosheetEventColumns::BAT_HAND_CD;
         foreach ($splits as $split) {
             $where = RetrosheetParseUtils::getWhereBySplit(

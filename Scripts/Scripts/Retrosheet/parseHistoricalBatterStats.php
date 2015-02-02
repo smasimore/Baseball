@@ -12,8 +12,8 @@ include(HOME_PATH.'Scripts/Include/Include.php');
 $test = true;
 $joeAverage = null;
 $runTypes = array(
-    Constants::BATTING,
-    Constants::PITCHING
+    RetrosheetConstants::BATTING,
+    RetrosheetConstants::PITCHING
 );
 
 function getBattingData($season, $ds, $table) {
@@ -55,7 +55,10 @@ function updateBattingArray($batting_instance, $player_stats) {
     foreach ($batting_instance as $stat_name => $stat) {
         if (in_array($stat_name, $pctStats)) {
             $stat_pct_name = array_search($stat_name, $pctStats);
-            $stat_pct = number_format($stat / $plate_appearances, Constants::NUM_DECIMALS);
+            $stat_pct = number_format(
+                $stat / $plate_appearances,
+                RetrosheetConstants::NUM_DECIMALS
+            );
             $player_stats[$player_id][$ds][$split][$stat_pct_name] = $stat_pct;
         }
     }
@@ -77,6 +80,7 @@ $colheads = array(
 );
 
 foreach ($runTypes as $runType) {
+
     $season_insert_table = "historical_season_$runType";
     $previous_insert_table = "historical_previous_$runType";
     $career_insert_table = "historical_career_$runType";

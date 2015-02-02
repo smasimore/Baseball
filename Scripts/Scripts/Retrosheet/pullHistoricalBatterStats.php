@@ -7,7 +7,7 @@ ini_set('max_execution_time', -1);
 ini_set('mysqli.connect_timeout', -1);
 ini_set('mysqli.reconnect', '1');
 include('/Users/constants.php');
-include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
+include(HOME_PATH.'Scripts/Include/RetrosheetInclude.php');
 
 $playerSeason = array();
 $playerCareer = array();
@@ -137,7 +137,7 @@ function pullBattingData($season, $date) {
     FROM events
     WHERE season = '$season'
     AND substr(game_id,8,4) = '$date') a
-    JOIN id c ON a.bat_id = c.id";
+    LEFT OUTER JOIN id c ON a.bat_id = c.id";
     $season_data = exe_sql(DATABASE, $sql);
     return $season_data;
 }

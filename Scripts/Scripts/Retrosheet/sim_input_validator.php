@@ -7,7 +7,7 @@ ini_set('max_execution_time', -1);
 ini_set('mysqli.connect_timeout', -1);
 ini_set('mysqli.reconnect', '1');
 include('/Users/constants.php');
-include(HOME_PATH.'Scripts/Include/Include.php');
+include(HOME_PATH.'Scripts/Include/RetrosheetInclude.php');
 
 const MIN_AT_BATS = 18;
 const PITCHER = 'pitcher';
@@ -28,12 +28,15 @@ const EVENTS_TABLE = 'events';
 const STAT_DIFFERENCE = .001;
 const SEASON_GAP_EXCEPTION = 'Player Has A Gap Of > 5 Years';
 
-$numTestDates = 10;
+$numTestDates = 5;
 $maxYear = 2013;
-$minYear = 1960;
-$statsYear = //RetrosheetStatsYear::CAREER;
-            RetrosheetStatsYear::SEASON;
-            //RetrosheetStatsYear::PREVIOUS;
+$minYear = 1951;
+$statsYears = array(
+    RetrosheetStatsYear::CAREER,
+    RetrosheetStatsYear::SEASON,
+    RetrosheetStatsYear::PREVIOUS
+);
+$statsYear = null;
 $statsType = BASIC;
 $silenceSuccess = true;
 $skipJoeAverage = false;
@@ -180,7 +183,8 @@ function validateBatter($lineup, $batter_id, $home_away, $lineup_pos) {
             $game_id,
             $actual_batter,
             'batter_joe_average',
-            "$actual_batter !== 'joe_average'"
+            "$actual_batter !== 'joe_average'",
+            BAT_ID
         );
     } else {
         assertTrue(
@@ -367,43 +371,38 @@ function validateBatting($game, $home_away) {
 
 $days_tested = array();
 $test_days = array();
-$test_seasons = array();
-for ($i = 0; $i < $numTestDates; $i++) {
-    $rand_season = rand($minYear, $maxYear);
-    $rand_month = formatDayMonth(rand(4, 9));
-    $rand_day = formatDayMonth(rand(1, 31));
-    $rand_ds = "'$rand_season-$rand_month-$rand_day'";
-    $test_seasons[$rand_season] = $rand_season;
-    $test_days[$rand_ds] = $rand_ds;
-}
-$test_days = array('l1' => "'1990-09-16'");
-$test_seasons = array(1=>1990);
-$test_days = implode(',', $test_days);
-$test_seasons = implode(',', $test_seasons);
-
-$sim_input = pullSimInput($test_days, $test_seasons);
-if (!isset($sim_input)) {
-    exit("No Valid Game Days in $test_days \n");
-}
-
-$start_message = "\n Testing...";
-foreach ($sim_input as $game) {
-    echo $start_message . $game['gameid'] . "\n";
-    $joeAverage = RetrosheetParseUtils::getJoeAverageStats($game['season']);
-    echo '                        pitching_h ';
-    validatePitching($game, HOME_ABBR);
-    echo "SUCCESS! \n";
-    echo '                        pitching_a ';
-    validatePitching($game, AWAY_ABBR);
-    echo "SUCCESS! \n";
-    echo '                        batting_h ';
-    validateBatting($game, HOME_ABBR);
-    echo "SUCCESS! \n";
-    echo '                        batting_a ';
-    validateBatting($game, AWAY_ABBR);
-    echo "SUCCESS! \n";
-    $days_tested[$game['game_date']] = $game['game_date'];
-    $start_message = '           ';
+for ($test_season = $minYear; $test_season < $maxYear; $test_season++) {
+    echo "Season is $test_season \n";
+    $test_days = RetrosheetParseUtils::getValidatorDates($test_season);
+    $test_days = implode(',', $test_days);
+    foreach ($statsYears as $type) {
+        $statsYear = $type;
+        echo "Stats Year is $statsYear \n";
+        $sim_input = pullSimInput($test_days, $test_season);
+        if (!isset($sim_input)) {
+            exit("No Valid Game Days in $test_days \n");
+        }
+        $start_message = "\n Testing...";
+        foreach ($sim_input as $game) {
+            echo $start_message . $game['gameid'] . "\n";
+            $joeAverage =
+                RetrosheetParseUtils::getJoeAverageStats($game['season']);
+            echo '                        pitching_h ';
+            validatePitching($game, HOME_ABBR);
+            echo "SUCCESS! \n";
+            echo '                        pitching_a ';
+            validatePitching($game, AWAY_ABBR);
+            echo "SUCCESS! \n";
+            echo '                        batting_h ';
+            validateBatting($game, HOME_ABBR);
+            echo "SUCCESS! \n";
+            echo '                        batting_a ';
+            validateBatting($game, AWAY_ABBR);
+            echo "SUCCESS! \n";
+            $days_tested[$game['game_date']] = $game['game_date'];
+            $start_message = '           ';
+        }
+    }
 }
 
 echo "\n \n VARS VALIDATED: ";

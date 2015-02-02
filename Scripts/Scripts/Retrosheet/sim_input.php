@@ -7,7 +7,7 @@ ini_set('max_execution_time', -1);
 ini_set('mysqli.connect_timeout', -1);
 ini_set('mysqli.reconnect', '1');
 include('/Users/constants.php');
-include(HOME_PATH.'Scripts/Include/Include.php');
+include(HOME_PATH.'Scripts/Include/RetrosheetInclude.php');
 
 const INPUT_TABLE = 'sim_input';
 
