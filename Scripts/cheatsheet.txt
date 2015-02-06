@@ -116,3 +116,11 @@ SELECT TABLE_NAME, table_rows, data_length, index_length,  round(((data_length +
 /usr/local/mysql/data/Sarah-Masimore.local.err # useful error log
 ls -laF /usr/local/mysql/ # show permissions
 sudo chown -R mysql /usr/local/mysql/ # sets permissions
+
+# Add remote access to MySQL to a new comp for running sim
+# In MySQL:
+GRANT ALL ON fooDatabase.* TO fooUser@'1.2.3.4' IDENTIFIED BY 'my_password';
+# On local:
+1. Install MySQLdb package for python
+http://stackoverflow.com/questions/1448429/how-to-install-mysqldb-python-data-access-library-to-mysql-on-mac-os-x#1448476
+2. Create constants.py file

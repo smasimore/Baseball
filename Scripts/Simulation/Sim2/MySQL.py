@@ -7,7 +7,7 @@ constants = imp.load_source('constants', '/Users/constants.py')
 
 def __connectToDatabase():
     return MySQLdb.connect(
-        "localhost",
+        constants.HOST,
         constants.DB_USER,
         constants.DB_PASSWORD,
         constants.BB_DATABASE
