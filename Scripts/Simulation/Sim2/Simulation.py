@@ -152,7 +152,7 @@ class Simulation:
         # Return first row with cols for tests.
         return dict(zip(self.SIM_OUTPUT_COLUMNS, self.__exportResults()[0]))
 
-    def __runGame(self, row_number, sim_results):
+    def __runGame(self, row_number, sim_results, debug_log):
         game_data = self.inputData[row_number]
         game = Game(
             self.weights,
@@ -169,13 +169,12 @@ class Simulation:
         game_results = []
         for analysis_run in range(0, self.analysisRuns):
             time = datetime.datetime.now()
-            run_results, debug_log = game.playGame()
+            run_results, run_debug_log = game.playGame()
 
             # Turn off debug logging so that only logs for 1 game per Sim run.
-            if debug_log:
-                self.debugLoggingOn = False
-                self.__logToDebugTable(debug_log)
-                game.setLogging(self.debugLoggingOn)
+            if run_debug_log:
+                game.setLogging(False)
+                debug_log.append(run_debug_log)
 
             # Adding to run_results which will need to be processed to get
             # game-level stats (e.g. % home win).
@@ -199,6 +198,7 @@ class Simulation:
         # Create shared memory dict.
         manager = Manager()
         sim_results = manager.list()
+        debug_log = manager.list()
 
         rows = len(self.inputData)
         rows_completed = 0
@@ -217,7 +217,8 @@ class Simulation:
                     target=self.__runGame,
                     args=(
                         row_number,
-                        sim_results
+                        sim_results,
+                        debug_log
                     )
                 )
             for t in range(threads):
@@ -228,7 +229,9 @@ class Simulation:
 
             # Only log on first run through loop. Needs to be set here since
             # setting within thread doesn't carry over.
-            self.debugLoggingOn = False
+            if debug_log:
+                self.debugLoggingOn = False
+                self.__logToDebugTable(debug_log[0])
 
             # Print status.
             print (str(round(
