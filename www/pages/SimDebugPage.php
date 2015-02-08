@@ -27,15 +27,16 @@ class SimDebugPage extends Page {
     private function fetchData() {
         $events = get_data('baseball', 'sim_debug');
 
-        // Set game params.
-        $params = reset($events);
-        $this->season = $params['season'];
-        $this->statsYear = $params['stats_year'];
-        $this->statsType = $params['stats_type'];
-        $this->weights = $params['weights'];
-        $this->analysisRuns = $params['analysis_runs'];
-        $this->simGameDate = $params['sim_game_date'];
-        $this->weightsMutator = $params['weights_mutator'];
+        // Set game data.
+        $data = reset($events);
+        $this->gameID = $data['gameid'];
+        $this->season = $data['season'];
+        $this->statsYear = $data['stats_year'];
+        $this->statsType = $data['stats_type'];
+        $this->weights = $data['weights'];
+        $this->analysisRuns = $data['analysis_runs'];
+        $this->simGameDate = $data['sim_game_date'];
+        $this->weightsMutator = $data['weights_mutator'];
 
         foreach ($events as $i => $event) {
             $score = json_decode($event['score'], true);
@@ -115,7 +116,8 @@ class SimDebugPage extends Page {
 
         $this->setHeader(
             'Sabertooth Ventures',
-            "SEASON $this->season
+            "GAMEID $this->gameID
+            SEASON $this->season
             STATS YEAR $this->statsYear
             STATS TYPE $this->statsType
             WEIGHTS $this->weights

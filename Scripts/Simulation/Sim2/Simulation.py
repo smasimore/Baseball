@@ -48,6 +48,7 @@ class Simulation:
         'bases',
         'batter_stats',
         'stacked_hit_stats',
+        'gameid',
         'season',
         'stats_year',
         'stats_type',

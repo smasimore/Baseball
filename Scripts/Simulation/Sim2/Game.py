@@ -10,6 +10,7 @@ class Game:
 
     def __init__(self, weights, input_data, at_bat_impact_data):
         self.atBatImpactData = at_bat_impact_data
+        self.gameID = input_data['gameid']
         self.teams = {
             self.HOME :
                  Team(
@@ -144,7 +145,8 @@ class Game:
             hit_type,
             self.bases,
             json.dumps(unstacked_batter_stats),
-            json.dumps(stacked_hit_stats)
+            json.dumps(stacked_hit_stats),
+            self.gameID
         ])
 
     def __initializeResults(self):

@@ -2,11 +2,12 @@ from Simulation import Simulation
 from Game import StatCategories
 
 weights = {
-    StatCategories.B_TOTAL : 1.0,
+    StatCategories.B_TOTAL : .5,
+    StatCategories.P_TOTAL : .5,
 }
 
-season_start = 1955
-season_end = 2013
+season_start = 2007
+season_end = 2008
 stats_years = ['career', 'previous', 'season']
 stats_type = 'basic'
 
