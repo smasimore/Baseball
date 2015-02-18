@@ -4,7 +4,19 @@
 if (!defined('HOME_PATH')) {
     include('/Users/constants.php');
 }
-include(HOME_PATH.'Scripts/Include/Enum.php');
+
+// General class for generic retrosheet constants.
+class RetrosheetConstants {
+
+    // Player and stats types.
+    const BATTER = 'batter';
+    const BATTING = 'batting';
+    const PITCHER = 'pitcher';
+    const PITCHING = 'pitching';
+
+    // Stats precision.
+    const NUM_DECIMALS = 3;
+}
 
 class RetrosheetBatting extends Enum {
 
@@ -105,9 +117,13 @@ class RetrosheetStatsType {
 
 class RetrosheetDefaults extends Enum {
 
+    const MIN_PLATE_APPEARANCE = 18;
+    const PLATE_APPEARANCES = 'plate_appearances';
+    // The order of these vars representing our defaulting order. i.e. If
+    // a players split isn't available we use their Total, then previous, etc.
     const SEASON_TOTAL = 0;
-    const PREV_YEAR_ACTUAL = 1;
-    const PREV_YEAR_TOTAL = 2;
+    const PREVIOUS_ACTUAL = 1;
+    const PREVIOUS_TOTAL = 2;
     const CAREER_ACTUAL = 3;
     const CAREER_TOTAL = 4;
     const JOE_AVERAGE_ACTUAL = 5;
@@ -131,6 +147,19 @@ class RetrosheetGameTypes extends Enum {
     const SINGLE_GAME = 0;
     const DOUBLE_HEADER_FIRST = 1;
     const DOUBLE_HEADER_SECOND = 2;
+}
+
+class RetrosheetJoeAverage {
+
+    const JOE_AVERAGE = 'joe_average';
+    const BATTER_STATS = 'batter_stats';
+    const PITCHER_STATS = 'pitcher_stats';
+}
+
+class RetrosheetEventColumns {
+
+    const BAT_HAND_CD = 'BAT_HAND_CD';
+    const PIT_HAND_CD = 'PIT_HAND_CD';
 }
 
 ?>

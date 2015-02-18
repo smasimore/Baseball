@@ -4,8 +4,6 @@
 if (!defined('HOME_PATH')) {
     include('/Users/constants.php');
 }
-include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
-include(HOME_PATH.'Scripts/Include/RetrosheetConstants.php');
 
 class RetrosheetParseUtils {
 
@@ -49,7 +47,7 @@ class RetrosheetParseUtils {
 
     public static function getJoeAverageStats($season) {
         $sql =
-            "SELECT stats
+            "SELECT *
             FROM historical_joe_average
             WHERE season = $season";
         return reset(exe_sql(DATABASE, $sql));
@@ -132,12 +130,12 @@ class RetrosheetParseUtils {
                 // DEFAULT 0: Season Total Split
                 $sql_data['where'] = 'TRUE';
                 break;
-            case RetrosheetDefaults::PREV_YEAR_ACTUAL:
+            case RetrosheetDefaults::PREVIOUS_ACTUAL:
                 // DEFAULT 1: Prev Year Actual Split
                 $sql_data['where'] = $sql_data['original_where'];
                 $sql_data['stats_year'] = RetrosheetStatsYear::PREVIOUS;
                 break;
-            case RetrosheetDefaults::PREV_YEAR_TOTAL:
+            case RetrosheetDefaults::PREVIOUS_TOTAL:
                 // DEFAULT 2: Prev Year Total Split
                 $sql_data['where'] = 'TRUE';
                 break;
@@ -169,78 +167,89 @@ class RetrosheetParseUtils {
         $date,
         $split,
         $player_season,
-        $average_season,
-        $player_prev_season,
+        $player_previous,
         $player_career,
-        $average_prev_season,
-        $average_career
+        $joeAverage,
+        $joe_average_type
     ) {
 
         $default_data = null;
+        $is_joe_average = false;
         switch ($default_step) {
             case RetrosheetDefaults::SEASON_TOTAL:
-                $default_data = elvis($player_season[$player_id][$date][TOTAL]);
-                break;
-            case RetrosheetDefaults::PREV_YEAR_ACTUAL:
                 $default_data =
-                    elvis($player_prev_season[$player_id][$date][$split]);
+                    elvis($player_season[$player_id][$date][RetrosheetSplits::TOTAL]);
                 break;
-            case RetrosheetDefaults::PREV_YEAR_TOTAL:
+            case RetrosheetDefaults::PREVIOUS_ACTUAL:
                 $default_data =
-                    elvis($player_prev_season[$player_id][$date][TOTAL]);
+                    elvis($player_previous[$player_id][$date][$split]);
+                break;
+            case RetrosheetDefaults::PREVIOUS_TOTAL:
+                $default_data =
+                    elvis($player_previous[$player_id][$date][RetrosheetSplits::TOTAL]);
                 break;
             case RetrosheetDefaults::CAREER_ACTUAL:
                 $default_data =
                     elvis($player_career[$player_id][$date][$split]);
                 break;
             case RetrosheetDefaults::CAREER_TOTAL:
-                $default_data = elvis($player_career[$player_id][$date][TOTAL]);
+                $default_data =
+                    elvis($player_career[$player_id][$date][RetrosheetSplits::TOTAL]);
                 break;
-            case RetrosheetDefaults::SEASON_JOE_AVERAGE_ACTUAL:
-                $default_data = elvis($average_season[$date][$split]);
+            case RetrosheetDefaults::JOE_AVERAGE_ACTUAL:
+                $default_data = elvis($joeAverage[$joe_average_type][$split]);
+                $is_joe_average = true;
                 break;
-            case RetrosheetDefaults::SEASON_JOE_AVERAGE_TOTAL:
-                $default_data = elvis($average_season[$date][TOTAL]);
-                break;
-            case RetrosheetDefaults::PREV_SEASON_JOE_AVERAGE_ACTUAL:
-                $default_data = elvis($average_prev_season[$date][$split]);
-                break;
-            case RetrosheetDefaults::PREV_SEASON_JOE_AVERAGE_TOTAL:
-                $default_data = elvis($average_prev_season[$date][TOTAL]);
-                break;
-            case RetrosheetDefaults::CAREER_JOE_AVERAGE_ACTUAL:
-                $default_data = elvis($average_career[$date][$split]);
-                break;
-            case RetrosheetDefaults::CAREER_JOE_AVERAGE_TOTAL:
-                $default_data = elvis($average_career[$date][TOTAL]);
-                break;
-            case 11:
-                exit("$player_id GOT TO CASE 11");
+            // Note: RetrosheetDefaults::JOE_AVERAGE_TOTAL doesn't exist here
+            // since the JOE_AVERAGE_ACTUAL is populated with TOTAL if null.
         }
-        $pas = idx($default_data, 'plate_appearances', 0);
-        return $pas >= MIN_PLATE_APPEARANCE ? $default_data : null;
+        $pas = idx($default_data, RetrosheetDefaults::PLATE_APPEARANCES, 0);
+        return
+            ($is_joe_average
+            || $pas >= RetrosheetDefaults::MIN_PLATE_APPEARANCE)
+            ? $default_data : null;
+    }
+
+    // Returns first two and last two dates in season plus one
+    // additional random game mid-seeason.
+    public static function getValidatorDates($season) {
+        $sql =
+            "SELECT min(game_date) as min, max(game_date) as max
+            FROM sim_input
+            WHERE season = $season
+            and stats_year = 'previous'";
+        $data = reset(exe_sql(DATABASE, $sql));
+        $min = $data['min'];
+        $max = $data['max'];
+        $rand = rand(60,120);
+        $test_days = array(
+            $min,
+            ds_modify($min, '+1 day'),
+            ds_modify($min, "+$rand day"),
+            ds_modify($max, '-1 day'),
+            $max
+        );
+        $final_days = array();
+        foreach ($test_days as $days) {
+            $final_days[] = "'$days'";
+        }
+        return $final_days;
     }
 
     public static function updateMissingSplits(
         $player_season,
-        $average_season,
-        $player_prev_season = null,
-        $player_career = null,
-        $average_prev_season = null,
-        $average_career = null
+        $joeAverage,
+        $playerType,
+        $player_previous = null,
+        $player_career = null
     ) {
-        global $splits;
-        $defaults_only = isset($player_season) ? 0 : 1;
-        if (isset($average_prev_season)) {
-            $player_season['joe_average_previous'] = $average_prev_season;
+        if (!isset($player_season)) {
+            return null;
         }
-        if (isset($average_career)) {
-            $player_season['joe_average_career'] = $average_career;
-        }
-        if ($defaults_only) {
-            return $player_season;
-        }
-        $player_season['joe_average'] = $average_season;
+        $joe_average_type = $playerType == RetrosheetConstants::BATTING
+            ? RetrosheetJoeAverage::BATTER_STATS
+            : RetrosheetJoeAverage::PITCHER_STATS;
+        $splits = RetrosheetSplits::getSplits();
         foreach ($player_season as $player_id => $dates) {
             foreach ($dates as $date => $split_data) {
                 foreach ($splits as $split) {
@@ -255,11 +264,10 @@ class RetrosheetParseUtils {
                                 $date,
                                 $split,
                                 $player_season,
-                                $average_season,
-                                $player_prev_season,
+                                $player_previous,
                                 $player_career,
-                                $average_prev_season,
-                                $average_career
+                                $joeAverage,
+                                $joe_average_type
                             );
                         $is_filled =
                             isset($player_season[$player_id][$date][$split]);
