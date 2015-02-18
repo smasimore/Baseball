@@ -117,7 +117,7 @@ class RetrosheetStatsType {
 
 class RetrosheetDefaults extends Enum {
 
-    const MIN_PLATE_APPEARANCE = 18;
+    const MIN_PLATE_APPEARANCE = 50;
     const PLATE_APPEARANCES = 'plate_appearances';
     // The order of these vars representing our defaulting order. i.e. If
     // a players split isn't available we use their Total, then previous, etc.
