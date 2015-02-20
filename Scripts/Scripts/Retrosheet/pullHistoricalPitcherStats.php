@@ -28,10 +28,14 @@ function initializePlayerArray($game_stat, $split) {
         $seasonPlayers[] = $player_id;
     }
     $season = $game_stat['season'];
+    $pitcher_type = $game_stat['pitcher_type'];
+    $last_team = $game_stat['last_team'];
     $player_name = format_for_mysql($game_stat['player_name']);
     $initial_stats = array(
         'player_id' => $player_id,
         'player_name' => $player_name,
+        'pitcher_type' => $pitcher_type,
+        'last_team' => $last_team,
         'season' => $season,
         'split' => $split,
         'singles' => 0,
@@ -44,11 +48,11 @@ function initializePlayerArray($game_stat, $split) {
         'fly_outs' => 0,
         'plate_appearances' => 0
     );
-    if (!isset($playerSeason[$player_id][$split])) {
-        $playerSeason[$player_id][$split] = $initial_stats;
+    if (!isset($playerSeason[$player_id][$split][$pitcher_type])) {
+        $playerSeason[$player_id][$split][$pitcher_type] = $initial_stats;
     }
-    if (!isset($playerCareer[$player_id][$split])) {
-        $playerCareer[$player_id][$split] = $initial_stats;
+    if (!isset($playerCareer[$player_id][$split][$pitcher_type])) {
+        $playerCareer[$player_id][$split][$pitcher_type] = $initial_stats;
     }
 }
 
@@ -58,10 +62,14 @@ function updateEvent($game_stat, $split) {
     initializePlayerArray($game_stat, $split);
     $player_id = $game_stat['player_id'];
     $event = $game_stat['event_name'];
-    $playerSeason[$player_id][$split]['plate_appearances'] += 1;
-    $playerCareer[$player_id][$split]['plate_appearances'] += 1;
-    $playerSeason[$player_id][$split][$event . 's'] += 1;
-    $playerCareer[$player_id][$split][$event . 's'] += 1;
+    $pitcher_type = $game_stat['pitcher_type'];
+    $last_team = $game_stat['last_team'];
+    $playerSeason[$player_id][$split][$pitcher_type]['last_team'] = $last_team;
+    $playerCareer[$player_id][$split][$pitcher_type]['last_team'] = $last_team;
+    $playerSeason[$player_id][$split][$pitcher_type]['plate_appearances'] += 1;
+    $playerCareer[$player_id][$split][$pitcher_type]['plate_appearances'] += 1;
+    $playerSeason[$player_id][$split][$pitcher_type][$event . 's'] += 1;
+    $playerCareer[$player_id][$split][$pitcher_type][$event . 's'] += 1;
 }
 
 // Function to split out event by situation (home, vsright, etc.).
@@ -78,7 +86,7 @@ function getSeasonStartEnd($season) {
             max(substr(game_id,8,4)) as end,
             season
         FROM events
-        WHERE season = '$season'
+        WHERE season = $season
         GROUP BY season";
     $season_dates = reset(exe_sql(DATABASE, $season_sql));
     $season_start = convertRetroDateToDs($season, $season_dates['start']);
@@ -86,11 +94,13 @@ function getSeasonStartEnd($season) {
     return array($season_start, $season_end);
 }
 
-function pullBattingData($season, $date) {
+function pullPitchingData($season, $date) {
     $season_data = null;
     $sql = 
        "SELECT lower(concat(c.first, '_', c.last)) AS player_name,
        a.pit_id AS player_id,
+       a.last_team,
+       a.pitcher_type,
        a.season,
        a.ds,
        a.home_away,
@@ -118,6 +128,10 @@ function pullBattingData($season, $date) {
             WHEN bat_home_id = 0 THEN 'Home'
             ELSE 'Away'
         END AS home_away,
+        CASE
+            WHEN bat_home_id = 0 THEN HOME_TEAM_ID
+            ELSE AWAY_TEAM_ID
+        END as last_team,
         CASE 
             WHEN bat_hand_cd = 'R' then 'VsRight'
             WHEN bat_hand_cd = 'L' then 'VsLeft'
@@ -133,9 +147,10 @@ function pullBattingData($season, $date) {
             ELSE 'ScoringPos'
           END AS situation,
         battedball_cd,
-        pit_id
+        pit_id,
+        pitcher_type
     FROM events
-    WHERE season = '$season'
+    WHERE season = $season
     AND substr(game_id,8,4) = '$date') a
     LEFT OUTER JOIN id c ON a.pit_id = c.id";
     $season_data = exe_sql(DATABASE, $sql);
@@ -148,13 +163,14 @@ function updatePlayerCareer($season, $ds) {
     $player_last_season_career = exe_sql(DATABASE, 
         "SELECT * 
         FROM retrosheet_historical_pitching_career
-        WHERE season = '$season' 
+        WHERE season = $season
         AND ds = '$ds'"
     );
     foreach ($player_last_season_career as $stat) {
         $player_id = $stat['player_id'];
         $split = $stat['split'];
-        $playerCareer[$player_id][$split] = $stat;
+        $pitcher_type = $stat['pitcher_type'];
+        $playerCareer[$player_id][$split][$pitcher_type] = $stat;
     }
 }
 
@@ -169,6 +185,8 @@ if ($confirm !== 'y') {
 $colheads = array(
     'player_name',
     'player_id',
+    'pitcher_type',
+    'last_team',
     'singles',
     'doubles',
     'triples',
@@ -219,10 +237,12 @@ for ($season = 1950; $season < 2014; $season++) {
         updatePlayerCareer($previous_season, $previous_season_end);
         $player_career_daily_insert = array();
         foreach ($playerCareer as $name => $split) {
-            foreach ($split as $stat) {
-                $stat['season'] = $season;
-                $stat['ds'] = $season_start;
-                $player_career_daily_insert[] = $stat;
+            foreach ($split as $pitcher_type) {
+                foreach ($pitcher_type as $stat) {
+                    $stat['season'] = $season;
+                    $stat['ds'] = $season_start;
+                    $player_career_daily_insert[] = $stat;
+                }
             }
         } 
         multi_insert(DATABASE, $career_table, $player_career_daily_insert, $colheads);
@@ -233,7 +253,7 @@ for ($season = 1950; $season < 2014; $season++) {
         $retro_ds = return_between($ds, "-", "-", EXCL).substr($ds, -2);
         // Enter today's game data into tomorrow's ds (as if we pulled at 12am)
         $entry_ds = ds_modify($ds, '+1 day');
-        $daily_stats = pullBattingData($season, $retro_ds);
+        $daily_stats = pullPitchingData($season, $retro_ds);
         if ($daily_stats) {
             foreach ($daily_stats as $game_stat) {
                 // Filter out unneccesary events.
@@ -248,7 +268,7 @@ for ($season = 1950; $season < 2014; $season++) {
         $player_season_daily_insert = array();
         $player_career_daily_insert = array();
         foreach ($playerCareer as $name => $split) {
-            // Only insert players who have played in last 3 years.
+            // Only insert players who have played in last 5 years.
             $played_0 = in_array($name, $seasonPlayers);
             $played_1 = in_array($name, $previous_season_players["-1"]);
             $played_2 = in_array($name, $previous_season_players["-2"]);
@@ -258,14 +278,17 @@ for ($season = 1950; $season < 2014; $season++) {
                 || $played_3 || $played_4)) {
                 continue;
             }
-            foreach ($split as $split_name => $stat) {
-                $stat['ds'] = $entry_ds;
-                $stat['season'] = $season;
-                $player_career_daily_insert[] = $stat;
-                if (isset($playerSeason[$name][$split_name])) {
-                    $playerSeason[$name][$split_name]['ds'] = $entry_ds;
-                    $player_season_daily_insert[] = 
-                        $playerSeason[$name][$split_name];
+            foreach ($split as $split_name => $split) {
+                foreach ($split as $pitcher_type => $stat) {
+                    $stat['ds'] = $entry_ds;
+                    $stat['season'] = $season;
+                    $player_career_daily_insert[] = $stat;
+                    if (isset($playerSeason[$name][$split_name][$pitcher_type])) {
+                        $playerSeason[$name][$split_name][$pitcher_type]['ds'] =
+                            $entry_ds;
+                        $player_season_daily_insert[] =
+                            $playerSeason[$name][$split_name][$pitcher_type];
+                    }
                 }
             }
         } 
