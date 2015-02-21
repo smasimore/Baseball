@@ -12,6 +12,7 @@ include(HOME_PATH.'Scripts/Include/RetrosheetInclude.php');
 $playerSeason = array();
 $playerCareer = array();
 $seasonPlayers = array();
+$pitcherLastGame = array();
 
 function convertRetroDateToDs($season, $date) {
     $month = substr($date, 0, 2);
@@ -29,15 +30,15 @@ function initializePlayerArray($game_stat, $split) {
     }
     $season = $game_stat['season'];
     $pitcher_type = $game_stat['pitcher_type'];
-    $last_team = $game_stat['last_team'];
     $player_name = format_for_mysql($game_stat['player_name']);
     $initial_stats = array(
         'player_id' => $player_id,
         'player_name' => $player_name,
         'pitcher_type' => $pitcher_type,
-        'last_team' => $last_team,
         'season' => $season,
         'split' => $split,
+        'total_outs' => 0,
+        'total_games' => 0,
         'singles' => 0,
         'doubles' => 0,
         'triples' => 0,
@@ -56,16 +57,46 @@ function initializePlayerArray($game_stat, $split) {
     }
 }
 
+// Function to keep track of games pitched per pitcher.
+function isPitcherNewGame($player_id, $split, $pitcher_type, $game_id) {
+    global $pitcherLastGame;
+    $pitcher_key = $player_id.$split.$pitcher_type;
+    if (idx($pitcherLastGame, $pitcher_key) === $game_id) {
+        return false;
+    }
+    $pitcherLastGame[$pitcher_key] = $game_id;
+    return true;
+}
+
 // Function to add event impact to daily and careers arrays.
 function updateEvent($game_stat, $split) {
     global $playerSeason, $playerCareer;
     initializePlayerArray($game_stat, $split);
     $player_id = $game_stat['player_id'];
     $event = $game_stat['event_name'];
+    $ds = $game_stat['ds'];
+    $game_id = $game_stat['game_id'];
     $pitcher_type = $game_stat['pitcher_type'];
     $last_team = $game_stat['last_team'];
+    $event_outs = $game_stat['event_outs_ct'];
     $playerSeason[$player_id][$split][$pitcher_type]['last_team'] = $last_team;
     $playerCareer[$player_id][$split][$pitcher_type]['last_team'] = $last_team;
+    $is_new_game =
+        isPitcherNewGame($player_id, $split, $pitcher_type, $game_id);
+    if ($is_new_game) {
+        $playerSeason[$player_id][$split][$pitcher_type]['total_games'] += 1;
+        $playerCareer[$player_id][$split][$pitcher_type]['total_games'] += 1;
+    }
+    $playerSeason[$player_id][$split][$pitcher_type]['last_game'] = $ds;
+    $playerCareer[$player_id][$split][$pitcher_type]['last_game'] = $ds;
+    $playerSeason[$player_id][$split][$pitcher_type]['total_outs'] +=
+        $event_outs;
+    $playerCareer[$player_id][$split][$pitcher_type]['total_outs'] +=
+        $event_outs;
+    // If event is 'other' don't count it as a PA.
+    if ($event === 'other') {
+        return;
+    }
     $playerSeason[$player_id][$split][$pitcher_type]['plate_appearances'] += 1;
     $playerCareer[$player_id][$split][$pitcher_type]['plate_appearances'] += 1;
     $playerSeason[$player_id][$split][$pitcher_type][$event . 's'] += 1;
@@ -100,8 +131,10 @@ function pullPitchingData($season, $date) {
        "SELECT lower(concat(c.first, '_', c.last)) AS player_name,
        a.pit_id AS player_id,
        a.last_team,
-       a.pitcher_type,
        a.season,
+       a.pitcher_type,
+       a.event_outs_ct,
+       a.game_id,
        a.ds,
        a.home_away,
        a.bat_hand_cd AS vs_hand,
@@ -122,6 +155,7 @@ function pullPitchingData($season, $date) {
     FROM
         (SELECT event_cd AS event,
         season,
+        game_id,
         concat(substr(game_id,4,4), '-', substr(game_id,8,2), '-', 
             substr(game_id,10,2)) AS ds,
         CASE
@@ -148,7 +182,8 @@ function pullPitchingData($season, $date) {
           END AS situation,
         battedball_cd,
         pit_id,
-        pitcher_type
+        pitcher_type,
+        event_outs_ct
     FROM events
     WHERE season = $season
     AND substr(game_id,8,4) = '$date') a
@@ -182,23 +217,28 @@ if ($confirm !== 'y') {
     exit();
 }
 
+$test = true;
+
 $colheads = array(
-    'player_name',
-    'player_id',
-    'pitcher_type',
-    'last_team',
-    'singles',
-    'doubles',
-    'triples',
-    'home_runs',
-    'walks',
-    'strikeouts',
-    'ground_outs',
-    'fly_outs',
-    'plate_appearances',
-    'split',
-    'season',
-    'ds'
+    'player_name' => '?',
+    'player_id' => '!',
+    'pitcher_type' => '!',
+    'last_team' => '!',
+    'last_game' => '!',
+    'total_outs' => '!',
+    'total_games' => '!',
+    'singles' => '!',
+    'doubles' => '!',
+    'triples' => '!',
+    'home_runs' => '!',
+    'walks' => '!',
+    'strikeouts' => '!',
+    'ground_outs' => '!',
+    'fly_outs' => '!',
+    'plate_appearances' => '!',
+    'split' => '!',
+    'season' => '!',
+    'ds' => '!'
 );
 $season_start = null;
 $season_end = null;
@@ -245,7 +285,14 @@ for ($season = 1950; $season < 2014; $season++) {
                 }
             }
         } 
-        multi_insert(DATABASE, $career_table, $player_career_daily_insert, $colheads);
+        if (!$test) {
+            multi_insert(
+                DATABASE,
+                $career_table,
+                $player_career_daily_insert,
+                $colheads
+            );
+        }
     }
     for ($ds = $season_start; $ds <= $season_end;
         $ds = ds_modify($ds, '+1 day')) {  
@@ -258,9 +305,6 @@ for ($season = 1950; $season < 2014; $season++) {
             foreach ($daily_stats as $game_stat) {
                 // Filter out unneccesary events.
                 $event = $game_stat['event_name'];
-                if ($event == 'other') {
-                    continue;
-                }
                 updateDailyStats($game_stat);
             }
         }
@@ -292,6 +336,10 @@ for ($season = 1950; $season < 2014; $season++) {
                 }
             }
         } 
+        if ($test) {
+            print_r($player_season_daily_insert);
+            exit();
+        }
         if (isset($player_season_daily_insert)) {
             multi_insert(
                 DATABASE,
