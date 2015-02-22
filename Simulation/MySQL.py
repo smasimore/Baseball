@@ -5,6 +5,9 @@ from warnings import filterwarnings, resetwarnings
 
 constants = imp.load_source('constants', '/Users/constants.py')
 
+# Error types. Used to only raise certain types of errors.
+_DUPLICATE_PARTITION = 1517
+
 def __connectToDatabase():
     return MySQLdb.connect(
         constants.HOST,
@@ -12,6 +15,14 @@ def __connectToDatabase():
         constants.DB_PASSWORD,
         constants.BB_DATABASE
     )
+
+
+def __printExceptionQuery(query):
+    print
+    print '************** EXCEPTION ON QUERY ***************'
+    print query
+    print '*************************************************'
+    print
 
 # create(
 #   'test_python_integration3',
@@ -29,10 +40,11 @@ def create(table_name, column_data):
         cursor = db.cursor()
         cursor.execute(query)
         db.close()
-        return ''
     except MySQLdb.Error, e:
-        db.close()
-        return {'query' : query, 'error' : e}
+        if db:
+            db.close()
+        __printExceptionQuery(query)
+        raise
 
 
 
@@ -59,12 +71,12 @@ def insert(table_name, column_names, data):
         else:
             cursor.executemany(query, data)
         db.commit()
-        # disconnect from server
         db.close()
-        return ''
     except MySQLdb.Error, e:
-        db.close()
-        return {'query' : query, 'sub_data' : data, 'error' : e}
+        if db:
+            db.close()
+        __printExceptionQuery(query)
+        raise
 
 
 
@@ -83,14 +95,13 @@ def delete(query):
         # execute SQL insert query using execute() and commit() methods.
         cursor.execute(query)
         resetwarnings()
-
         db.commit()
-        # disconnect from server
         db.close()
-        return ''
     except MySQLdb.Error, e:
-        db.close()
-        return {'query' : query, 'error' : e}
+        if db:
+            db.close()
+        __printExceptionQuery(query)
+        raise
 
 
 
@@ -107,8 +118,12 @@ def read(query):
         return [{columns[index][0]:column for index, column in
             enumerate(value)} for value in data]
     except MySQLdb.Error, e:
-        db.close()
-        return {'query' : query, 'error' : e}
+        if db:
+            db.close()
+        __printExceptionQuery(query)
+        raise
+
+
 
 def dropPartition(table, p):
     query = ("""ALTER TABLE %s DROP PARTITION p%s""" % (table, p))
@@ -119,12 +134,14 @@ def dropPartition(table, p):
         # execute SQL insert query using execute() and commit() methods.
         cursor.execute(query)
         db.commit()
-        # disconnect from server
         db.close()
-        return ''
     except MySQLdb.Error, e:
-        db.close()
-        return {'query' : query, 'error' : e}
+        if db:
+            db.close()
+        __printExceptionQuery(query)
+        raise
+
+
 
 def addPartition(table, p, partition):
     query = ("""ALTER TABLE %s ADD PARTITION (
@@ -137,9 +154,12 @@ def addPartition(table, p, partition):
         # execute SQL insert query using execute() and commit() methods.
         cursor.execute(query)
         db.commit()
-        # disconnect from server
         db.close()
         return ''
     except MySQLdb.Error, e:
-        db.close()
-        return {'query' : query, 'error' : e}
+        if db:
+            db.close()
+        # Only raise exception if not due to the partition already existing.
+        if e.args[0] != _DUPLICATE_PARTITION:
+            __printExceptionQuery(query)
+            raise
