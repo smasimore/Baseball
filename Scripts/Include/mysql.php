@@ -453,13 +453,14 @@ function update(
 	$table, 
 	$data_array, 
 	$key_column, 
-	$id, 
+	$id,
+    $id_type = 'string',	
 	$second_where = null, 
 	$second_value = null, 
 	$third_where = null, 
 	$third_value = null
 ) {
-
+  //TODO(cert): Fix params above to use an array instead of second/third thing.
     error_log(
         format_log_data('update', $table, count($data_array)),
         3,
@@ -498,19 +499,20 @@ function update(
 	$setting_list="";
 	for ($xx=0; $xx<count($data_array); $xx++) {
 		list($key,$value)=each($data_array);
-		$setting_list.= $key."="."'$value'";
+		$value = $id_type === 'string' ? "'$value'" : $value;
+		$setting_list .= "$key = $value";
 		if ($xx!=count($data_array)-1)
 			$setting_list .= ",";
 	}
 
-    # Create SQL command
-	$sql="UPDATE ".$table." SET ".$setting_list." WHERE ". $key_column." = " . "\"" . $id . "\"";
-	// Change query if there are more than 1 thing in the where statement
-	if ($second_where) {
-		$sql="UPDATE ".$table." SET ".$setting_list." WHERE ". $key_column." = " . "\"" . $id . "\" AND ".$second_where." = "."\"" . $second_value . "\"";
-	} else if ($third_where) {
-		$sql="UPDATE ".$table." SET ".$setting_list." WHERE ". $key_column." = " . "\"" . $id . "\" AND ".$second_where." = "."\"" . $second_value . "\" AND ".$third_where." = "."\"" . $third_value . "\"";
-	}
+	# Create SQL command
+	$sql = "UPDATE $table SET $setting_list WHERE $key_column = '$id'";
+	// Change query if there are extra where parameters.
+	if ($third_where) {
+		$sql = $sql . " AND $second_where = '$second_value' AND $third_where = '$third_value'";
+	} else if ($second_where) {
+		$sql = $sql . " AND $second_where = '$second_value'";
+	} 
     $result = mysqli_query($mysql_connect, $sql);
 
     # Report SQL error, if one occured, otherwise return result
