@@ -16,8 +16,7 @@ if (!defined('HOME_PATH')) {
     include('/Users/constants.php');
 }
 include(HOME_PATH.'Scripts/Include/Enum.php');
-include(HOME_PATH.'Scripts/Include/RetrosheetParseUtils.php');
-include(HOME_PATH.'Scripts/Include/RetrosheetConstants.php');
 include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
+include(HOME_PATH.'Scripts/Include/Teams.php');
 
 ?>

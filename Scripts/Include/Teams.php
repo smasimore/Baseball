@@ -95,13 +95,19 @@ class Teams {
         $team = ucwords($team);
         switch ($team) {
             case 'Red Sox':
+            case 'Boston Red Sox':
                 $team = 'Red-Sox';
                 break;
             case 'White Sox':
+            case 'Chicago White Sox':
                 $team = 'White-Sox';
                 break;
             case 'Blue Jays':
+            case 'Jays':
                 $team = 'Blue-Jays';
+                break;
+            case 'Anaheim':
+                $team = 'Angels';
                 break;
         }
         if (!in_array($team, self::$teamNames)) {
