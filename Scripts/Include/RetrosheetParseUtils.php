@@ -350,7 +350,8 @@ class RetrosheetParseUtils {
     public static function getWhereBySplit(
         $split,
         $bat_home_id = RetrosheetHomeAway::HOME,
-        $opp_hand = 'PIT_HAND_CD'
+        $opp_hand = 'PIT_HAND_CD',
+        $pitcher_type = null
     ) {
         switch ($split) {
             case RetrosheetSplits::TOTAL:
@@ -388,6 +389,10 @@ class RetrosheetParseUtils {
                 $where = "START_BASES_CD = " . RetrosheetBases::BASES_LOADED .
                     " AND OUTS_CT < 2";
                 break;
+        }
+        // If starter/reliever is passed in append to WHERE.
+        if ($pitcher_type === 'S' || $pitcher_type === 'R') {
+            $where .= " AND PITCHER_TYPE = '$pitcher_type'";
         }
         return $where;
     }

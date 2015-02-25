@@ -11,10 +11,6 @@ include(HOME_PATH.'Scripts/Include/RetrosheetInclude.php');
 
 $test = true;
 $joeAverage = null;
-$runTypes = array(
-    RetrosheetConstants::BATTING,
-    RetrosheetConstants::PITCHING
-);
 
 function getBattingData($season, $ds, $table) {
     $query =
@@ -79,131 +75,129 @@ $colheads = array(
     'ds'
 );
 
-foreach ($runTypes as $runType) {
+$run_type = RetrosheetConstants::BATTING;
+$season_insert_table = "historical_season_$run_type";
+$previous_insert_table = "historical_previous_$run_type";
+$career_insert_table = "historical_career_$run_type";
+$season_table = "retrosheet_historical_$run_type";
+$career_table = "retrosheet_historical_$run_type"."_career";
 
-    $season_insert_table = "historical_season_$runType";
-    $previous_insert_table = "historical_previous_$runType";
-    $career_insert_table = "historical_career_$runType";
-    $season_table = "retrosheet_historical_$runType";
-    $career_table = "retrosheet_historical_$runType"."_career";
+for ($season = $season_vars['start_script'];
+    $season < $season_vars['end_script'];
+    $season++) {
 
-    for ($season = $season_vars['start_script'];
-        $season < $season_vars['end_script'];
-        $season++) {
-
-        $season_vars = RetrosheetParseUtils::updateSeasonVars(
-            $season,
-            $season_vars,
-            $career_table
-        );
-        // Season = 1950 is left in just for the above funtion to register
-        // previous_season_end.
-        if ($season == 1950) {
+    $season_vars = RetrosheetParseUtils::updateSeasonVars(
+        $season,
+        $season_vars,
+        $career_table
+    );
+    // Season = 1950 is left in just for the above funtion to register
+    // previous_season_end.
+    if ($season == 1950) {
+        continue;
+    }
+    $joeAverage = RetrosheetParseUtils::getJoeAverageStats($season);
+    $previous_data = null;
+    $previous = $season - 1;
+    $previous_data = getBattingData(
+        $previous,
+        $season_vars['previous_season_end'],
+        $season_table
+    );
+    for ($ds = $season_vars['season_start'];
+        $ds <= $season_vars['season_end'];
+        $ds = ds_modify($ds, '+1 day')) {
+        echo $ds."\n";
+        $player_season = null;
+        $player_previous = null;
+        $player_career = null;
+        $season_data = getBattingData($season, $ds, $season_table);
+        $career_data = getBattingData($season, $ds, $career_table);
+        if (!$career_data) {
+            echo "No Data For $ds \n";
             continue;
         }
-        $joeAverage = RetrosheetParseUtils::getJoeAverageStats($season);
-        $previous_data = null;
-        $previous = $season - 1;
-        $previous_data = getBattingData(
-            $previous,
-            $season_vars['previous_season_end'],
-            $season_table
+        foreach ($career_data as $index => $career_split) {
+            $player_career = updateBattingArray(
+                $career_split,
+                $player_career
+            );
+            $previous_split = idx($previous_data, $index);
+            if ($previous_split) {
+                $player_previous =
+                    updateBattingArray($previous_split, $player_previous);
+            }
+            $season_split = idx($season_data, $index);
+            if ($season_split) {
+                $player_season =
+                    updateBattingArray($season_split, $player_season);
+            }
+        }
+
+        $player_career = RetrosheetParseUtils::updateMissingSplits(
+            $player_career,
+            $joeAverage,
+            $run_type,
+            /* player_previous */ null,
+            /* player_career */ null
         );
-        for ($ds = $season_vars['season_start'];
-            $ds <= $season_vars['season_end'];
-            $ds = ds_modify($ds, '+1 day')) {
-            echo $ds."\n";
-            $player_season = null;
-            $player_previous = null;
-            $player_career = null;
-            $season_data = getBattingData($season, $ds, $season_table);
-            $career_data = getBattingData($season, $ds, $career_table);
-            if (!$career_data) {
-                echo "No Data For $ds \n";
-                continue;
-            }
-            foreach ($career_data as $index => $career_split) {
-                $player_career = updateBattingArray(
-                    $career_split,
-                    $player_career
-                );
-                $previous_split = idx($previous_data, $index);
-                if ($previous_split) {
-                    $player_previous =
-                        updateBattingArray($previous_split, $player_previous);
-                }
-                $season_split = idx($season_data, $index);
-                if ($season_split) {
-                    $player_season =
-                        updateBattingArray($season_split, $player_season);
-                }
-            }
+        $player_previous = RetrosheetParseUtils::updateMissingSplits(
+            $player_previous,
+            $joeAverage,
+            $run_type,
+            /* player_previous */ null,
+            $player_career
+        );
+        $player_season = RetrosheetParseUtils::updateMissingSplits(
+            $player_season,
+            $joeAverage,
+            $run_type,
+            $player_previous,
+            $player_career
+        );
 
-            $player_career = RetrosheetParseUtils::updateMissingSplits(
-                $player_career,
-                $joeAverage,
-                $runType,
-                /* player_previous */ null,
-                /* player_career */ null
-            );
-            $player_previous = RetrosheetParseUtils::updateMissingSplits(
-                $player_previous,
-                $joeAverage,
-                $runType,
-                /* player_previous */ null,
-                $player_career
-            );
-            $player_season = RetrosheetParseUtils::updateMissingSplits(
+        $player_season = RetrosheetParseUtils::prepareStatsMultiInsert(
+            $player_season,
+            $season,
+            $ds
+        );
+        $player_previous = RetrosheetParseUtils::prepareStatsMultiInsert(
+            $player_previous,
+            $season,
+            $ds
+        );
+        $player_career = RetrosheetParseUtils::prepareStatsMultiInsert(
+            $player_career,
+            $season,
+            $ds
+        );
+
+        if (!$test && isset($player_season)) {
+            multi_insert(
+                DATABASE,
+                $season_insert_table,
                 $player_season,
-                $joeAverage,
-                $runType,
+                $colheads
+            );
+        }
+        if (!$test && isset($player_previous)) {
+            multi_insert(
+                DATABASE,
+                $previous_insert_table,
                 $player_previous,
-                $player_career
+                $colheads
             );
-
-            $player_season = RetrosheetParseUtils::prepareStatsMultiInsert(
-                $player_season,
-                $season,
-                $ds
-            );
-            $player_previous = RetrosheetParseUtils::prepareStatsMultiInsert(
-                $player_previous,
-                $season,
-                $ds
-            );
-            $player_career = RetrosheetParseUtils::prepareStatsMultiInsert(
+        }
+        if (!$test && isset($player_career)) {
+            multi_insert(
+                DATABASE,
+                $career_insert_table,
                 $player_career,
-                $season,
-                $ds
+                $colheads
             );
-
-            if (!$test && isset($player_season)) {
-                multi_insert(
-                    DATABASE,
-                    $season_insert_table,
-                    $player_season,
-                    $colheads
-                );
-            }
-            if (!$test && isset($player_previous)) {
-                multi_insert(
-                    DATABASE,
-                    $previous_insert_table,
-                    $player_previous,
-                    $colheads
-                );
-            }
-            if (!$test && isset($player_career)) {
-                multi_insert(
-                    DATABASE,
-                    $career_insert_table,
-                    $player_career,
-                    $colheads
-                );
-            }
-            if ($test && isset($player_season)) {
-                print_r($player_season); exit();
-            }
+        }
+        if ($test && isset($player_season)) {
+            print_r($player_season); exit();
         }
     }
 }
