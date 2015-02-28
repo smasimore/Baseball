@@ -241,14 +241,25 @@ class RetrosheetParseUtils {
         $joeAverage,
         $playerType,
         $player_previous = null,
-        $player_career = null
+        $player_career = null,
+        $pitcher_type = null
     ) {
         if (!isset($player_season)) {
             return null;
         }
-        $joe_average_type = $playerType == RetrosheetConstants::BATTING
-            ? RetrosheetJoeAverage::BATTER_STATS
-            : RetrosheetJoeAverage::PITCHER_STATS;
+        if ($playerType == RetrosheetConstants::BATTING) {
+            $joe_average_type = RetrosheetJoeAverage::BATTER_STATS;
+        } else {
+            if (!$pitcher_type) {
+                throw new Exception(
+                    'Must specify starter or reliever for a non-batter average'
+                );
+            }
+            $joe_average_type =
+                $pitcher_type === RetrosheetConstants::RELIEVER
+                ? RetrosheetJoeAverage::RELIEVER_STATS
+                : RetrosheetJoeAverage::STARTER_STATS;
+        }
         $splits = RetrosheetSplits::getSplits();
         foreach ($player_season as $player_id => $dates) {
             foreach ($dates as $date => $split_data) {

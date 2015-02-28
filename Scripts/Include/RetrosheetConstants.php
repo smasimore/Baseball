@@ -13,9 +13,27 @@ class RetrosheetConstants {
     const BATTING = 'batting';
     const PITCHER = 'pitcher';
     const PITCHING = 'pitching';
+    const STARTER = 'starter';
+    const RELIEVER = 'reliever';
 
     // Stats precision.
     const NUM_DECIMALS = 3;
+}
+
+class RetrosheetPercentStats {
+
+   public function getPctStats() {
+        return array(
+            'pct_single' => 'singles',
+            'pct_double' => 'doubles',
+            'pct_triple' => 'triples',
+            'pct_home_run' => 'home_runs',
+            'pct_walk' => 'walks',
+            'pct_strikeout' => 'strikeouts',
+            'pct_ground_out' => 'ground_outs',
+            'pct_fly_out' => 'fly_outs'
+        );
+    }
 }
 
 class RetrosheetBatting extends Enum {
@@ -153,7 +171,8 @@ class RetrosheetJoeAverage {
 
     const JOE_AVERAGE = 'joe_average';
     const BATTER_STATS = 'batter_stats';
-    const PITCHER_STATS = 'pitcher_stats';
+    const STARTER_STATS = 'starter_stats';
+    const RELIEVER_STATS = 'reliever_stats';
 }
 
 class RetrosheetEventColumns {
