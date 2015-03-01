@@ -9,8 +9,6 @@ ini_set('mysqli.reconnect', '1');
 include('/Users/constants.php');
 include(HOME_PATH.'Scripts/Include/RetrosheetInclude.php');
 
-const INPUT_TABLE = 'sim_input';
-
 $statsYears = array(
     RetrosheetStatsYear::SEASON,
     RetrosheetStatsYear::PREVIOUS,
@@ -19,7 +17,7 @@ $statsYears = array(
 $statsType =
     RetrosheetStatsType::BASIC;
     //RetrosheetStatsType::MAGIC;
-$startScript = 1951;
+$startScript = 1990;
 $endScript  = 2014;
 $joeAverage = null;
 
@@ -83,10 +81,42 @@ function getDefaultWaterfall($season, $previous, $career, $joeAverage) {
     return $insert_data;
 }
 
-function fillPitchers($pitcher, $stats, $previous_stats, $career_stats, $type) {
+function getAverageInnings(
+    $player_id,
+    $stats,
+    $home_away
+) {
+    // NOTE: I took care of ensuring earlier stats don't appear (i.e. season
+    // won't be there if we are running on previous).
+    $player_stats = array(
+        idx($stats['season'], $player_id),
+        idx($stats['previous'], $player_id),
+        idx($stats['career'], $player_id)
+    );
+    foreach ($player_stats as $stats_year) {
+        if (!$stats_year) {
+            continue;
+        }
+        $stat = json_decode($stats_year['stats'], true);
+        $avg_innings = $stat[ucfirst($home_away)]['avg_innings'] > 0
+            ? $stat[ucfirst($home_away)]['avg_innings']
+            : $stat['Total']['avg_innings'];
+        if ($avg_innings > 0) {
+            return $avg_innings;
+        }
+    }
+    return null;
+}
+
+function fillPitchers($pitcher, $stats, $team, $home_away) {
     global $joeAverage;
     $pitcher = json_decode($pitcher, true);
     $player_id = $pitcher['id'];
+    $avg_innings = getAverageInnings(
+        $player_id,
+        $stats['starter'],
+        $home_away
+    );
     return array(
         'player_id' =>
             isset($pitcher['id']) ? $pitcher['id'] : 'joe_average',
@@ -94,30 +124,31 @@ function fillPitchers($pitcher, $stats, $previous_stats, $career_stats, $type) {
             isset($pitcher['name']) ? $pitcher['name'] : $pitcher['id'],
         'handedness' =>
             isset($pitcher['hand']) ? $pitcher['hand'] : '?',
-        'era' =>
-            isset($pitcher[$type.'_era'])
-            ? $pitcher[$type.'_era'] : null,
-        'bucket' =>
-            isset($pitcher[$type.'_bucket'])
-            ? $pitcher[$type.'_bucket'] : null,
-        'avg_innings' =>
-            isset($pitcher[$type.'_avg_innings'])
-            ? $pitcher[$type.'_avg_innings'] : null,
+        'avg_innings' => $avg_innings,
         'pitcher_vs_batter' =>
-                getDefaultWaterfall(
-                    idx($stats, $player_id)
-                        ? $stats[$player_id]['stats'] : null,
-                    idx($previous_stats, $player_id)
-                        ? $previous_stats[$player_id]['stats'] : null,
-                    idx($career_stats, $player_id)
-                        ? $career_stats[$player_id]['stats'] : null,
-                    $joeAverage['pitcher_stats']
-                ),
-        'reliever_vs_batter' => null
+            getDefaultWaterfall(
+                idx($stats['starter']['season'], $player_id)
+                    ? $stats['starter']['season'][$player_id]['stats'] : null,
+                idx($stats['starter']['previous'], $player_id)
+                    ? $stats['starter']['previous'][$player_id]['stats'] : null,
+                idx($stats['starter']['career'], $player_id)
+                    ? $stats['starter']['career'][$player_id]['stats'] : null,
+                $joeAverage['starter_stats']
+            ),
+        'reliever_vs_batter' =>
+            getDefaultWaterfall(
+                idx($stats['reliever']['season'], $team)
+                    ? $stats['reliever']['season'][$team]['stats'] : null,
+                idx($stats['reliever']['previous'], $team)
+                    ? $stats['reliever']['previous'][$team]['stats'] : null,
+                idx($stats['reliever']['career'], $team)
+                    ? $stats['reliever']['career'][$team]['stats'] : null,
+                $joeAverage['reliever_stats']
+            )
     );
 }
 
-function fillLineups($lineup, $stats, $previous_stats, $career_stats) {
+function fillLineups($lineup, $stats) {
     global $joeAverage;
     $lineup = json_decode($lineup, true);
     $filled_lineups = array();
@@ -126,12 +157,12 @@ function fillLineups($lineup, $stats, $previous_stats, $career_stats) {
         $player_id = $player['player_id'];
         $batter_v_pitcher =
             getDefaultWaterfall(
-                idx($stats, $player_id)
-                    ? $stats[$player_id]['stats'] : null,
-                idx($previous_stats, $player_id)
-                    ? $previous_stats[$player_id]['stats'] : null,
-                idx($career_stats, $player_id)
-                    ? $career_stats[$player_id]['stats'] : null,
+                idx($stats['season'], $player_id)
+                    ? $stats['season'][$player_id]['stats'] : null,
+                idx($stats['previous'], $player_id)
+                    ? $stats['previous'][$player_id]['stats'] : null,
+                idx($stats['career'], $player_id)
+                    ? $stats['career'][$player_id]['stats'] : null,
                 $joeAverage['batter_stats']
             );
         $batter_v_pitcher['hand'] = idx($player, 'hand');
@@ -140,7 +171,7 @@ function fillLineups($lineup, $stats, $previous_stats, $career_stats) {
     return $filled_lineups;
 }
 
-$test = false;
+$test = true;
 
 $colheads = array(
     'rand_bucket' => '!',
@@ -165,10 +196,10 @@ for ($season = $startScript;
 
     $joeAverage = RetrosheetParseUtils::getJoeAverageStats($season);
     foreach ($statsYears as $stats_year) {
-
         $tables = array(
             'batter' => "historical_$stats_year"."_batting",
-            'pitcher' => "historical_$stats_year"."_pitching",
+            'starter' => "historical_$stats_year"."_starter_pitching",
+            'reliever' => "historical_$stats_year"."_reliever_pitching"
         );
         // Drop and re-add partitions for this season/type/year combo.
         $partitions = array(
@@ -177,8 +208,8 @@ for ($season = $startScript;
             $stats_year => 'string'
         );
         if (!$test) {
-            drop_partition(DATABASE, INPUT_TABLE, $partitions);
-            add_partition(DATABASE, INPUT_TABLE, $partitions);
+            drop_partition(DATABASE, RetrosheetTables::SIM_INPUT, $partitions);
+            add_partition(DATABASE, RetrosheetTables::SIM_INPUT, $partitions);
         }
         list($season_start, $season_end) = updateSeasonVars($season);
         $season_lineup = pullSeasonLineup($season);
@@ -188,40 +219,46 @@ for ($season = $startScript;
             $ds = ds_modify($ds, '+1 day')) {
 
             $sim_input_data = array();
-            $previous_batter_stats = array();
-            $previous_pitcher_stats = array();
-            $career_batter_stats = array();
-            $career_pitcher_stats = array();
+            $batting_stats['season'] =
+                pullSeasonData($season, $ds, $tables['batter']);
+            $pitching_stats['starter']['season'] =
+                pullSeasonData($season, $ds, $tables['starter']);
+            $pitching_stats['reliever']['season'] =
+                pullSeasonData($season, $ds, $tables['reliever']);
 
-            $batter_stats = pullSeasonData($season, $ds, $tables['batter']);
-            $pitcher_stats = pullSeasonData($season, $ds, $tables['pitcher']);
-            if ($stats_year == RetrosheetStatsYear::SEASON) {
-                $previous_batter_stats =
-                    pullSeasonData(
-                        $season,
-                        $ds,
-                        RetrosheetTables::HISTORICAL_PREVIOUS_BATTING
-                    );
-                $previous_pitcher_stats =
-                    pullSeasonData(
-                        $season,
-                        $ds,
-                        RetrosheetTables::HISTORICAL_PREVIOUS_PITCHING
-                    );
+            if ($stats_year === RetrosheetStatsYear::SEASON) {
+                $batting_stats['previous'] = pullSeasonData(
+                    $season,
+                    $ds,
+                    RetrosheetTables::HISTORICAL_PREVIOUS_BATTING
+                );
+                $pitching_stats['starter']['previous'] = pullSeasonData(
+                    $season,
+                    $ds,
+                    RetrosheetTables::HISTORICAL_PREVIOUS_PITCHING_STARTER
+                );
+                $pitching_stats['reliever']['previous'] = pullSeasonData(
+                    $season,
+                    $ds,
+                    RetrosheetTables::HISTORICAL_PREVIOUS_PITCHING_RELIEVER
+                );
             }
             if ($stats_year !== RetrosheetStatsYear::CAREER) {
-                $career_batter_stats =
-                    pullSeasonData(
-                        $season,
-                        $ds,
-                        RetrosheetTables::HISTORICAL_CAREER_BATTING
-                    );
-                $career_pitcher_stats =
-                    pullSeasonData(
-                        $season,
-                        $ds,
-                        RetrosheetTables::HISTORICAL_CAREER_PITCHING
-                    );
+                $batting_stats['career'] = pullSeasonData(
+                    $season,
+                    $ds,
+                    RetrosheetTables::HISTORICAL_CAREER_BATTING
+                );
+                $pitching_stats['starter']['career'] = pullSeasonData(
+                    $season,
+                    $ds,
+                    RetrosheetTables::HISTORICAL_CAREER_PITCHING_STARTER
+                );
+                $pitching_stats['reliever']['career'] = pullSeasonData(
+                    $season,
+                    $ds,
+                    RetrosheetTables::HISTORICAL_CAREER_PITCHING_RELIEVER
+                );
             }
 
             if (!isset($season_lineup[$ds])) {
@@ -246,38 +283,32 @@ for ($season = $startScript;
                         json_encode(
                             fillPitchers(
                                 $lineup['pitcher_h'],
-                                $pitcher_stats,
-                                $previous_pitcher_stats,
-                                $career_pitcher_stats,
-                                $stats_year
+                                $pitching_stats,
+                                $lineup['home'],
+                                RetrosheetSplits::HOME
                             )
                         ),
                     'pitching_a' =>
                         json_encode(
                             fillPitchers(
                                 $lineup['pitcher_a'],
-                                $pitcher_stats,
-                                $previous_pitcher_stats,
-                                $career_pitcher_stats,
-                                $stats_year
+                                $pitching_stats,
+                                $lineup['away'],
+                                RetrosheetSplits::AWAY
                             )
                         ),
                     'batting_h' =>
                         json_encode(
                             fillLineups(
                                 $lineup['lineup_h'],
-                                $batter_stats,
-                                $previous_batter_stats,
-                                $career_batter_stats
+                                $batting_stats
                             )
                         ),
                     'batting_a' =>
                         json_encode(
                             fillLineups(
                                 $lineup['lineup_a'],
-                                $batter_stats,
-                                $previous_batter_stats,
-                                $career_batter_stats
+                                $batting_stats
                             )
                         )
                 );
@@ -285,7 +316,7 @@ for ($season = $startScript;
         if (!$test && isset($sim_input_data)) {
             multi_insert(
                 DATABASE,
-                INPUT_TABLE,
+                RetrosheetTables::SIM_INPUT,
                 $sim_input_data,
                 $colheads
             );

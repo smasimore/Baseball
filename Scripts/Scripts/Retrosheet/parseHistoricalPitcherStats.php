@@ -95,9 +95,9 @@ $colheads = array(
 $starter_reliever =
     //RetrosheetConstants::RELIEVER;
     RetrosheetConstants::STARTER;
-$season_insert_table = "historical_season_$runType"."_$starter_reliever";
-$previous_insert_table = "historical_previous_$runType"."_$starter_reliever";
-$career_insert_table = "historical_career_$runType"."_$starter_reliever";
+$season_insert_table = "historical_season_$starter_reliever"."_$runType";
+$previous_insert_table = "historical_previous_$starter_reliever"."_$runType";
+$career_insert_table = "historical_career_$starter_reliever"."_$runType";
 $season_table = "retrosheet_historical_$runType";
 $career_table = "retrosheet_historical_$runType"."_career";
 
