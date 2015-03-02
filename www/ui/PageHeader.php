@@ -108,7 +108,7 @@ class PageHeader {
 
         echo
             "<div class='page_nav'>
-                <div class='page_header'>
+                <div class='page_header header_device'>
                     $header_text
                     $logout
                 </div>
@@ -126,6 +126,7 @@ class PageHeader {
         $nav = new UOList(
             array(
                 "<a class='nav_item' href='sim_perf.php'>Sim Perf</a>",
+                "<a class='nav_item' href='sim_debug.php'>Sim Debug</a>",
                 "<a class='nav_item' href='log.php'>Log</a>"
             ),
             'nav_list'

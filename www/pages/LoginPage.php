@@ -18,15 +18,22 @@ class LoginPage extends Page {
     public function display() {
         // TODO(smas) Refactor this into form and text objects.
         if ($this->loggedIn == false) {
+            if ($this->error) {
+                echo
+                    "<div class='error_box error_device'>
+                        Try again sucka!
+                    </div>";
+            }
             echo
                 "<form
                     id='form'
                     action='includes/process_login.php'
                     method='post'
                     name='login_form'>
-                    <div class='loginbox'>
+                    <div class='login_box'>
                         <p class='helvetica'>
                             <input
+                                class='login_field login_device'
                                 type='text'
                                 name='username'
                                 placeholder='Username'
@@ -34,6 +41,7 @@ class LoginPage extends Page {
                         </p>
                         <p class='helvetica'>
                             <input
+                                class='login_field login_device'
                                 type='password'
                                 name='password'
                                 id='password'
@@ -41,7 +49,7 @@ class LoginPage extends Page {
                             />
                         </p>
                         <input
-                            class='button'
+                            class='button login_field login_device'
                             type='button'
                             value='Login'
                             id='form_submit'
@@ -49,20 +57,6 @@ class LoginPage extends Page {
                         />
                     </div>
                 </form>";
-            if ($this->error) {
-                echo "<div class='errorbox small_w'>Try again sucka!</div>";
-            }
-        } else {
-            $list = new UOList(array(
-                "<a href='games.php?date=today'>Games</a>",
-                "<a href='analysis.php'>Analysis</a>",
-                "<a href='roi.php'>ROI</a>",
-                "<a href='understand.php'>Understand</a>",
-                "<a href='sim.php'>Sim</a>",
-                "<a href='log.php?name=sarah'>Sarah's Log</a>",
-                "<a href='log.php?name=dan'>Dan's Log</a>"
-            ));
-            $list->display();
         }
     }
 }
