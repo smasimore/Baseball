@@ -151,19 +151,19 @@ class RetrosheetDefaults extends Enum {
 class RetrosheetTables {
 
     const HISTORICAL_SEASON_BATTING = 'historical_season_batting';
-    const HISTORICAL_SEASON_PITCHING_STARTER =
+    const HISTORICAL_SEASON_STARTER_PITCHING =
         'historical_season_starter_pitching';
-    const HISTORICAL_SEASON_PITCHING_RELIEVER =
+    const HISTORICAL_SEASON_RELIEVER_PITCHING =
         'historical_season_reliever_pitching';
     const HISTORICAL_PREVIOUS_BATTING = 'historical_previous_batting';
-    const HISTORICAL_PREVIOUS_PITCHING_STARTER =
+    const HISTORICAL_PREVIOUS_STARTER_PITCHING =
         'historical_previous_starter_pitching';
-    const HISTORICAL_PREVIOUS_PITCHING_RELIEVER =
+    const HISTORICAL_PREVIOUS_RELIEVER_PITCHING =
         'historical_previous_reliever_pitching';
     const HISTORICAL_CAREER_BATTING = 'historical_career_batting';
-    const HISTORICAL_CAREER_PITCHING_STARTER =
+    const HISTORICAL_CAREER_STARTER_PITCHING =
         'historical_career_starter_pitching';
-    const HISTORICAL_CAREER_PITCHING_RELIEVER =
+    const HISTORICAL_CAREER_RELIEVER_PITCHING =
         'historical_career_reliever_pitching';
 
     const SIM_INPUT = 'sim_input';

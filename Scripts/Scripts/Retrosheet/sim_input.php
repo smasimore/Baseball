@@ -235,12 +235,12 @@ for ($season = $startScript;
                 $pitching_stats['starter']['previous'] = pullSeasonData(
                     $season,
                     $ds,
-                    RetrosheetTables::HISTORICAL_PREVIOUS_PITCHING_STARTER
+                    RetrosheetTables::HISTORICAL_PREVIOUS_STARTER_PITCHING
                 );
                 $pitching_stats['reliever']['previous'] = pullSeasonData(
                     $season,
                     $ds,
-                    RetrosheetTables::HISTORICAL_PREVIOUS_PITCHING_RELIEVER
+                    RetrosheetTables::HISTORICAL_PREVIOUS_RELIEVER_PITCHING
                 );
             }
             if ($stats_year !== RetrosheetStatsYear::CAREER) {
@@ -252,12 +252,12 @@ for ($season = $startScript;
                 $pitching_stats['starter']['career'] = pullSeasonData(
                     $season,
                     $ds,
-                    RetrosheetTables::HISTORICAL_CAREER_PITCHING_STARTER
+                    RetrosheetTables::HISTORICAL_CAREER_STARTER_PITCHING
                 );
                 $pitching_stats['reliever']['career'] = pullSeasonData(
                     $season,
                     $ds,
-                    RetrosheetTables::HISTORICAL_CAREER_PITCHING_RELIEVER
+                    RetrosheetTables::HISTORICAL_CAREER_RELIEVER_PITCHING
                 );
             }
 
