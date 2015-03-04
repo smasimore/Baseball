@@ -3,6 +3,7 @@ ini_set('memory_limit', '-1');
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
+// TODO(smas): Anything not UI-related should not be in here.
 include_once __DIR__ . '/../includes/db_connect.php';
 include_once __DIR__ . '/../includes/functions.php';
 include_once __DIR__ . '/../includes/ui_elements.php';
@@ -33,7 +34,7 @@ class Page {
         }
     }
 
-    protected function setHeader($header, $sub_header = null) {
+    final protected function setHeader($header, $sub_header = null) {
         $this->header = new PageHeader($this->loggedIn, $header, $sub_header);
         $this->display();
     }

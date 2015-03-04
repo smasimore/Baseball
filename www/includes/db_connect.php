@@ -1,3 +1,3 @@
 <?php
-include_once 'psl-config.php';   // As functions.php is not included
-$mysqli = new mysqli(HOST, USER, PASSWORD, 'secure_login');
+include_once '/Users/constants.php';
+$mysqli = new mysqli(HOST, SITE, DB_PASSWORD, 'secure_login');

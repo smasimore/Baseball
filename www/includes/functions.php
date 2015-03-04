@@ -1,5 +1,5 @@
 <?php
-include_once 'psl-config.php';
+include_once '/Users/constants.php';
 include_once __DIR__ . '/../../Scripts/Include/mysql.php';
  
 function sec_session_start() {

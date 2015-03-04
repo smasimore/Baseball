@@ -2,6 +2,7 @@
 include_once 'Page.php';
 include_once __DIR__ . '/../ui/UOList.php';
 include_once __DIR__ .'/../includes/Bases.php';
+include_once __DIR__ .'/../data/SimDebugDataType.php';
 
 class SimDebugPage extends Page {
 
@@ -25,18 +26,19 @@ class SimDebugPage extends Page {
     }
 
     private function fetchData() {
-        $events = get_data('baseball', 'sim_debug');
+        $dt = new SimDebugDataType();
+        $dt->gen();
 
-        // Set game data.
-        $data = reset($events);
-        $this->gameID = $data['gameid'];
-        $this->season = $data['season'];
-        $this->statsYear = $data['stats_year'];
-        $this->statsType = $data['stats_type'];
-        $this->weights = $data['weights'];
-        $this->analysisRuns = $data['analysis_runs'];
-        $this->simGameDate = $data['sim_game_date'];
-        $this->weightsMutator = $data['weights_mutator'];
+        $events = $dt->getEvents();
+
+        $this->gameID = $dt->getGameID();
+        $this->season = $dt->getSeason();
+        $this->statsYear = $dt->getStatsYear();
+        $this->statsType = $dt->getStatsType();
+        $this->weights = $dt->getWeights();
+        $this->analysisRuns = $dt->getAnalysisRuns();
+        $this->simGameDate = $dt->getSimGameDate();
+        $this->weightsMutator = $dt->getWeightsMutator();
 
         foreach ($events as $i => $event) {
             $score = json_decode($event['score'], true);
