@@ -79,16 +79,21 @@ function updateEvent($game_stat, $split) {
     $pitcher_type = $game_stat['pitcher_type'];
     $last_team = $game_stat['last_team'];
     $event_outs = $game_stat['event_outs_ct'];
-    $playerSeason[$player_id][$split][$pitcher_type]['last_team'] = $last_team;
-    $playerCareer[$player_id][$split][$pitcher_type]['last_team'] = $last_team;
+    // Only update last team/game on the 'Total' split
+    if ($split === RetrosheetSplits::TOTAL) {
+        $playerSeason[$player_id][$split][$pitcher_type]['last_team'] =
+            $last_team;
+        $playerCareer[$player_id][$split][$pitcher_type]['last_team'] =
+            $last_team;
+        $playerSeason[$player_id][$split][$pitcher_type]['last_game'] = $ds;
+        $playerCareer[$player_id][$split][$pitcher_type]['last_game'] = $ds;
+    }
     $is_new_game =
         isPitcherNewGame($player_id, $split, $pitcher_type, $game_id);
     if ($is_new_game) {
         $playerSeason[$player_id][$split][$pitcher_type]['total_games'] += 1;
         $playerCareer[$player_id][$split][$pitcher_type]['total_games'] += 1;
     }
-    $playerSeason[$player_id][$split][$pitcher_type]['last_game'] = $ds;
-    $playerCareer[$player_id][$split][$pitcher_type]['last_game'] = $ds;
     $playerSeason[$player_id][$split][$pitcher_type]['total_outs'] +=
         $event_outs;
     $playerCareer[$player_id][$split][$pitcher_type]['total_outs'] +=
