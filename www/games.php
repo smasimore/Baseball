@@ -1,8 +1,5 @@
 <?php
-include_once 'includes/db_connect.php';
-include_once 'includes/functions.php';
-include_once 'includes/ui_elements.php';
-include_once 'pages/GamesPage.php';
+include_once 'pages/GamesPage2.php';
 
 sec_session_start();
 ?>
@@ -18,13 +15,12 @@ sec_session_start();
         <script type="text/JavaScript" src="js/tables.js"></script>
     </head>
     <body class="page">
-        <?php if (login_check($mysqli) == true) {
-            if ($_GET['date'] != 'today' && isset($_GET['date'])) {
-                $date = preg_replace('/[^\d-]+/', '', $_GET['date']);
+        <?php
+            $date = idx($_GET, 'date', date('Y-m-d'));
+            if ($date) {
+                $date = preg_replace('/[^\d-]+/', '', $date);
             }
-            $page = new GamesPage($date);
-        } else { 
-            ui_error_logged_out();
-        } ?>
+            $page = new GamesPage2(login_check($mysqli), $date);
+        ?>
     </body>
 </html>

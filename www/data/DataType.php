@@ -28,7 +28,7 @@ abstract class DataType {
         return DATABASE;
     }
 
-    public function gen() {
+    final public function gen() {
         $columns = $this->getColumns()
             ? implode(', ', $this->getColumns())
             : '*';
@@ -53,15 +53,25 @@ abstract class DataType {
 
         $where_stmt = ' WHERE ';
         foreach ($params as $key => $value) {
-            if (gettype($value) === 'string') {
-                $value = "'$value'";
+            $operator = '=';
+            switch (gettype($value)) {
+                case 'string':
+                    $value = "'$value'";
+                    break;
+                case 'NULL':
+                    $value = 'null';
+                    $operator = 'is';
+                    break;
+                case 'boolean':
+                    $value = (int)$value;
+                    break;
             }
 
             // Last param.
             if ($key === key(array_slice($params, -1, 1, TRUE))) {
-                $where_stmt .= "$key = $value";
+                $where_stmt .= "$key $operator $value";
             } else {
-                $where_stmt .= "$key = $value AND ";
+                $where_stmt .= "$key $operator $value AND ";
             }
         }
 

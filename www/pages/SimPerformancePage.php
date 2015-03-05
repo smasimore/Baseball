@@ -6,8 +6,6 @@ class SimPerformancePage extends Page {
 
     const HIST_BUCKET_SIZE = 5;
 
-    private $loggedIn;
-
     // Params.
     private $groupSwitchPerc;
     private $firstSeason;
@@ -35,7 +33,6 @@ class SimPerformancePage extends Page {
 
     public function __construct($logged_in, $params) {
         parent::__construct($logged_in, true);
-        $this->loggedIn = $logged_in;
         $this->setHeader(' ');
 
         $this->groupSwitchPerc = idx($params, 'group_switch_perc', 50);
@@ -280,7 +277,7 @@ class SimPerformancePage extends Page {
 
 
     public function display() {
-        $errors_list = new UOList($this->errors, null, 'errorbox medium_w');
+        $errors_list = new UOList($this->errors, null, 'error_box medium_w');
         $errors_list->display();
 
         $sim_param_list = $this->getSimParamList();

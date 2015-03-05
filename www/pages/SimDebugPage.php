@@ -6,7 +6,6 @@ include_once __DIR__ .'/../data/SimDebugDataType.php';
 
 class SimDebugPage extends Page {
 
-    private $loggedIn;
     private $events = array();
     private $eventsHTML = array();
     private $season;
@@ -20,7 +19,6 @@ class SimDebugPage extends Page {
 
     public function __construct($logged_in) {
         parent::__construct($logged_in, true);
-        $this->loggedIn = $logged_in;
         $this->fetchData();
         $this->display();
     }
