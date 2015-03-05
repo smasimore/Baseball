@@ -30,16 +30,16 @@ class Page {
         }
 
         if (!$custom_header) {
-            $this->display();
+            $this->displayHeader();
         }
     }
 
     final protected function setHeader($header, $sub_header = null) {
         $this->header = new PageHeader($this->loggedIn, $header, $sub_header);
-        $this->display();
+        $this->displayHeader();
     }
 
-    private function display() {
+    private function displayHeader() {
         if (!$this->header) {
             $this->header = new PageHeader($this->loggedIn);
         }

@@ -57,7 +57,7 @@ class Table extends UIElement {
             foreach ($row as $cell) {
                 // Format cell if number of array
                 if (is_numeric($cell)) {
-                    $cell = round($cell, 2);
+                    $cell = round($cell, 3);
                 }
                 if (is_array($cell)) {
                     $cell = json_encode($cell);

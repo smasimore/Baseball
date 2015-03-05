@@ -1,8 +1,8 @@
 <?php
 
-include_once 'UOList.php';
+include_once __DIR__ . '/UIElement.php';
 
-class PageHeader {
+class PageHeader extends UIElement {
 
     private $loggedIn;
     private $title;
@@ -84,7 +84,7 @@ class PageHeader {
         return $this;
     } 
 
-    public function display() {
+    public function setHTML() {
         $html_title =
             "<p class='title'>
                 $this->title
@@ -106,7 +106,7 @@ class PageHeader {
             null;
         $nav = $this->getNav();
 
-        echo
+        $this->html =
             "<div class='page_nav'>
                 <div class='page_header header_device'>
                     $header_text
@@ -125,6 +125,7 @@ class PageHeader {
 
         $nav = new UOList(
             array(
+                "<a class='nav_item' href='games.php'>Games</a>",
                 "<a class='nav_item' href='sim_perf.php'>Sim Perf</a>",
                 "<a class='nav_item' href='sim_debug.php'>Sim Debug</a>",
                 "<a class='nav_item' href='log.php'>Log</a>"

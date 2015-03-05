@@ -26,7 +26,7 @@ class LogPage extends Page {
         }
 
         $html = "<div style='height:300px;width:100%;border:3px solid #000000;
-            font:16px/26px Georgia, Garamond, Serif;overflow:auto;'>";
+            font:16px/26px Georgia, Garamond, Serif; overflow:auto;'>";
 
         $filename = __DIR__ . '/../' . $this->name . '_errors.txt';
         $fp = fopen( $filename, "r+" ) or die("Couldn't open $filename");

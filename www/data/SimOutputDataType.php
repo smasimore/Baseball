@@ -12,7 +12,7 @@ final class SimOutputDataType extends DataType {
     }
 
     protected function getColumns() {
-        return array('gameid', 'home_win_pct', 'home', 'away');
+        return array('gameid', 'home', 'away', 'home_win_pct');
     }
 
     protected function getParams() {

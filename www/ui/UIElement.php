@@ -1,6 +1,7 @@
 <?php
 
 include_once __DIR__ . '/../includes/functions.php';
+include_once __DIR__ . '/UOList.php';
 
 abstract class UIElement {
 
