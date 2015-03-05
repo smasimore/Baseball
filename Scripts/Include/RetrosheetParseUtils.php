@@ -117,18 +117,43 @@ class RetrosheetParseUtils {
         return $final_insert;
     }
 
+    // Get relief pitchers given a team, season and retro_ds.
+    public static function getRelieversByTeam($team_id, $season, $ds) {
+        $day = substr($ds, -2);
+        $month = substr($ds, 0, 2);
+        $ds = "$season-$month-$day";
+        $table = RetrosheetTables::RETROSHEET_HISTORICAL_PITCHING;
+        $query =
+            "SELECT DISTINCT player_id
+            FROM $table
+            WHERE last_team = '$team_id'
+            AND pitcher_type = 'R'
+            AND split = 'Total'
+            AND season = $season
+            AND ds = '$ds'";
+        $pitchers = exe_sql(DATABASE, $query);
+        $pitcher_array = array();
+        foreach ($pitchers as $pitcher) {
+            $pitcher_id = $pitcher['player_id'];
+            $pitcher_array[$pitcher_id] = "'$pitcher_id'";
+        }
+        $pitcher_list = implode(',', $pitcher_array);
+        return $pitcher_list;
+    }
+
     public static function getDefaultVars(
         $default_step,
         $game_id,
         $sql_data,
-        $type,
-        $type_id
+        $pitcher_type = null
     ) {
-
+        $total_where = $pitcher_type
+            ? "PITCHER_TYPE = '$pitcher_type'"
+            : 'TRUE';
         switch ($default_step) {
             case RetrosheetDefaults::SEASON_TOTAL:
                 // DEFAULT 0: Season Total Split
-                $sql_data['where'] = 'TRUE';
+                $sql_data['where'] = $total_where;
                 break;
             case RetrosheetDefaults::PREVIOUS_ACTUAL:
                 // DEFAULT 1: Prev Year Actual Split
@@ -137,7 +162,7 @@ class RetrosheetParseUtils {
                 break;
             case RetrosheetDefaults::PREVIOUS_TOTAL:
                 // DEFAULT 2: Prev Year Total Split
-                $sql_data['where'] = 'TRUE';
+                $sql_data['where'] = $total_where;
                 break;
             case RetrosheetDefaults::CAREER_ACTUAL:
                 // DEFAULT 3: Career Actual Split
@@ -146,7 +171,7 @@ class RetrosheetParseUtils {
                 break;
             case RetrosheetDefaults::CAREER_TOTAL:
                 // DEFAULT 4: Career Total Split
-                $sql_data['where'] = 'TRUE';
+                $sql_data['where'] = $total_where;
                 break;
             case RetrosheetDefaults::JOE_AVERAGE_ACTUAL:
                 // DEFAULT 5: Actual Joe Average
@@ -155,7 +180,7 @@ class RetrosheetParseUtils {
                 $sql_data['player_where'] = 'TRUE';
                 break;
             case RetrosheetDefaults::JOE_AVERAGE_TOTAL:
-                $sql_data['where'] = 'TRUE';
+                $sql_data['where'] = $total_where;
                 break;
         }
         return $sql_data;

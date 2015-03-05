@@ -9,35 +9,23 @@ ini_set('mysqli.reconnect', '1');
 include('/Users/constants.php');
 include(HOME_PATH.'Scripts/Include/RetrosheetInclude.php');
 
-const MIN_AT_BATS = 18;
-const PITCHER = 'pitcher';
-const BATTER = 'batter';
-const BASIC = 'basic';
 const HOME = 'home';
 const AWAY = 'away';
 const HOME_ABBR = 'h';
 const AWAY_ABBR = 'a';
-const BAT_ID = 'BAT_ID';
-const PIT_ID = 'PIT_ID';
-const BAT_HAND_CD = 'BAT_HAND_CD';
-const PIT_HAND_CD = 'PIT_HAND_CD';
-const JOE_AVERAGE = 'joe_average';
-const SIM_INPUT_TABLE = 'sim_input';
-const GAMES_TABLE = 'games';
-const EVENTS_TABLE = 'events';
 const STAT_DIFFERENCE = .001;
 const SEASON_GAP_EXCEPTION = 'Player Has A Gap Of > 5 Years';
 
 $numTestDates = 5;
-$maxYear = 2013;
-$minYear = 1951;
+$maxYear = 2014;
+$minYear = 1990;
 $statsYears = array(
     RetrosheetStatsYear::CAREER,
     RetrosheetStatsYear::SEASON,
     RetrosheetStatsYear::PREVIOUS
 );
 $statsYear = null;
-$statsType = BASIC;
+$statsType = RetrosheetStatsType::BASIC;
 $silenceSuccess = true;
 $skipJoeAverage = false;
 $joeAverage = null;
@@ -51,7 +39,7 @@ $defaultMap = array(
         RetrosheetDefaults::JOE_AVERAGE_TOTAL
     ),
     RetrosheetStatsYear::PREVIOUS => array(
-        RetrosheetDefaults::PREV_YEAR_TOTAL,
+        RetrosheetDefaults::PREVIOUS_TOTAL,
         RetrosheetDefaults::CAREER_ACTUAL,
         RetrosheetDefaults::CAREER_TOTAL,
         RetrosheetDefaults::JOE_AVERAGE_ACTUAL,
@@ -63,7 +51,7 @@ function pullSimInput($test_days, $seasons) {
     global $statsYear, $statsType;
     echo "Pulling Sim Data... \n";
     $sql = "SELECT *
-        FROM " . SIM_INPUT_TABLE . "
+        FROM " . RetrosheetTables::SIM_INPUT . "
         WHERE season in($seasons)
         AND game_date in($test_days)
         AND stats_type = '$statsType'
@@ -95,7 +83,6 @@ function pullPlateAppearances(
         $where,
         $season_where
     );
-    echo $sql;
     $sql_hash = md5($sql);
     if (isset($cache['plateAppearances'][$sql_hash])) {
         $data = $cache['plateAppearances'][$sql_hash];
@@ -109,7 +96,7 @@ function pullPlateAppearances(
 function checkException($player, $type_id, $exception_where) {
     // 1) Does this player have a 5+ year gap in their history?
     $sql = "SELECT DISTINCT season
-        FROM " . EVENTS_TABLE .
+        FROM " . RetrosheetTables::EVENTS .
         " WHERE ($type_id = '$player'
         OR $exception_where)
         ORDER BY season";
@@ -141,7 +128,7 @@ function assertTrue(
     $message = "GAMEID: $game_id => $stat \t \t \t";
     if (!$truth) {
         $exception_where = $type_id ? 'FALSE' : "PIT_ID = '$player'";
-        $type_id = elvis($type_id, BAT_ID);
+        $type_id = elvis($type_id, RetrosheetEventColumns::BAT_ID);
         $exception = checkException($player, $type_id, $exception_where);
         if ($exception) {
             echo "Exception for $player: $exception \n";
@@ -161,7 +148,7 @@ function assertTrue(
 
 function pullLineup($game_id) {
     $sql = "SELECT *
-        FROM " . GAMES_TABLE .
+        FROM " . RetrosheetTables::GAMES .
         " WHERE game_id = '$game_id'";
     return reset(exe_sql(DATABASE, $sql));
 }
@@ -172,19 +159,19 @@ function validateBatter($lineup, $batter_id, $home_away, $lineup_pos) {
     $batter_index =
         strtoupper($home_away) . '_LINEUP' . $lineup_pos . '_BAT_ID';
     $actual_batter = $lineup[$batter_index];
-    // For Joe Average ensure that batter doesn't meet MIN_AT_BATS.
-    if ($batter_id == JOE_AVERAGE) {
+    // For Joe Average ensure that batter doesn't meet MIN_PLATE_APPEARANCE.
+    if ($batter_id == RetrosheetJoeAverage::JOE_AVERAGE) {
         $pas = pullPlateAppearances(
             "bat_id = '$actual_batter'",
             $game_id
         );
         assertTrue(
-            ($pas < MIN_AT_BATS),
+            ($pas < RetrosheetDefaults::MIN_PLATE_APPEARANCE),
             $game_id,
             $actual_batter,
             'batter_joe_average',
             "$actual_batter !== 'joe_average'",
-            BAT_ID
+            RetrosheetEventColumns::BAT_ID
         );
     } else {
         assertTrue(
@@ -199,20 +186,21 @@ function validateBatter($lineup, $batter_id, $home_away, $lineup_pos) {
 
 function validatePitcher($game_id, $pitcher_id, $home_away) {
     $pitcher =
-        ($home_away == HOME_ABBR) ? 'HOME_START_PIT_ID' : 'AWAY_START_PIT_ID';
+        ($home_away == HOME_ABBR)
+        ? RetrosheetEventColumns::HOME_START_PIT_ID : 'AWAY_START_PIT_ID';
     $sql = "SELECT $pitcher as pitcher
-        FROM " . GAMES_TABLE .
+        FROM " . RetrosheetTables::GAMES .
         " WHERE game_id = '$game_id'";
     $data = reset(exe_sql(DATABASE, $sql));
     $actual_pitcher = $data['pitcher'];
-    // For Joe Average ensure that pitcher doesn't meet MIN_AT_BATS.
-    if ($pitcher_id == JOE_AVERAGE) {
+    // For Joe Average ensure that pitcher doesn't meet MIN_PLATE_APPEARANCE.
+    if ($pitcher_id == RetrosheetJoeAverage::JOE_AVERAGE) {
         $pas = pullPlateAppearances(
             "pit_id = '$actual_pitcher'",
             $game_id
         );
         assertTrue(
-            ($pas < MIN_AT_BATS),
+            ($pas < RetrosheetDefaults::MIN_PLATE_APPEARANCE),
             $game_id,
             $actual_pitcher,
             'pitcher_joe_average',
@@ -229,29 +217,57 @@ function validatePitcher($game_id, $pitcher_id, $home_away) {
     }
 }
 
-function validateSplit($stats, $player_id, $split, $game_id, $type) {
+function validateSplit(
+    $stats,
+    $player_id,
+    $split,
+    $game_id,
+    $type
+) {
     global $statsYear, $skipJoeAverage, $cache, $defaultMap;
     $season = substr($game_id, 3, 4);
     $ds = substr($game_id, 7, 4);
     // Unlike batters, when a pitcher is home the bat_id = 0 since it
     // refers to the opposing batter.
     switch ($type) {
-        case PITCHER:
-            $type_id = PIT_ID;
+        case RetrosheetConstants::STARTER:
+            $type_id = RetrosheetEventColumns::PIT_ID;
             $player_where = "$type_id = '$player_id'";
+            $opp_hand = RetrosheetEventColumns::BAT_HAND_CD;
+            $bat_home_id = RetrosheetHomeAway::AWAY;
+            break;
+        case RetrosheetConstants::RELIEVER:
+            $type_id = RetrosheetEventColumns::PIT_ID;
+            // Note: $player_id is LAST_TEAM for the reliever pull.
+            $relievers =
+                RetrosheetParseUtils::getRelieversByTeam(
+                    $player_id,
+                    $season,
+                    $ds
+                );
+            $player_where = "$type_id in($relievers)";
             $opp_hand = BAT_HAND_CD;
             $bat_home_id = RetrosheetHomeAway::AWAY;
             break;
-        case BATTER:
-            $type_id = BAT_ID;
+        case RetrosheetConstants::BATTER:
+            $type_id = RetrosheetEventColumns::BAT_ID;
             $player_where = "$type_id = '$player_id'";
-            $opp_hand = PIT_HAND_CD;
+            $opp_hand = RetrosheetEventColumns::PIT_HAND_CD;
             $bat_home_id = RetrosheetHomeAway::HOME;
             break;
     }
     // Create a WHERE statement based on split
-    $where = RetrosheetParseUtils::getWhereBySplit($split, $bat_home_id, $opp_hand);
-    $is_joe_average = $player_id == JOE_AVERAGE;
+    $pitcher_type = null;
+    if ($type !== RetrosheetConstants::BATTER) {
+        $pitcher_type = $type === RetrosheetConstants::STARTER ? 'S' : 'R';
+    }
+    $where = RetrosheetParseUtils::getWhereBySplit(
+        $split,
+        $bat_home_id,
+        $opp_hand,
+        $pitcher_type
+    );
+    $is_joe_average = $player_id == RetrosheetJoeAverage::JOE_AVERAGE;
     $pas = idx($stats, 'plate_appearances', 0);
     $default_step = 0;
     $sql_data = array(
@@ -260,7 +276,8 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
         'where' => $where,
         'original_where' => $where
     );
-    $is_filled = ($pas >= MIN_AT_BATS && !$is_joe_average);
+    $is_filled =
+        ($pas >= RetrosheetDefaults::MIN_PLATE_APPEARANCE && !$is_joe_average);
     while (!$is_filled) {
         $default_routing = $statsYear == RetrosheetStatsYear::SEASON
             ? $default_step : $defaultMap[$statsYear][$default_step];
@@ -276,8 +293,7 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
             $default_routing,
             $game_id,
             $sql_data,
-            $type,
-            $type_id
+            $pitcher_type
         );
         $pas = pullPlateAppearances(
             $sql_data['player_where'],
@@ -285,7 +301,7 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
             $sql_data['stats_year'],
             $sql_data['where']
         );
-        $is_filled = $pas >= MIN_AT_BATS;
+        $is_filled = $pas >= RetrosheetDefaults::MIN_PLATE_APPEARANCE;
         $default_step += 1;
     }
     // Update SQL params if they've changed in defaulting.
@@ -302,7 +318,6 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
         $where,
         $season_where
     );
-    echo $sql."\n";
     // To save processing time don't re-run Joe Average queries
     if ($is_joe_average && isset($cache['joeAverages'][$sql])) {
         $data = $cache['joeAverages'][$sql];
@@ -315,8 +330,9 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
             $cache['joeAverages'][$sql] = $data;
         }
         foreach ($stats as $split_name => $stat) {
-            if ($split_name == 'plate_appearances'
-                || $split_name == 'player_id'
+            if ($split_name === 'plate_appearances'
+                || $split_name === 'player_id'
+                || $split_name === 'avg_innings'
             ) {
                 continue;
             }
@@ -342,12 +358,28 @@ function validateSplit($stats, $player_id, $split, $game_id, $type) {
 function validatePitching($game, $home_away) {
     global $splits;
     $game_id = $game['gameid'];
+    $home_away_full = $home_away === HOME_ABBR ? HOME : AWAY;
+    $team = $game[$home_away_full];
     $pitching_data = json_decode($game["pitching_$home_away"], true);
     $pitcher_id = $pitching_data['player_id'];
     validatePitcher($game_id, $pitcher_id, $home_away);
     foreach ($splits as $split) {
-        $stats = $pitching_data['pitcher_vs_batter'][$split];
-        validateSplit($stats, $pitcher_id, $split, $game_id, PITCHER);
+        $starter_stats = $pitching_data['pitcher_vs_batter'][$split];
+        validateSplit(
+            $starter_stats,
+            $pitcher_id,
+            $split,
+            $game_id,
+            RetrosheetConstants::STARTER
+        );
+        $reliever_stats = $pitching_data['reliever_vs_batter'][$split];
+        validateSplit(
+            $reliever_stats,
+            $team,
+            $split,
+            $game_id,
+            RetrosheetConstants::RELIEVER
+        );
     }
 }
 
@@ -360,11 +392,17 @@ function validateBatting($game, $home_away) {
         $player_data = $batting_data[$i];
         $batter_id = isset($player_data['Total']['player_id'])
             ? $player_data['Total']['player_id']
-            : JOE_AVERAGE;
+            : RetrosheetJoeAverage::JOE_AVERAGE;
         validateBatter($lineup, $batter_id, $home_away, $i);
         foreach ($splits as $split) {
             $stats = $player_data[$split];
-            validateSplit($stats, $batter_id, $split, $game_id, BATTER);
+            validateSplit(
+                $stats,
+                $batter_id,
+                $split,
+                $game_id,
+                RetrosheetConstants::BATTER
+            );
         }
     }
 }

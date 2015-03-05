@@ -76,7 +76,9 @@ foreach ($players as $player_id) {
 		switch ($i % 7) {
 			case VS_HAND:
 				$salary_index += 2;
-				$month_day = $dates[$ds_index];
+				// idx() is used for last few rows where there are no more dates.
+				// TODO(cert): Fix this so script ends after last date.
+				$month_day = idx($dates, $ds_index);
 				$ds = "2014-$month_day";
 				$ds_index += 1;
 				break;

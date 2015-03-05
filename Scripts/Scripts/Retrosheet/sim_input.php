@@ -219,6 +219,26 @@ for ($season = $startScript;
             $ds = ds_modify($ds, '+1 day')) {
 
             $sim_input_data = array();
+            // Creating empty arrays to avoid missing index errors and
+            // because the script was being weird before and not completely
+            // resetting for different stats_years.
+            $batting_stats = array(
+                'season' => array(),
+                'previous' => array(),
+                'career' => array()
+            );
+            $pitching_stats = array(
+                'starter' = array(
+                    'season' => array(),
+                    'previous' => array(),
+                    'career' => array()
+                ),
+                'reliever' => array(
+                    'season' => array(),
+                    'previous' => array(),
+                    'career' => array()
+                )
+            );
             $batting_stats['season'] =
                 pullSeasonData($season, $ds, $tables['batter']);
             $pitching_stats['starter']['season'] =

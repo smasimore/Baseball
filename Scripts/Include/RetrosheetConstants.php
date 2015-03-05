@@ -165,7 +165,13 @@ class RetrosheetTables {
         'historical_career_starter_pitching';
     const HISTORICAL_CAREER_RELIEVER_PITCHING =
         'historical_career_reliever_pitching';
+    const RETROSHEET_HISTORICAL_PITCHING =
+        'retrosheet_historical_pitching';
+    const RETROSHEET_HISTORICAL_PITCHING_CAREER =
+        'retrosheet_historical_pitching_career';
 
+    const GAMES = 'games';
+    const EVENTS = 'events';
     const SIM_INPUT = 'sim_input';
 }
 
@@ -186,8 +192,12 @@ class RetrosheetJoeAverage {
 
 class RetrosheetEventColumns {
 
+    const BAT_ID = 'BAT_ID';
+    const PIT_ID = 'PIT_ID';
     const BAT_HAND_CD = 'BAT_HAND_CD';
     const PIT_HAND_CD = 'PIT_HAND_CD';
+    const HOME_START_PIT_ID = 'HOME_START_PIT_ID';
+    const AWAY_START_PIT_ID = 'AWAY_START_PIT_ID';
 }
 
 ?>
