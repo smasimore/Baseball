@@ -130,7 +130,7 @@ function checkException($game_id, $player, $type_id, $exception_where) {
             $season,
             $retro_ds
         );
-        $relievers = implode(',', $relievers);
+        $relievers = $relievers ? array_keys($relievers) : null;
         foreach ($relievers as $reliever) {
             $exception =
                 checkPlayerYearGap($reliever, $type_id, $exception_where);
@@ -262,6 +262,7 @@ function validateSplit(
     $type
 ) {
     global $statsYear, $skipJoeAverage, $cache, $defaultMap;
+    $is_joe_average = $player_id == RetrosheetJoeAverage::JOE_AVERAGE;
     $season = substr($game_id, 3, 4);
     $ds = substr($game_id, 7, 4);
     // Unlike batters, when a pitcher is home the bat_id = 0 since it
@@ -282,9 +283,14 @@ function validateSplit(
                     $season,
                     $ds
                 );
-            $relievers = implode(',', $relievers);
-            $player_where = "$type_id in($relievers)";
-            $opp_hand = BAT_HAND_CD;
+            $relievers = $relievers ? implode(',', $relievers) : null;
+            if ($relievers) {
+                $player_where = "$type_id in($relievers)";
+            } else {
+                $player_where = 'TRUE';
+                $is_joe_average = 1;
+            }
+            $opp_hand = RetrosheetEventColumns::BAT_HAND_CD;
             $bat_home_id = RetrosheetHomeAway::AWAY;
             break;
         case RetrosheetConstants::BATTER:
@@ -305,7 +311,6 @@ function validateSplit(
         $opp_hand,
         $pitcher_type
     );
-    $is_joe_average = $player_id == RetrosheetJoeAverage::JOE_AVERAGE;
     $pas = idx($stats, 'plate_appearances', 0);
     $default_step = 0;
     $sql_data = array(
@@ -350,7 +355,6 @@ function validateSplit(
         $season,
         $ds
     );
-
     $sql = RetrosheetParseUtils::getEventsByBatterQuery(
         $player_where,
         $where,
