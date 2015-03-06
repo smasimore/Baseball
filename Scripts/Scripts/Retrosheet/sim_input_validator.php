@@ -123,7 +123,6 @@ function checkException($game_id, $player, $type_id, $exception_where) {
     // Is the exception for a (reliever) team? If so...
     // 1) Do any players have a 5+ year gap in their history?
     $teams = Teams::getAllRetrosheetTeamAbbrs($season);
-    $teams = array_keys($teams);
     if (in_array($player, $teams)) {
         $relievers = RetrosheetParseUtils::getRelieversByTeam(
             $player,

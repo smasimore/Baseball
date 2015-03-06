@@ -166,6 +166,7 @@ if ($confirm !== 'y') {
     exit();
 }
 
+$test = true;
 $colheads = array(
     'player_name',
     'player_id',
@@ -225,7 +226,14 @@ for ($season = 1950; $season < 2014; $season++) {
                 $player_career_daily_insert[] = $stat;
             }
         } 
-        multi_insert(DATABASE, $career_table, $player_career_daily_insert, $colheads);
+        if (!$test) {
+            multi_insert(
+                DATABASE,
+                $career_table,
+                $player_career_daily_insert,
+                $colheads
+            );
+        }
     }
     for ($ds = $season_start; $ds <= $season_end;
         $ds = ds_modify($ds, '+1 day')) {  
@@ -269,8 +277,20 @@ for ($season = 1950; $season < 2014; $season++) {
                 }
             }
         } 
-        multi_insert(DATABASE, $daily_table, $player_season_daily_insert, $colheads);
-        multi_insert(DATABASE, $career_table, $player_career_daily_insert, $colheads);
+        if (!$test) {
+            multi_insert(
+                DATABASE,
+                $daily_table,
+                $player_season_daily_insert,
+                $colheads
+            );
+            multi_insert(
+                DATABASE,
+                $career_table,
+                $player_career_daily_insert,
+                $colheads
+            );
+        }
     }
 }
 
