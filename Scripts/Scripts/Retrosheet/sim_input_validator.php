@@ -8,6 +8,7 @@ ini_set('mysqli.connect_timeout', -1);
 ini_set('mysqli.reconnect', '1');
 include('/Users/constants.php');
 include(HOME_PATH.'Scripts/Include/RetrosheetInclude.php');
+include(HOME_PATH.'Scripts/Include/Teams.php');
 
 const HOME = 'home';
 const AWAY = 'away';
@@ -93,8 +94,7 @@ function pullPlateAppearances(
     return idx($data, 'plate_appearances', 0);
 }
 
-function checkException($player, $type_id, $exception_where) {
-    // 1) Does this player have a 5+ year gap in their history?
+function checkPlayerYearGap($player, $type_id, $exception_where) {
     $sql = "SELECT DISTINCT season
         FROM " . RetrosheetTables::EVENTS .
         " WHERE ($type_id = '$player'
@@ -114,6 +114,38 @@ function checkException($player, $type_id, $exception_where) {
             return SEASON_GAP_EXCEPTION;
         }
     }
+    return null;
+}
+
+function checkException($game_id, $player, $type_id, $exception_where) {
+    $season = substr($game_id, 3, 4);
+    $retro_ds = substr($game_id, 7, 4);
+    // Is the exception for a (reliever) team? If so...
+    // 1) Do any players have a 5+ year gap in their history?
+    $teams = Teams::getAllRetrosheetTeamAbbrs($season);
+    $teams = array_keys($teams);
+    if (in_array($player, $teams)) {
+        $relievers = RetrosheetParseUtils::getRelieversByTeam(
+            $player,
+            $season,
+            $retro_ds
+        );
+        $relievers = implode(',', $relievers);
+        foreach ($relievers as $reliever) {
+            $exception =
+                checkPlayerYearGap($reliever, $type_id, $exception_where);
+            // If there is an exception return that, otherwise keep checking.
+            if ($exception) {
+                return $exception;
+            }
+        }
+        return null;
+    } else {
+        // If exception is for a player...
+        // 2) Does this player have a 5+ year gap in their history?
+        $exception = checkPlayerYearGap($player, $type_id, $exception_where);
+        return $exception;
+    }
 }
 
 function assertTrue(
@@ -129,7 +161,12 @@ function assertTrue(
     if (!$truth) {
         $exception_where = $type_id ? 'FALSE' : "PIT_ID = '$player'";
         $type_id = elvis($type_id, RetrosheetEventColumns::BAT_ID);
-        $exception = checkException($player, $type_id, $exception_where);
+        $exception = checkException(
+            $game_id,
+            $player,
+            $type_id,
+            $exception_where
+        );
         if ($exception) {
             echo "Exception for $player: $exception \n";
         } else {
@@ -245,6 +282,7 @@ function validateSplit(
                     $season,
                     $ds
                 );
+            $relievers = implode(',', $relievers);
             $player_where = "$type_id in($relievers)";
             $opp_hand = BAT_HAND_CD;
             $bat_home_id = RetrosheetHomeAway::AWAY;

@@ -165,6 +165,14 @@ class Teams {
         }
         return $abbr;
     }
+
+    public static function getAllRetrosheetTeamAbbrs($season) {
+        $sql = "SELECT DISTINCT TEAM_ID
+            FROM teams
+            WHERE year_id = $season";
+        $data = exe_sql(DATABASE, $sql);
+        return array_keys(index_by($data, 'TEAM_ID'));
+    }
 }
 
 ?>

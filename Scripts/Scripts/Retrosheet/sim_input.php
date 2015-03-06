@@ -228,7 +228,7 @@ for ($season = $startScript;
                 'career' => array()
             );
             $pitching_stats = array(
-                'starter' = array(
+                'starter' => array(
                     'season' => array(),
                     'previous' => array(),
                     'career' => array()

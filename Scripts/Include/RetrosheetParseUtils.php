@@ -117,8 +117,13 @@ class RetrosheetParseUtils {
         return $final_insert;
     }
 
-    // Get relief pitchers given a team, season and retro_ds.
-    public static function getRelieversByTeam($team_id, $season, $ds) {
+    // Get relief pitchers given a team, season and retro_ds. Returns a
+    // comma separated list unless $output_array is set to true.
+    public static function getRelieversByTeam(
+        $team_id,
+        $season,
+        $ds
+    ) {
         $day = substr($ds, -2);
         $month = substr($ds, 0, 2);
         $ds = "$season-$month-$day";
@@ -137,8 +142,7 @@ class RetrosheetParseUtils {
             $pitcher_id = $pitcher['player_id'];
             $pitcher_array[$pitcher_id] = "'$pitcher_id'";
         }
-        $pitcher_list = implode(',', $pitcher_array);
-        return $pitcher_list;
+        return $pitcher_array;
     }
 
     public static function getDefaultVars(
