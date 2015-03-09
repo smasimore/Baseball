@@ -40,7 +40,4 @@ final class SimOutputDataType extends DataType {
         return $this;
     }
 
-    public function getData() {
-        return $this->data;
-    }
 }

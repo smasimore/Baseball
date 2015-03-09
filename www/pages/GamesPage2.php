@@ -8,6 +8,7 @@ class GamesPage2 extends Page {
 
     private $date = array();
     private $simData;
+    private $gameDT;
 
     public function __construct($logged_in, $date) {
         parent::__construct($logged_in, true);
@@ -20,11 +21,14 @@ class GamesPage2 extends Page {
     private function fetchData() {
         // TODO(smas): remove this. Overriding for testing.
         $this->date = '1955-04-13';
-        //$this->date = '1990-04-09'; // For sim_input data.
+        $date = '1990-04-09'; // For sim_input data.
 
         $sim_output_dt = new SimOutputDataType();
         $sim_output_dt->setGameDate($this->date)->gen();
         $this->simData = $sim_output_dt->getData();
+
+        $this->gameDT = new SimInputDataType();
+        $this->gameDT->setGameDate($date)->gen();
     }
 
     private function display() {

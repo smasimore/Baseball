@@ -39,9 +39,15 @@ abstract class DataType {
 
         $this->data = exe_sql($this->getDatabase(), $query);
 
+        $this->formatData();
+
         if (!$this->data) {
             throw new Exception("No data available for $query");
         }
+    }
+
+    public function getData() {
+        return $this->data;
     }
 
     private function formatParamsForWhereStmt() {
@@ -77,5 +83,7 @@ abstract class DataType {
 
         return $where_stmt;
     }
+
+    protected function formatData() {}
 
 }
