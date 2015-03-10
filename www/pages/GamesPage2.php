@@ -13,8 +13,16 @@ class GamesPage2 extends Page {
     public function __construct($logged_in, $date) {
         parent::__construct($logged_in, true);
         $this->date = $date;
-        $this->fetchData();
         $this->setHeader($this->date);
+
+        try {
+            $this->fetchData();
+        } catch (Exception $e) {
+            $this->errors[] = $e->getMessage();
+            $this->displayErrors();
+            return;
+        }
+
         $this->display();
     }
 

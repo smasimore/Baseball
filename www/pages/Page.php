@@ -17,6 +17,8 @@ include_once __DIR__ .'/../ui/Colors.php';
 
 class Page {
 
+    protected $errors = array();
+
     private $loggedIn;
     private $header = null;
 
@@ -47,6 +49,11 @@ class Page {
 
         // Needed to prevent overlap of elements below header.
         echo "<div style='clear:both;'></div>";
+    }
+
+    final protected function displayErrors() {
+        $errors_list = new UOList($this->errors, null, 'error_box medium_w');
+        $errors_list->display();
     }
 }
 

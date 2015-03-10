@@ -29,8 +29,6 @@ class SimPerformancePage extends Page {
     private $histActual = array();
     private $histNumGames = array();
 
-    private $errors = array();
-
     public function __construct($logged_in, $params) {
         parent::__construct($logged_in, true);
         $this->setHeader(' ');
@@ -277,8 +275,7 @@ class SimPerformancePage extends Page {
 
 
     public function display() {
-        $errors_list = new UOList($this->errors, null, 'error_box medium_w');
-        $errors_list->display();
+        $this->displayErrors();
 
         $sim_param_list = $this->getSimParamList();
         $group_param_list_a = $this->getGroupParamList(0);
