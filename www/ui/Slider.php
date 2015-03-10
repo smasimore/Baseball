@@ -35,7 +35,7 @@ class Slider extends UIElement {
         $html =
             "<div>
                 <table class='slider_table'><tr><td class='slider_title_cell'>
-                    <font class='helvetica' size='2' color='#2B96E8'>
+                    <font class='input_title' color='#2B96E8'>
                         $this->title
                     </font>
                 </td><td>
@@ -55,7 +55,7 @@ class Slider extends UIElement {
                         type='text'
                         id=$this->name"."_display
                         value=$this->value
-                        style='width:20px'
+                        class='slider_box'
                         onchange='
                             if (this.value < $this->min) {
                                 this.value = $this->min;

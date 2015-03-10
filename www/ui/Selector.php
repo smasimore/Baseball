@@ -31,12 +31,13 @@ class Selector extends UIElement {
             "<div class='$this->class selector'>
                 <table class='table'><tr>
                     <td class='leftcell'>
-                        <font class='helvetica' size='2' color='#2B96E8'>
+                        <font class='input_title' color='#2B96E8'>
                             $this->title
                         </font>
                     </td>
                     <td class='rightcell'>
                         <select
+                            class='selector_input'
                             name=$this->name
                             value=$this->value>";
         
