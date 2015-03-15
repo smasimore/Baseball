@@ -197,45 +197,11 @@ function esc_url($url) {
     }
 }
 
-function s_log($data) {
+function www_log($name, $data) {
+    $file = __DIR__ . '/../'.$name.'_errors.txt';
     $type = "\n" . gettype($data);
     file_put_contents(
-        __DIR__ . '/../sarah_errors.txt',
-        "$type - ", 
-        FILE_APPEND
-    );
-
-    // if class print name of class
-    if (is_object($data)) {
-        $data = get_class($data);
-    }
-    if (!is_array($data)) {
-        file_put_contents(
-            __DIR__ . '/../sarah_errors.txt',
-            "$data", 
-            FILE_APPEND
-        );
-        return;
-    }
-    $data = json_encode($data);
-    file_put_contents(
-        __DIR__ . '/../sarah_errors.txt',
-        "$data", 
-        FILE_APPEND
-    );
-}
-
-function smart_format($num, $digits = 2) {
-    if (gettype($num) == 'double') {
-        $num = number_format($num, $digits);
-    }
-    return $num;
-}
-
-function d_log($data) {
-    $type = "\n" . gettype($data);
-    file_put_contents(
-        '../dan_errors.txt',
+        $file,
         "$type - ",
         FILE_APPEND
     );
@@ -245,8 +211,10 @@ function d_log($data) {
         $data = get_class($data);
     }
     if (!is_array($data)) {
+        // Remove new lines.
+        $data = trim(preg_replace('/\s\s+/', ' ', $data));
         file_put_contents(
-            "../dan_errors.txt",
+            $file,
             "$data",
             FILE_APPEND
         );
@@ -254,10 +222,25 @@ function d_log($data) {
     }
     $data = json_encode($data);
     file_put_contents(
-        "../dan_errors.txt",
+        $file,
         "$data",
         FILE_APPEND
     );
+}
+
+function s_log($data) {
+    www_log('sarah', $data);
+}
+
+function d_log($data) {
+    www_log('dan', $data);
+}
+
+function smart_format($num, $digits = 2) {
+    if (gettype($num) == 'double') {
+        $num = number_format($num, $digits);
+    }
+    return $num;
 }
 
 function logout() {

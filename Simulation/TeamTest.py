@@ -9,9 +9,7 @@ class TeamTestCase(unittest.TestCase):
         u'avg_innings': 5,
         u'name': u'Dan Certner',
         u'reliever_era': 5.5,
-        u'reliever_bucket': u'100',
         u'handedness': u'R',
-        u'bucket': u'75',
         u'era': 3.5,
         u'reliever_vs_batter':{},
         u'pitcher_vs_batter': {}
@@ -99,8 +97,7 @@ class TeamTestCase(unittest.TestCase):
 
 
     __WEIGHTS = {
-        'b_pitcher_era_band': 0.1,
-        'b_home_away': 0.2,
+        'b_home_away': 0.3,
         'b_pitcher_handedness': 0.2,
         'b_stadium': 0.1,
         'b_situation': 0.1,
@@ -131,12 +128,12 @@ class TeamTestCase(unittest.TestCase):
             unstacked,
             {
                 u'pct_fly_out': 0.11000000000000001,
-                u'pct_triple': 0.09000000000000001,
+                u'pct_triple': 0.09,
                 u'pct_ground_out': 0.1,
                 u'pct_walk': 0.1,
                 u'pct_double': 0.1,
                 u'pct_strikeout': 0.1,
-                u'pct_single': 0.3,
+                u'pct_single': 0.30000000000000004,
                 u'pct_home_run': 0.1
             }
         )

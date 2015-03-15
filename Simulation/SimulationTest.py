@@ -21,7 +21,7 @@ class SimulationTestCase(unittest.TestCase):
         batting_a,
         pitching_h,
         pitching_a,
-        use_reliever = True):
+        use_reliever = False):
         input_data = [{
             'gameid' : 'test',
             'game_date' : 'test',
@@ -59,13 +59,11 @@ class SimulationTestCase(unittest.TestCase):
         p_h = {
             'handedness' : 'L',
             'avg_innings' : 99,
-            'bucket' : '25',
             'pitcher_vs_batter' : {}
         }
         p_a = {
             'handedness' : 'R',
             'avg_innings' : 99,
-            'bucket' : '50',
             'pitcher_vs_batter' : {}
         }
 
@@ -119,13 +117,11 @@ class SimulationTestCase(unittest.TestCase):
         p_h = {
             'handedness' : 'L',
             'avg_innings' : 99,
-            'bucket' : '25',
             'pitcher_vs_batter' : {}
         }
         p_a = {
             'handedness' : 'R',
             'avg_innings' : 99,
-            'bucket' : '50',
             'pitcher_vs_batter' : {}
         }
 
@@ -159,13 +155,11 @@ class SimulationTestCase(unittest.TestCase):
         p_h = {
             'handedness' : 'L',
             'avg_innings' : 99,
-            'bucket' : '25',
             'pitcher_vs_batter' : {}
         }
         p_a = {
             'handedness' : 'R',
             'avg_innings' : 99,
-            'bucket' : '50',
             'pitcher_vs_batter' : {}
         }
 
@@ -180,46 +174,6 @@ class SimulationTestCase(unittest.TestCase):
                 1.0,
                 3,
                 'b_pitcher_handedness_100',
-            ]
-        )
-
-    def test_b_pitcher_era_band(self):
-        weights = {StatCategories.B_PITCHER_ERA_BAND : 1.0}
-        b_h = {
-            PerformanceBand.B50 : {
-                u'pct_strikeout': 0.5,
-                u'pct_single': 0.5,
-            }
-        }
-        b_a = {
-            PerformanceBand.B25 : {
-                u'pct_strikeout': 1,
-            }
-        }
-        p_h = {
-            'handedness' : 'L',
-            'avg_innings' : 99,
-            'bucket' : '25',
-            'pitcher_vs_batter' : {}
-        }
-        p_a = {
-            'handedness' : 'R',
-            'avg_innings' : 99,
-            'bucket' : '50',
-            'pitcher_vs_batter' : {}
-        }
-
-        results = self.__runGame(weights, b_h, b_a, p_h, p_a)
-        self.assertEqual(
-            [
-                results['home_win_pct'],
-                results['weights_i'],
-                results['weights'],
-            ],
-            [
-                1.0,
-                2,
-                'b_pitcher_era_band_100',
             ]
         )
 
@@ -267,13 +221,11 @@ class SimulationTestCase(unittest.TestCase):
         p_h = {
             'handedness' : 'L',
             'avg_innings' : 99,
-            'bucket' : '25',
             'pitcher_vs_batter' : {}
         }
         p_a = {
             'handedness' : 'R',
             'avg_innings' : 99,
-            'bucket' : '50',
             'pitcher_vs_batter' : {}
         }
 
@@ -307,13 +259,11 @@ class SimulationTestCase(unittest.TestCase):
         p_h = {
             'handedness' : 'L',
             'avg_innings' : 99,
-            'bucket' : '25',
             'pitcher_vs_batter' : {}
         }
         p_a = {
             'handedness' : 'R',
             'avg_innings' : 99,
-            'bucket' : '50',
             'pitcher_vs_batter' : {}
         }
 
@@ -338,7 +288,6 @@ class SimulationTestCase(unittest.TestCase):
         p_h = {
             'handedness' : 'L',
             'avg_innings' : 99,
-            'bucket' : '25',
             'pitcher_vs_batter' : {
                 Total.TOTAL : {
                     u'pct_strikeout': 1,
@@ -348,7 +297,6 @@ class SimulationTestCase(unittest.TestCase):
         p_a = {
             'handedness' : 'R',
             'avg_innings' : 99,
-            'bucket' : '50',
             'pitcher_vs_batter' : {
                 Total.TOTAL : {
                     u'pct_strikeout': 0.5,
@@ -378,7 +326,6 @@ class SimulationTestCase(unittest.TestCase):
         p_h = {
             'handedness' : 'L',
             'avg_innings' : 99,
-            'bucket' : '25',
             'pitcher_vs_batter' : {
                 HomeAway.HOME : {
                     u'pct_strikeout': 1,
@@ -388,7 +335,6 @@ class SimulationTestCase(unittest.TestCase):
         p_a = {
             'handedness' : 'R',
             'avg_innings' : 99,
-            'bucket' : '50',
             'pitcher_vs_batter' : {
                 HomeAway.AWAY : {
                     u'pct_strikeout': 0.5,
@@ -418,7 +364,6 @@ class SimulationTestCase(unittest.TestCase):
         p_h = {
             'handedness' : 'L',
             'avg_innings' : 99,
-            'bucket' : '25',
             'pitcher_vs_batter' : {
                 Handedness.RIGHT : {
                     u'pct_strikeout': 1,
@@ -428,7 +373,6 @@ class SimulationTestCase(unittest.TestCase):
         p_a = {
             'handedness' : 'R',
             'avg_innings' : 99,
-            'bucket' : '50',
             'pitcher_vs_batter' : {
                 Handedness.LEFT : {
                     u'pct_strikeout': 0.5,
@@ -458,7 +402,6 @@ class SimulationTestCase(unittest.TestCase):
         p_h = {
             'handedness' : 'L',
             'avg_innings' : 99,
-            'bucket' : '25',
             'pitcher_vs_batter' : {
                 Handedness.RIGHT : {
                     u'pct_strikeout': 1,
@@ -468,7 +411,6 @@ class SimulationTestCase(unittest.TestCase):
         p_a = {
             'handedness' : 'R',
             'avg_innings' : 99,
-            'bucket' : '50',
             'pitcher_vs_batter' : {
                 Handedness.LEFT : {
                     u'pct_strikeout': 0.5,
@@ -491,46 +433,6 @@ class SimulationTestCase(unittest.TestCase):
             ]
         )
 
-    def test_p_batter_avg_band(self):
-        weights = {StatCategories.P_BATTER_AVG_BAND : 1.0}
-        b_h = {'bucket' : '100'}
-        b_a = {'bucket' : '50'}
-        p_h = {
-            'handedness' : 'L',
-            'avg_innings' : 99,
-            'bucket' : '25',
-            'pitcher_vs_batter' : {
-                PerformanceBand.B50 : {
-                    u'pct_strikeout': 1,
-                }
-            }
-        }
-        p_a = {
-            'handedness' : 'R',
-            'avg_innings' : 99,
-            'bucket' : '50',
-            'pitcher_vs_batter' : {
-                PerformanceBand.B100 : {
-                    u'pct_strikeout': 0.5,
-                    u'pct_single': 0.5,
-                }
-            }
-        }
-
-        results = self.__runGame(weights, b_h, b_a, p_h, p_a)
-        self.assertEqual(
-            [
-                results['home_win_pct'],
-                results['weights_i'],
-                results['weights'],
-            ],
-            [
-                1.0,
-                10,
-                'p_batter_avg_band_100',
-            ]
-        )
-
     def test_p_situation(self):
         weights = {StatCategories.P_SITUATION : 1.0}
         b_h = {}
@@ -538,7 +440,6 @@ class SimulationTestCase(unittest.TestCase):
         p_h = {
             'handedness' : 'L',
             'avg_innings' : 99,
-            'bucket' : '25',
             'pitcher_vs_batter' : {
                 Situations.NONE_ON : {
                     u'pct_strikeout': 1.0,
@@ -560,7 +461,6 @@ class SimulationTestCase(unittest.TestCase):
         p_a = {
             'handedness' : 'R',
             'avg_innings' : 99,
-            'bucket' : '50',
             'pitcher_vs_batter' : {
                 Situations.NONE_ON : {
                     u'pct_strikeout': 0.5,
@@ -606,7 +506,6 @@ class SimulationTestCase(unittest.TestCase):
         p_h = {
             'handedness' : 'L',
             'avg_innings' : 99,
-            'bucket' : '25',
             'pitcher_vs_batter' : {
                 Stadium.STADIUM : {
                     u'pct_strikeout': 1,
@@ -616,7 +515,6 @@ class SimulationTestCase(unittest.TestCase):
         p_a = {
             'handedness' : 'R',
             'avg_innings' : 99,
-            'bucket' : '50',
             'pitcher_vs_batter' : {
                 Stadium.STADIUM : {
                     u'pct_strikeout': 0.5,
@@ -646,7 +544,6 @@ class SimulationTestCase(unittest.TestCase):
         p_h = {
             'handedness' : 'L',
             'avg_innings' : 99,
-            'bucket' : '25',
             'pitcher_vs_batter' : {
                 Total.TOTAL : {
                     u'pct_strikeout': 1,
@@ -656,7 +553,6 @@ class SimulationTestCase(unittest.TestCase):
         p_a = {
             'handedness' : 'R',
             'avg_innings' : 5,
-            'bucket' : '50',
             'pitcher_vs_batter' : {
                 Total.TOTAL : {
                     u'pct_strikeout': 1,
@@ -670,7 +566,7 @@ class SimulationTestCase(unittest.TestCase):
             }
         }
 
-        results = self.__runGame(weights, b_h, b_a, p_h, p_a)
+        results = self.__runGame(weights, b_h, b_a, p_h, p_a, True)
         self.assertEqual(
             [
                 results['home_win_pct'],
@@ -691,7 +587,6 @@ class SimulationTestCase(unittest.TestCase):
         p_h = {
             'handedness' : 'L',
             'avg_innings' : 99,
-            'bucket' : '25',
             'pitcher_vs_batter' : {
                 Total.TOTAL : {
                     u'pct_strikeout': 1,
@@ -701,7 +596,6 @@ class SimulationTestCase(unittest.TestCase):
         p_a = {
             'handedness' : 'R',
             'avg_innings' : 5,
-            'bucket' : '50',
             'pitcher_vs_batter' : {
                 Total.TOTAL : {
                     u'pct_single': 0.5,
@@ -711,7 +605,7 @@ class SimulationTestCase(unittest.TestCase):
             'reliever_vs_batter' : {}
         }
 
-        results = self.__runGame(weights, b_h, b_a, p_h, p_a)
+        results = self.__runGame(weights, b_h, b_a, p_h, p_a, True)
         self.assertEqual(
             [
                 results['home_win_pct'],
@@ -732,7 +626,6 @@ class SimulationTestCase(unittest.TestCase):
         p_h = {
             'handedness' : 'L',
             'avg_innings' : 0,
-            'bucket' : '25',
             'pitcher_vs_batter' : {
                 Total.TOTAL : {
                     u'pct_strikeout': 1,
@@ -748,7 +641,6 @@ class SimulationTestCase(unittest.TestCase):
         p_a = {
             'handedness' : 'R',
             'avg_innings' : 0,
-            'bucket' : '50',
             'pitcher_vs_batter' : {
                 Total.TOTAL : {
                     u'pct_single': 0.5,

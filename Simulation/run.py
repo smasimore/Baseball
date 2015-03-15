@@ -3,7 +3,7 @@ from Game import StatCategories
 
 weights = {
     StatCategories.B_TOTAL : .5,
-    StatCategories.P_TOTAL : .5,
+    StatCategories.B_HOME_AWAY : .5,
 }
 
 season_start = 2007

@@ -9,7 +9,6 @@ class Simulation:
 
     ########## PRIVATE CONSTANTS ##########
     __TABLE = 'sim_input'
-    __TEST_TABLE = 'sim_input_test'
     __DEBUG_TABLE = 'sim_debug'
     __WEIGHTS_INDEX_TABLE = 'sim_weights_index'
     __AT_BAT_IMPACT_TABLE = 'at_bat_impact'
@@ -71,13 +70,11 @@ class Simulation:
         StatCategories.B_TOTAL,
         StatCategories.B_HOME_AWAY,
         StatCategories.B_PITCHER_HANDEDNESS,
-        StatCategories.B_PITCHER_ERA_BAND,
         StatCategories.B_SITUATION,
         StatCategories.B_STADIUM,
         StatCategories.P_TOTAL,
         StatCategories.P_HOME_AWAY,
         StatCategories.P_BATTER_HANDEDNESS,
-        StatCategories.P_BATTER_AVG_BAND,
         StatCategories.P_SITUATION,
         StatCategories.P_STADIUM,
     ]
@@ -97,7 +94,7 @@ class Simulation:
     TEST_RUN = False
     WEIGHTS_MUTATOR = None
     DEBUG_LOGGING = True
-    USE_RELIEVER = True
+    USE_RELIEVER = False
 
     # Input data split into 30 rand groups.
     SAMPLE_MIN = 0
@@ -117,6 +114,7 @@ class Simulation:
         self.validateSeasonYear(season)
         self.validateInList(stats_type, self.STATS_TYPES)
         self.validateInList(stats_year, self.STATS_YEAR)
+        self.validateUseReliever(self.USE_RELIEVER)
 
         self.weights = weights
         self.season = season
@@ -127,9 +125,7 @@ class Simulation:
         # Extra, defaulted params. To change call setters.
         self.analysisRuns = self.ANALYSIS_RUNS
         self.gameDate = self.GAME_DATE
-        self.testRun = self.TEST_RUN # Use this in conjunction with setting a
-                                     # file with test data. Sim will use test
-                                     # data rather than MySQL.
+        self.testRun = self.TEST_RUN
         self.weightsMutator = self.WEIGHTS_MUTATOR
         self.debugLoggingOn = self.DEBUG_LOGGING
         self.useReliever = self.USE_RELIEVER
@@ -138,12 +134,10 @@ class Simulation:
 
     def run(self):
         self.__addWeightsIndex()
-        if not self.testRun:
-            self.__fetchInputData()
-        else:
-            if not self.inputData:
-                raise ValueError('When testing, inputData must be set manually')
 
+        # For unit tests, inputData is set using setInputData.
+        if not self.inputData:
+            self.__fetchInputData()
 
         self.__fetchAtBatImpactData()
         self.__runGames()
@@ -260,8 +254,6 @@ class Simulation:
                 )
 
     def __fetchInputData(self):
-        table= self.__TABLE if self.testRun is False else self.__TEST_TABLE
-
         # Used in export step to clear output table of previous data.
         self.queryWhere = (
             """ WHERE
@@ -287,7 +279,7 @@ class Simulation:
         query = (
             """SELECT *
             FROM %s %s"""
-            % (table, self.queryWhere)
+            % (self.__TABLE, self.queryWhere)
         )
 
         results = MySQL.read(query)
@@ -450,6 +442,9 @@ class Simulation:
         self.validateDate(date)
         self.gameDate = date
 
+    # Use this in conjunction with setInputData for unit tests. If inputData
+    # is not set, sim_input data will be used. Either way, sim_output will not
+    # be written to if testRun is true.
     def setTestRun(self, test_run):
         self.validateTestRun(test_run)
         self.testRun = test_run
@@ -576,3 +571,15 @@ class Simulation:
             raise ValueError(
                 'Use Reliever param needs to be a bool. %s is not.'
                 % use_reliever)
+
+        if use_reliever == True:
+            for weight_name, weight in self.weights.iteritems():
+                if weight_name[:2] == 'p_':
+                    return
+
+            # If no pitcher stat categories are used, return above will never
+            # be hit and error will be thrown.
+            raise ValueError(
+                'Use Reliever param cannot be true if no pitcher stat' +
+                'categories are included in weights.'
+            )

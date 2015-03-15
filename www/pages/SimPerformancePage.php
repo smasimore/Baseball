@@ -33,9 +33,9 @@ class SimPerformancePage extends Page {
         parent::__construct($logged_in, true);
         $this->setHeader(' ');
 
-        $this->groupSwitchPerc = idx($params, 'group_switch_perc', 50);
-        $this->firstSeason = idx($params, 'first_season', 1951);
-        $this->lastSeason = idx($params, 'last_season', 1951);
+        $this->groupSwitchPerc = idx($params, 'group_switch_perc', 100);
+        $this->firstSeason = idx($params, 'first_season', 1990);
+        $this->lastSeason = idx($params, 'last_season', 2013);
         $this->firstBucket = idx($params, 'first_bucket', 0);
         $this->lastBucket = idx($params, 'last_bucket', 9);
 
@@ -171,7 +171,7 @@ class SimPerformancePage extends Page {
                 (100 / $this->groupSwitchPerc))] :
                 $dates[0];
             foreach ($games_by_date_1 as $date => $games_1) {
-                if ($date < $switch_date) {
+                if ($date <= $switch_date) {
                     // Use idx because of Incomplete Data error. Error will
                     // display and data shouldn't be trusted.
                     foreach (idx($games_by_date_0, $date, array()) as $game) {

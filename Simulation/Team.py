@@ -140,16 +140,6 @@ class Team:
                 StatCategories.B_PITCHER_HANDEDNESS
             ]
 
-        if StatCategories.B_PITCHER_ERA_BAND in self.categoryWeights.keys():
-            if self.__getPitcherType(inning) == Pitcher.STARTER:
-                stat_weights[self.__getPitcherERABand()] = (
-                    self.categoryWeights[StatCategories.B_PITCHER_ERA_BAND]
-                )
-            else:
-                stat_weights[self.__getRelieverERABand()] = (
-                    self.categoryWeights[StatCategories.B_PITCHER_ERA_BAND]
-                )
-
         if StatCategories.B_SITUATION in self.categoryWeights.keys():
             stat_weights[self.__getSituation(bases, outs)] = (
                 self.categoryWeights[StatCategories.B_SITUATION]
@@ -173,11 +163,6 @@ class Team:
         if StatCategories.P_BATTER_HANDEDNESS in self.categoryWeights.keys():
             stat_weights['p_' + self.__getBatterHandedness(batter)] = (
                 self.categoryWeights[StatCategories.P_BATTER_HANDEDNESS]
-            )
-
-        if StatCategories.P_BATTER_AVG_BAND in self.categoryWeights.keys():
-            stat_weights['p_' + self.__getBatterAVGBand(batter)] = (
-                self.categoryWeights[StatCategories.P_BATTER_AVG_BAND]
             )
 
         if StatCategories.P_SITUATION in self.categoryWeights.keys():
@@ -212,18 +197,6 @@ class Team:
                 Handedness.LEFT
                 if batter_h == 'L' else Handedness.RIGHT
             )
-
-    def __getPitcherERABand(self):
-        return self.pitchingData['bucket']
-
-    def __getRelieverERABand(self):
-        # If null, default to starter band.
-        return (self.pitchingData['reliever_bucket'] if
-            self.pitchingData['reliever_bucket'] else
-            self.__getPitcherERABand())
-
-    def __getBatterAVGBand(self, batter):
-        return self.battingData[str(batter)]['bucket']
 
     def __getSituation(self, bases, outs):
         # Check if 2 outs and batter in scoring position.

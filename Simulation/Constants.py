@@ -3,14 +3,12 @@ class StatCategories:
     B_TOTAL = 'b_total'
     B_HOME_AWAY = 'b_home_away'
     B_PITCHER_HANDEDNESS = 'b_pitcher_handedness'
-    B_PITCHER_ERA_BAND = 'b_pitcher_era_band'
     B_SITUATION = 'b_situation'
     B_STADIUM = 'b_stadium'
 
     P_TOTAL = 'p_total'
     P_HOME_AWAY = 'p_home_away'
     P_BATTER_HANDEDNESS = 'p_batter_handedness'
-    P_BATTER_AVG_BAND = 'p_batter_avg_band'
     P_SITUATION = 'p_situation'
     P_STADIUM = 'p_stadium'
 
