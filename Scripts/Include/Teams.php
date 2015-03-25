@@ -74,9 +74,19 @@ class Teams {
         'Houston' => 'HOU'
     );
 
+    public static function getTeamNameFromAbbr($abbr) {
+        $city = self::getTeamCityFromAbbreviation($abbr);
+        return self::$teamNames[$city];
+    }
+
     public static function getTeamCityFromName($team) {
         $team = self::getStandardTeamName($team);
         return array_search($team, self::$teamNames);
+    }
+
+    public static function getTeamCityFromAbbreviation($abbr) {
+        $abbr = self::getStandardTeamAbbr($abbr);
+        return array_search($abbr, self::$teamAbbreviations);
     }
 
     public static function getTeamAbbreviationFromCity($team) {
@@ -148,9 +158,11 @@ class Teams {
                 $abbr = 'NYY';
                 break;
             case 'TBA':
+            case 'TAM':
                 $abbr = 'TB';
                 break;
             case 'KCA':
+            case 'KAN':
                 $abbr = 'KC';
                 break;
             case 'CHA':
