@@ -89,11 +89,9 @@ class Teams {
         return array_search($abbr, self::$teamAbbreviations);
     }
 
-    public static function getTeamAbbreviationFromCity($team) {
-        if (!array_key_exists($team, self::$teamAbbreviations)) {
-            throw new Exception('Invalid Team City');
-        }
-        return self::$teamAbbreviations[$team];
+    public static function getTeamAbbreviationFromCity($city) {
+        $city = self::getStandardTeamCity($city);
+        return self::$teamAbbreviations[$city];
     }
 
     public static function getTeamAbbreviationFromName($team) {
@@ -103,7 +101,15 @@ class Teams {
 
     public static function getStandardTeamName($team) {
         $team = ucwords($team);
+        // ABC order based on $team name.
         switch ($team) {
+            case 'Anaheim':
+                $team = 'Angels';
+                break;
+            case 'Blue Jays':
+            case 'Jays':
+                $team = 'Blue-Jays';
+                break;
             case 'Red Sox':
             case 'Boston Red Sox':
                 $team = 'Red-Sox';
@@ -112,18 +118,40 @@ class Teams {
             case 'Chicago White Sox':
                 $team = 'White-Sox';
                 break;
-            case 'Blue Jays':
-            case 'Jays':
-                $team = 'Blue-Jays';
-                break;
-            case 'Anaheim':
-                $team = 'Angels';
-                break;
         }
         if (!in_array($team, self::$teamNames)) {
             throw new Exception('Invalid Team Name');
         }
         return $team;
+    }
+
+    public static function getStandardTeamCity($city) {
+        $city = ucwords($city);
+        // ABC order based on $city.
+        switch ($city) {
+            case "Chi. Cubs":
+                $city = "Chicago Cubs";
+                break;
+            case "Chi. White Sox":
+                $city = "Chicago Sox";
+                break;
+            case "L.A. Angels":
+                $city = "LA Angels";
+                break;
+            case "L.A. Dodgers":
+                $city = "LA Dodgers";
+                break;
+            case "N.Y. Mets":
+                $city = "NY Mets";
+                break;
+            case "N.Y. Yankees":
+                $city = "NY Yankees";
+                break;
+        }
+        if (!array_key_exists($city, self::$teamNames)) {
+            throw new Exception('Invalid Team City');
+        }
+        return $city;
     }
 
     public static function getStandardTeamAbbr($abbr) {

@@ -34,32 +34,17 @@ function get_html($url) {
     return($result);
 }
 
-function correctTeam($team) {
-	switch ($team) {
-		case "N.Y. Mets":
-			$team = "NY Mets";
-			break;
-		case "Chi. White Sox":
-			$team = "Chicago Sox";
-			break;
-		case "L.A. Angels":
-			$team = "LA Angels";
-			break;
-		case "Chi. Cubs":
-			$team = "Chicago Cubs";
-			break;
-		case "L.A. Dodgers":
-			$team = "LA Dodgers";
-			break;
-		case "N.Y. Yankees":
-			$team = "NY Yankees";
-			break;
-	}
-	return $team;
-}
-
-$countup = 0;
-$player_stats = array();
+$colheads = array(
+	'game_time',
+	'game_date',
+	'away',
+	'home',
+	'home_odds',
+	'away_odds',
+	'season',
+	'ts',
+	'ds'
+);
 
 date_default_timezone_set('America/Los_Angeles');
 $date = date('Y-m-d');
@@ -79,6 +64,7 @@ $times = parse_array_clean($source_code, $times_start, $times_end);
 $stats_start = "cellBorderL1\" width=\"56\" nowrap style=\"text-align:center";
 $stats_end = "</td>";
 $stats = parse_array_clean($source_code, $stats_start, $stats_end);
+
 $clean_stats = array();
 foreach ($stats as $i => $stat) {
 	$stat = str_replace("+", "", $stat);
@@ -93,11 +79,12 @@ foreach ($stats as $i => $stat) {
 	}
 }
 
-$final_array = array(array('time','date','away','home','home_odds','away_odds','ts'));
+$final_array = array();
 foreach ($times as $i => $time) {
 	$game_date = split_string($time, "  ", BEFORE, EXCL);
 	$month = split_string($game_date, "/", BEFORE, EXCL);
 	$day = split_string($game_date, "/", AFTER, EXCL);
+	$year = date('Y');
 	$game_time = split_string($time, "  ", AFTER, EXCL);
 	$game_ampm = format_for_mysql(substr($game_time, -2));
     $game_hour = trim(split_string($game_time, ":", BEFORE, EXCL));
@@ -109,40 +96,47 @@ foreach ($times as $i => $time) {
         $game_hour = "0$game_hour";
     }
     $game_time = "$game_hour:$game_minute:00";
-	$final_array[$i+1]['time'] = $game_time;
-	$final_array[$i+1]['date'] = '2014-'.$month.'-'.$day;
-	$final_array[$i+1]['ts'] = $ts;
+	$final_array[$i]['game_time'] = $game_time;
+	$final_array[$i]['game_date'] = "$year-$month-$day";
+	$final_array[$i]['season'] = $year;
+	$final_array[$i]['ts'] = $ts;
+	$final_array[$i]['ds'] = date('Y-m-d');
 }
 
-// Since teams are grouped in twos only put Home team
-// into the array
-$team_num = 1;
+// Since teams are grouped in twos only put Home team into the array.
+$team_num = 0;
 $odd = 0;
-foreach ($teams as $team) {
-	$team = correctTeam($team);
-	$team = Teams::$teamAbbreviations[$team];
-	if ($odd === 0) {
+foreach ($teams as $i => $team) {
+	$team = Teams::getTeamAbbreviationFromCity($team);
+	if ($i % 2 === 0) {
 		$final_array[$team_num]['away'] = $team;
-		$odd = 1;
 	} else {
 		$final_array[$team_num]['home'] = $team;
-		$odd = 0;
 		$team_num++;
 	}
 }
 
-// Starting with 1 since that what corresponds to current consensus odds
-$j = 8;
-for ($i = 1; $i < count($final_array); $i++) {
+/* Key
+ * 0 = Opening Odds
+ * 1 = Consensus Odds
+ * 8 = Sportsbook.ag Odds
+ * TODO(cert): Switch to Sportsbook.ag once season starts.
+ * TODO(cert): Change these to constants during rewrite.
+ */
+$j = 1;
+for ($i = 0; $i < count($final_array); $i++) {
 	$final_array[$i]['home_odds'] = $clean_stats[$j]['home'];
 	$final_array[$i]['away_odds'] = $clean_stats[$j]['away'];
+	// There are 9 different columns so skip over odds accordingly.
 	$j += 9;
 }
 
-// Run function to export the data to mysql, backup a copy to csv,
-// and leave a record in table_status -> in sweetfunctions.php
-$table_name = 'live_odds_2014';
-export_and_save($database, $table_name, $final_array);
-//print_r($final_array);
+$insert_table = 'live_odds';
+multi_insert(
+	DATABASE,
+	$insert_table,
+	$final_array,
+	$colheads
+);
 
 ?>
