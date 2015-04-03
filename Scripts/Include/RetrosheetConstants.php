@@ -170,8 +170,9 @@ class RetrosheetTables {
     const RETROSHEET_HISTORICAL_PITCHING_CAREER =
         'retrosheet_historical_pitching_career';
 
-    const GAMES = 'games';
     const EVENTS = 'events';
+    const ID = 'id';
+    const GAMES = 'games';
     const SIM_INPUT = 'sim_input';
 }
 
