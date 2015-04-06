@@ -387,6 +387,7 @@ function multi_insert($database, $table, $data_array, $colheads) {
 					echo "ERROR - INSERT FAILED: Make sure to include values 
 						for all columns specified in colheads. Missing column
 						$col \n";
+					print_r($row);
 					// Adding send e-mail for now to make sure I'm on top of these
 					// as I migrate to the new insert
 					send_email(
@@ -396,17 +397,17 @@ function multi_insert($database, $table, $data_array, $colheads) {
 					);
 					exit("Failed Insert into $table");
 				}
-			} else if (mb_detect_encoding($insert_data) !== 'ASCII') {
+			} else if (mb_detect_encoding($row[$col]) !== 'ASCII') {
                 $insert_row[] = 'null';
                 echo "You are trying to insert a foreign character into $table
                     check LIB_mysql_updatedbyus to turn off this error message.
                     Currently this is defaulted to NULL \n";
-                send_email(
-                    "Foreign Character in $table", 
-                    "You can turn this off in LIB_mysql.php",
-                    "d"
-                );
-            } else {
+                //send_email(
+                //    "Foreign Character in $table", 
+                //    "You can turn this off in LIB_mysql.php",
+                //    "d"
+                //);
+			} else {
 				$insert_data = $row[$col];
                 $insert_row[] = "'$insert_data'";
             }

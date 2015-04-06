@@ -157,8 +157,19 @@ class Teams {
     public static function getStandardTeamAbbr($abbr) {
         $abbr = strtoupper($abbr);
         switch ($abbr) {
-            case 'WAS':
-                $abbr = 'WSH';
+            case 'CHN':
+                $abbr = 'CHC';
+                break;
+            case 'CHA':
+            case 'CWS':
+                $abbr = 'CHW';
+                break;
+            case 'KCA':
+            case 'KAN':
+                $abbr = 'KC';
+                break;
+            case 'ANA':
+                $abbr = 'LAA';
                 break;
             case 'LA':
             case 'LAN':
@@ -170,34 +181,24 @@ class Teams {
             case 'NYN':
                 $abbr = 'NYM';
                 break;
-            case 'SLN':
-                $abbr = 'STL';
-                break;
-            case 'CHN':
-                $abbr = 'CHC';
-                break;
-            case 'SFN':
-                $abbr = 'SF';
+            case 'NYA':
+                $abbr = 'NYY';
                 break;
             case 'SDN':
                 $abbr = 'SD';
                 break;
-            case 'NYA':
-                $abbr = 'NYY';
+            case 'SFN':
+                $abbr = 'SF';
+                break;
+            case 'SLN':
+                $abbr = 'STL';
                 break;
             case 'TBA':
             case 'TAM':
                 $abbr = 'TB';
                 break;
-            case 'KCA':
-            case 'KAN':
-                $abbr = 'KC';
-                break;
-            case 'CHA':
-                $abbr = 'CHW';
-                break;
-            case 'ANA':
-                $abbr = 'LAA';
+            case 'WAS':
+                $abbr = 'WSH';
                 break;
         }
         if (!in_array($abbr, self::$teamAbbreviations)) {

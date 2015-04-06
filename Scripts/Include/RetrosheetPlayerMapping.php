@@ -128,6 +128,10 @@ class RetrosheetPlayerMapping {
         29221 => 'carpd01'
     );
     private static $ambiguousNameTeamMap = array(
+        'chriscarpenter' => array(
+            'STL' => 'carpc002',
+            'BOS' => 'carpc003'
+        ),
         'davidcarpenter' => array(
             'ATL' => 'carpd001',
             'LAA' => 'carpd002'
@@ -135,6 +139,26 @@ class RetrosheetPlayerMapping {
         'joseramirez' => array(
             'NYY' => 'ramij01',
             'CLE' => 'ramij003'
+        ),
+        'michaeltaylor' => array(
+            'CHW' => 'taylm001',
+            'WSH' => 'taylm01'
+        ),
+        'luisjimenez' => array(
+            'LAA' => 'jimel002',
+            'SEA' => 'jimel001'
+        ),
+        'henryrodriguez' => array(
+            'MIA' => 'rodrh002',
+            'CIN' => 'rodrh003'
+        ),
+        'juanperez' => array(
+            'SF' => 'perej002',
+            'TOR' => 'perej001'
+        ),
+        'chrisyoung' => array(
+            'SEA' => 'younc003',
+            'OAK' => 'younc004'
         )
     );
 
@@ -157,6 +181,68 @@ class RetrosheetPlayerMapping {
         return self::$playerIDMap;
     }
 
+    public static function getIDFromESPNID($espn_id) {
+       $sql = sprintf(
+            "SELECT *
+            FROM %s
+            WHERE espn_id = %d",
+            'players',
+            $espn_id
+        );
+        $data = exe_sql(DATABASE, $sql);
+        return reset($data)['player_id'];
+    }
+
+    public static function getIDFromFirstLast($first, $last, $team = null) {
+        $first = format_for_mysql($first);
+        $last = format_for_mysql($last);
+        $sql = sprintf(
+            "SELECT *
+            FROM %s
+            WHERE first = '%s'
+            AND last = '%s'",
+            'players',
+            $first,
+            $last
+        );
+        $data = exe_sql(DATABASE, $sql);
+        $num_results = count($data);
+        if ($num_results === 0) {
+            // Check to make sure it's not a first-name discrepency.
+            $sql = sprintf(
+                "SELECT *
+                FROM %s
+                WHERE last = '%s'",
+                'players',
+                $last
+            );
+            $last_name_data = exe_sql(DATABASE, $sql);
+            if (count($last_name_data) !== 0) {
+                if (idx(self::$ambiguousNameTeamMap, $first.$last) !== null) {
+                    return self::$ambiguousNameTeamMap[$first.$last][$team];
+                }
+                /*
+                throw new Exception(sprintf(
+                    'Add first name correction for player %s %s',
+                    $first,
+                    $last
+                ));
+                 */
+            }
+            return null;
+        } else if ($num_results === 1) {
+            return reset($data)['player_id'];
+        } else if (idx(self::$ambiguousNameTeamMap, $first.$last) !== null) {
+            return self::$ambiguousNameTeamMap[$first.$last][$team];
+        }
+        // Otherwise throw an exception.
+        throw new Exception(sprintf(
+            'Multiple players named %s %s please add team mapping',
+            $first,
+            $last
+        ));
+    }
+
     private static function writeToPlayersTable() {
         $colheads = array(
             'player_id',
@@ -168,7 +254,7 @@ class RetrosheetPlayerMapping {
         );
         $sql_insert = array();
         foreach (self::$playerIDMap as $player) {
-            if (!$player['is_new']) {
+            if (idx($player, 'is_new') !== 1) {
                 continue;
             }
             $player['player_id'] = $player['retrosheet_id'];
@@ -206,17 +292,15 @@ class RetrosheetPlayerMapping {
         } else {
             $data = index_by($data, 'first', 'last');
             $ambiguous_names = self::getAmbiguousNames();
-            foreach ($data as $player_index => $player) {
+            foreach (self::$playerIDMap as $player_index => $player) {
+                // TODO(cert) something here with ambiguous names
                 if (array_key_exists($player_index, $ambiguous_names)) {
-                    if (!$known_exception) {
-                        throw new Exception(sprintf(
-                            'No team mapping for %s who has an ambiguous name',
-                            $player_index
-                        ));
-                    }
-                    continue;
+                    // do something here
                 }
-                self::$playerIDMap[$player_index]['player_id'] = $player['player_id'];
+                if (array_key_exists($player_index, $data)) {
+                    self::$playerIDMap[$player_index]['player_id'] =
+                        $data[$player_index]['player_id'];
+                }
             }
         }
     }
@@ -230,7 +314,6 @@ class RetrosheetPlayerMapping {
         foreach ($players as $player) {
             if ($player['retrosheet_include'] === 1) {
                 $espn_id = $player['espn_id'];
-                print_r($player);
                 throw new Exception("Should not make new id for $espn_id");
             }
             $id_start = substr($player['last'], 0, 4) . substr($player['first'], 0 , 1);

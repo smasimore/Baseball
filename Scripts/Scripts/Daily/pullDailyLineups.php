@@ -7,8 +7,8 @@ ini_set('mysqli.connect_timeout', '-1');
 ini_set('default_socket_timeout', '-1');
 ini_set('max_execution_time', '-1');
 include('/Users/constants.php'); 
-include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
-$database = 'baseball';
+include(HOME_PATH.'Scripts/Include/Teams.php');
+include(HOME_PATH.'Scripts/Include/RetrosheetPlayerMapping.php');
 
 // Change this to backfill - backfill must be true
 if ($argv[1]) {
@@ -17,8 +17,22 @@ if ($argv[1]) {
 }
 
 //global variables
-$header = array('time_est', 'away', 'home', 'away_pitcher_first', 'away_pitcher_last', 'home_pitcher_first', 'home_pitcher_last', 'away_handedness', 'home_handedness', 'away_lineup', 'home_lineup');
-$data = array($header);
+$colheads = array(
+	'time_est' => '!',
+	'away' => '!',
+	'home' => '!',
+	'away_pitcher_name' => '!',
+	'away_pitcher_id' => '?',
+	'home_pitcher_name' => '!',
+	'home_pitcher_id' => '?',
+	'away_handedness' => '!',
+	'home_handedness' => '!',
+	'away_lineup' => '!',
+	'home_lineup' => '!',
+	'season' => '!',
+	'ds' => '!'
+);
+$data = array();
 
 date_default_timezone_set('America/Los_Angeles');
 if (!$backfill) {
@@ -31,22 +45,15 @@ if (!$backfill) {
 	$ds = date("Y-m-d", strtotime($ds_override));
 }
 
-function pullLineups() {
-	global $month;
-	global $day;
-	global $ds;
-
+function pullLineups($month, $day, $ds) {
     //array to be filled
 	$lineups = array();
 	$game_info = array();
 
-	$day = $month . '/' .  $day . '/2014';
-	$target = 'http://baseballpress.com/lineup.php?d=' . $day;
+	$year = substr($ds, 0, 4);
+	$day = "$month/$day/$year";
+	$target = "http://baseballpress.com/lineup.php?d=$day";
 	$source_code = scrape($target);
-
-	// DELETE ME
-	//$source_code = file_get_contents(HOME_PATH.'Scripts/Scripts/2014/lineup_331_source_2.txt');
-	//$source_code = trim(preg_replace('/\s+/', ' ', $source_code));
 
 	$games_start = '<div class="game-';
 	$games_end = '<a class="mobile-lineup"';
@@ -79,10 +86,7 @@ function pullLineups() {
 		$home_team = null;
 		$away_team = null;
 		foreach ($teams as $j => $team) {
-			$team = strtolower($team);
-			if ($team == 'cws') {
-				$team = 'chw';
-			}
+			$team = Teams::getStandardTeamAbbr($team);
 			$teams[$j] = $team;
 		}
         $away_team = $teams[0];
@@ -103,37 +107,38 @@ function pullLineups() {
 			$name = explode(' ', $stg_pieces[0]);
 
 			$handedness = substr($stg_pieces[1], 0, 1);
-			$pitchers[$j]['handedness'] = $handedness;
-			$pitchers[$j]['first_name'] = str_replace("'", '', $name[0]);
-			$pitchers[$j]['last_name'] = str_replace("'", '', $name[1]);
+			$pitchers[$j]['handedness'] = format_for_mysql($handedness);
+			$pitchers[$j]['first_name'] = format_for_mysql(str_replace("'", '', $name[0]));
+			$pitchers[$j]['last_name'] = format_for_mysql(str_replace("'", '', $name[1]));
+			$pitchers[$j]['player_name'] =
+				$pitchers[$j]['first_name'] . '_' . $pitchers[$j]['last_name'];
 		}
+
 		$away_pitcher_data = $pitchers[0];
 		$home_pitcher_data = $pitchers[1];
 
-		if (!$away_pitcher_data) {
-			$away_pitcher_data = array(
-				'first_name' => 'Unknown',
-				'last_name' => 'Unknown',
-				'handedness' => 'Unknown',
-			);
-		}
-        if (!$home_pitcher_data) {
-            $home_pitcher_data = array(
-                'first_name' => 'Unknown',
-                'last_name' => 'Unknown',
-                'handedness' => 'Unknown',
-			);
-		}
-		$game_info[$day][$game_num]['time_est'] = $time;
-		$game_info[$day][$game_num]['away'] = $away_team;
-		$game_info[$day][$game_num]['home'] = $home_team;
-		$game_info[$day][$game_num]['away_pitcher_first'] = format_for_mysql($away_pitcher_data['first_name']);
-		$game_info[$day][$game_num]['away_pitcher_last'] = format_for_mysql($away_pitcher_data['last_name']);
-		$game_info[$day][$game_num]['home_pitcher_first'] = format_for_mysql($home_pitcher_data['first_name']);
-		$game_info[$day][$game_num]['home_pitcher_last'] = format_for_mysql($home_pitcher_data['last_name']);
-		$game_info[$day][$game_num]['away_handedness'] = format_for_mysql($away_pitcher_data['handedness']);
-		$game_info[$day][$game_num]['home_handedness'] = format_for_mysql($home_pitcher_data['handedness']);
+		$away_pitcher_data['player_id'] = RetrosheetPlayerMapping::getIDFromFirstLast(
+			$away_pitcher_data['first_name'],
+			$away_pitcher_data['last_name'],
+			$away_team
+		);
+		$home_pitcher_data['player_id'] = RetrosheetPlayerMapping::getIDFromFirstLast(
+			$home_pitcher_data['first_name'],
+			$home_pitcher_data['last_name'],	
+			$home_team
+		);
 
+		$game_info[$day][$game_num] = array(
+			'time_est' => $time,
+			'away' => $away_team,
+			'home' => $home_team,
+			'away_pitcher_name' => $away_pitcher_data['player_name'],
+			'away_pitcher_id' => $away_pitcher_data['player_id'],
+			'home_pitcher_name' => $home_pitcher_data['player_name'],
+			'home_pitcher_id' => $home_pitcher_data['player_id'],
+			'away_handedness' => $away_pitcher_data['handedness'],
+			'home_handedness' => $home_pitcher_data['handedness']
+		);
 
 		$lineups_start = '"players">';
 		$lineups_end = '</div></div>';
@@ -179,13 +184,23 @@ function pullLineups() {
 				$l_num = "L$num";
 				if ($j == 0) {
 					$lineups[$day][$time][$away_team][$l_num] = array(
-						'name' => format_for_mysql($batter),
+						'player_name' => format_for_mysql($batter),
+						'player_id' => RetrosheetPlayerMapping::getIDFromFirstLast(
+							split_string(format_for_mysql($batter), '_', BEFORE, EXCL),
+							split_string(format_for_mysql($batter), '_', AFTER, EXCL),
+							$away_team
+						),
 						'position' => format_for_mysql($position),
 						'batting' => format_for_mysql($batting),
 					);
 				} else {
 					$lineups[$day][$time][$home_team][$l_num] = array(
-                        'name' => format_for_mysql($batter),
+						'player_id' => RetrosheetPlayerMapping::getIDFromFirstLast(
+							split_string(format_for_mysql($batter), '_', BEFORE, EXCL),
+							split_string(format_for_mysql($batter), '_', AFTER, EXCL),
+							$home_team
+						),
+                        'player_name' => format_for_mysql($batter),
                         'position' => format_for_mysql($position),
                         'batting' => format_for_mysql($batting),
 					);
@@ -197,8 +212,12 @@ function pullLineups() {
     return array($lineups, $game_info);
 }
 
-list($lineups, $game_info) = pullLineups();
+list($lineups, $game_info) = pullLineups($month, $day, $ds);
 foreach ($game_info as $date => $games) {
+		$month = formatDayMonth(split_string($date, '/', BEFORE, EXCL));
+		$day = formatDayMonth(return_between($date, '/', '/', EXCL));
+		$year = substr($date, -4);
+		$ds = "$year-$month-$day";
 		$subject = null;
 		foreach ($games as $i => $game) {
 			$time = $game['time_est'];
@@ -206,13 +225,14 @@ foreach ($game_info as $date => $games) {
 				$game['home_pitcher_first'] == 'Unknown' ||
 				$lineups[$date][$time][$game['away']] == 'Unknown' ||
 				$lineups[$date][$time][$game['home']] == 'Unknown') {
-					$subject .= $game['away'] . ' @ ' . $game['home'] . "\n";
-					continue;
-				}
+				continue;
+			}
 			$away_team = $game['away'];
 			$home_team = $game['home'];
 			$game_info[$date][$i]['away_lineup'] = json_encode($lineups[$date][$time][$away_team]);
 			$game_info[$date][$i]['home_lineup'] = json_encode($lineups[$date][$time][$home_team]);
+			$game_info[$date][$i]['season'] = $year;
+			$game_info[$date][$i]['ds'] = $ds;
 			array_push($data, $game_info[$date][$i]);
 		}
 		if ($subject) {
@@ -220,7 +240,11 @@ foreach ($game_info as $date => $games) {
 		}
 }
 
-//print_r($data);
-export_and_save('baseball', 'lineups_2014', $data, $ds);
+multi_insert(
+	DATABASE,
+	'lineups',
+	$data,
+	$colheads
+);
 
 ?>
