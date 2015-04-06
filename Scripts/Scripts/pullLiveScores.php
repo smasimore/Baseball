@@ -14,7 +14,7 @@ $player_stats = array();
 
 date_default_timezone_set('America/Los_Angeles');
 $date = date('Y-m-d');
-if ($argv[1]) {
+if (idx($argv, 1) !== null) {
     $ds = $argv[1];
     $date = $argv[1];
 }

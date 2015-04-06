@@ -35,16 +35,17 @@ function get_html($url) {
 }
 
 $colheads = array(
-	'game_time',
-	'game_date',
-	'away',
-	'home',
-	'home_odds',
-	'away_odds',
-	'season',
-	'ts',
-	'ds'
+	'game_time' => '!',
+	'game_date' => '!',
+	'away' => '!',
+	'home' => '!',
+	'home_odds' => '?',
+	'away_odds' => '?',
+	'season' => '!',
+	'ts' => '!',
+	'ds' => '!'
 );
+$completedGameIndecies = array();
 
 date_default_timezone_set('America/Los_Angeles');
 $date = date('Y-m-d');
@@ -100,7 +101,16 @@ foreach ($times as $i => $time) {
 	$final_array[$i]['game_date'] = "$year-$month-$day";
 	$final_array[$i]['season'] = $year;
 	$final_array[$i]['ts'] = $ts;
-	$final_array[$i]['ds'] = date('Y-m-d');
+	$final_array[$i]['ds'] = $date;
+
+	// Don't log odds if game already started.
+	$game_hour = (int)substr($game_time, 0, 2);
+	// Adjust game hours to PST.
+	$game_hour -= 3;
+	$current_hour = (int)substr($ts, 11, 2);
+	if (($final_array[$i]['ds'] === $final_array[$i]['game_date']) && ($current_hour > $game_hour)) {
+		$completedGameIndecies[$i] = $i;
+	}
 }
 
 // Since teams are grouped in twos only put Home team into the array.
@@ -120,15 +130,21 @@ foreach ($teams as $i => $team) {
  * 0 = Opening Odds
  * 1 = Consensus Odds
  * 8 = Sportsbook.ag Odds
- * TODO(cert): Switch to Sportsbook.ag once season starts.
  * TODO(cert): Change these to constants during rewrite.
  */
-$j = 1;
+$j = 8;
 for ($i = 0; $i < count($final_array); $i++) {
 	$final_array[$i]['home_odds'] = $clean_stats[$j]['home'];
 	$final_array[$i]['away_odds'] = $clean_stats[$j]['away'];
 	// There are 9 different columns so skip over odds accordingly.
 	$j += 9;
+}
+
+// Now strip out completed games.
+foreach ($final_array as $i => $game) {
+	if (array_key_exists($i, $completedGameIndecies)) {
+		unset($final_array[$i]);
+	}
 }
 
 $insert_table = 'live_odds';
