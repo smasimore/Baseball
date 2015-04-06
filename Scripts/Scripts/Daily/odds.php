@@ -174,8 +174,14 @@ $colheads = array(
 	'home_odds',
 	'away_odds',
 	'home_pct_win',
-	'away_pct_win'
+	'away_pct_win',
+	'season',
+	'ds',
+	'ts'
 );
+
+// NOTE: THIS SCRIPT SHOULD BE RUN THE DAY AFTER GAMES ARE PLAYED TO GET ODDS
+// FROM VARIOUS CASINOS. FOR LIVE ODDS USE THE LIVE_ODDS SCRIPT.
 
 $final_odds = array();
 $stats_stg = array();
@@ -206,7 +212,7 @@ if ($test) {
 } else {
 	$games_sql =
 		"SELECT time_est, away, home
-		FROM lineups_2014
+		FROM lineups
 		WHERE ds = '$date'";
 	$games = exe_sql(DATABASE, $games_sql);
 	if (!$games) {
@@ -275,6 +281,9 @@ foreach ($stats_stg as $home_team) {
 					if (!$odds['home_odds']) {
 						continue;
 					}
+					$odds['ds'] = date('Y-m-d');
+					$odds['ts'] = date('Y-m-d H:i:s');
+					$odds['season'] = date('Y');
 					array_push($final_odds, $odds);
 				}
 			}
@@ -282,7 +291,7 @@ foreach ($stats_stg as $home_team) {
 	}
 }
 
-$insert_table = 'odds_2014';
+$insert_table = 'odds';
 if ($test) {
 	$test_array = array_slice($final_odds, 0, 5);
 	print_r($test_array);
