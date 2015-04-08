@@ -7,6 +7,7 @@ ini_set('max_execution_time', -1);
 ini_set('mysqli.connect_timeout', -1);
 ini_set('mysqli.reconnect', '1');
 include('/Users/constants.php');
+include(HOME_PATH.'Scripts/Include/DateTimeUtils.php');
 include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
 
 $countup = 0;
@@ -14,15 +15,9 @@ $player_stats = array();
 
 date_default_timezone_set('America/Los_Angeles');
 $date = date('Y-m-d');
-if (idx($argv, 1) !== null) {
-    $ds = $argv[1];
-    $date = $argv[1];
-}
+$season = substr($date, 0, 4);
 $ts = date("Y-m-d H:i:s");
-$hour = date("G");
 
-// Now a version of a cached scores script is embedded in the MLB page on ESPN.
-// Grab that link to parse first and then pull the scores.
 $target = "http://espn.go.com/mlb/";
 $source_code = scrape($target);
 $source_code = return_between(
@@ -85,18 +80,43 @@ foreach ($scores as $i => $score) {
 }
 
 foreach ($types as $i => $type) {
+	// If type is a date game has not started.
+	$type = strpos($type, $season) !== false ? 'Not Started' : $type;
 	$final_array[$i]['status']	= $type;	
 	$final_array[$i]['ts'] = $ts;
 }
 
+// Create var for overall game date since pulls after midnight (which we need
+// for extra innings west coast games) should be logged on actual game date
+// instead of pull date (we'll need this in the delete query later).
+$overall_game_date = null;
 foreach ($game_time as $i => $time) {
-	$final_array[$i]['game_date'] = substr($time, 0, 10);
-	$final_array[$i]['game_time'] = split_string($time, 'T', AFTER, EXCL);
-	$final_array[$i]['season'] = substr($time, 0, 4);
-	$final_array[$i]['ds'] = $date;
+	// ESPN has decided to be annoying and have it's time in GMT...convert
+	// this back to EST.
+	$game_date = substr($time, 0, 10);
+	$time = split_string($time, 'T', AFTER, EXCL);
+	list($converted_date, $converted_time) =
+		DateTimeUtils::getESTDateTimeFromGMT($game_date, $time);
+	$overall_game_date = $converted_date;
+	$final_array[$i]['game_date'] = $converted_date;
+	$final_array[$i]['game_time'] = $converted_time;
+	$final_array[$i]['season'] = $season;
+	$final_array[$i]['ds'] = date('Y-m-d');
 }
 
 $insert_table = 'live_scores';
+// First delete previous entries (where score isn't Final) and
+// write updated scores to the table.
+exe_sql(
+	DATABASE,
+	sprintf(
+		"DELETE FROM %s
+		WHERE game_date = '%s'",
+		$insert_table,
+		$overall_game_date
+	),
+	'delete'
+);
 multi_insert(
 	DATABASE,
 	$insert_table,
