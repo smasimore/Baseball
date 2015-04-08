@@ -63,11 +63,11 @@ documentation will at all times remain with copyright holders.
 /***********************************************************************
 MySQL Constants (scope = global)
 ----------------------------------------------------------------------*/
-define("MYSQL_ADDRESS", "localhost");          // Define the IP address of your MySQL Server
-define("MYSQL_USERNAME", "root");         // Define your MySQL user name
-define("MYSQL_PASSWORD", DB_PASSWORD);         // Define your MySQL password
+define("MYSQL_ADDRESS", HOST);          // Define the IP address of your MySQL Server
+define("MYSQL_USERNAME", MYSQL_USER);         // Define your MySQL user name
+define("MYSQL_PASSWORD", MYSQL_PASSWORD);         // Define your MySQL password
 // Cert edited this out since it's defined in constants.php
-//define("DATABASE", DATABASE);               // Define your default database
+define("DATABASE", DATABASE);               // Define your default database
 define("SUCCESS", true);              // Successful operation flag
 define("FAILURE", false);             // Failed operation flag
 
@@ -83,7 +83,7 @@ function format_log_data($function, $table, $data_length) {
 Database connection routine (only used by routines in this library
 ----------------------------------------------------------------------*/
 function connect_to_database() {
-    return(mysqli_connect(MYSQL_ADDRESS, MYSQL_USERNAME, MYSQL_PASSWORD));
+	return(mysqli_connect(MYSQL_ADDRESS, MYSQL_USERNAME, MYSQL_PASSWORD));
 }
 
 /***********************************************************************

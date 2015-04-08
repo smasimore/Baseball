@@ -5,7 +5,6 @@ if (!defined('HOME_PATH')) {
     include('/Users/constants.php');
 }
 ini_set('memory_limit', '-1');
-ini_set('default_socket_timeout', -1);
 ini_set('max_execution_time', -1);
 ini_set('mysqli.connect_timeout', -1);
 ini_set('mysqli.reconnect', '1');

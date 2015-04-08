@@ -1,7 +1,7 @@
 <?php
 
 include('/Users/constants.php');
-include(HOME_PATH.'Scripts/Include/RetrosheetPlayerMapping.php');
+include(HOME_PATH.'Scripts/Include/mysql.php');
 
 $test = array(
     array(
@@ -19,7 +19,7 @@ $test = array(
     )
 );
 
-$id_map = RetrosheetPlayerMapping::getPlayerIDMap($test, 2014);
-print_r($id_map);
+$data = exe_sql('baseball', "SELECT * FROM live_scores  WHERE ds = '2015-04-07' LIMIT 10");
+print_r($data);
 
 ?>
