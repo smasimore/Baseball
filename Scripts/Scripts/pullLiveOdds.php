@@ -1,12 +1,9 @@
 <?php
 //Copyright 2014, Saber Tooth Ventures, LLC
 
-ini_set('memory_limit', '-1');
-ini_set('default_socket_timeout', -1);
-ini_set('max_execution_time', -1);
-ini_set('mysqli.connect_timeout', -1);
-ini_set('mysqli.reconnect', '1');
-include('/Users/constants.php');
+if (!defined('DATABASE')) {
+	include('/Users/constants.php');
+}
 include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
 include(HOME_PATH.'Scripts/Include/Teams.php');
 
@@ -34,6 +31,31 @@ function get_html($url) {
     return($result);
 }
 
+function getLatestOddsData($date) {
+	$sql =
+		"SELECT a.*
+		FROM live_odds a
+		JOIN
+		  (SELECT max(ts) AS ts,
+							 game_date,
+							 game_time,
+							 home,
+							 away
+		   FROM live_odds
+		   GROUP BY game_date,
+					game_time,
+					home,
+					away) b
+		ON a.home = b.home
+		AND a.away = b.away
+		AND a.game_date = b.game_date
+		AND a.game_time = b.game_time
+		AND a.ts = b.ts
+		WHERE ds = '$date'";
+	$data = exe_sql('baseball', $sql);
+	return index_by($data, 'home', 'game_date', 'game_time');
+}
+
 $colheads = array(
 	'game_time' => '!',
 	'game_date' => '!',
@@ -45,7 +67,6 @@ $colheads = array(
 	'ts' => '!',
 	'ds' => '!'
 );
-$completedGameIndecies = array();
 
 date_default_timezone_set('America/Los_Angeles');
 $date = date('Y-m-d');
@@ -102,15 +123,6 @@ foreach ($times as $i => $time) {
 	$final_array[$i]['season'] = $year;
 	$final_array[$i]['ts'] = $ts;
 	$final_array[$i]['ds'] = $date;
-
-	// Don't log odds if game already started.
-	$game_hour = (int)substr($game_time, 0, 2);
-	// Adjust game hours to PST.
-	$game_hour -= 3;
-	$current_hour = (int)substr($ts, 11, 2);
-	if (($final_array[$i]['ds'] === $final_array[$i]['game_date']) && ($current_hour > $game_hour)) {
-		$completedGameIndecies[$i] = $i;
-	}
 }
 
 // Since teams are grouped in twos only put Home team into the array.
@@ -140,18 +152,30 @@ for ($i = 0; $i < count($final_array); $i++) {
 	$j += 9;
 }
 
-// Now strip out completed games.
+$insert_array = array();
+$latest_data = getLatestOddsData($date);
 foreach ($final_array as $i => $game) {
-	if (array_key_exists($i, $completedGameIndecies)) {
-		unset($final_array[$i]);
+	// Don't insert null odds (this happens when site(s) are down.
+	if ($game['home_odds'] === null && $game['away_odds'] === null) {
+		continue;
 	}
+	// Don't insert anything if odds haven't changed.
+	$game_index = $game['home'] . $game['game_date'] . $game['game_time'];
+	$home_odds_same =
+		$game['home_odds'] === $latest_data[$game_index]['home_odds'];
+	$away_odds_same
+		= $game['away_odds'] === $latest_data[$game_index]['away_odds'];
+	if ($home_odds_same && $away_odds_same) {
+		continue;
+	}
+	$insert_array[] = $game;
 }
 
 $insert_table = 'live_odds';
 multi_insert(
 	DATABASE,
 	$insert_table,
-	$final_array,
+	$insert_array,
 	$colheads
 );
 

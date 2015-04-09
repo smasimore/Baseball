@@ -67,7 +67,7 @@ define("MYSQL_ADDRESS", HOST);          // Define the IP address of your MySQL S
 define("MYSQL_USERNAME", MYSQL_USER);         // Define your MySQL user name
 define("MYSQL_PASSWORD", MYSQL_PASSWORD);         // Define your MySQL password
 // Cert edited this out since it's defined in constants.php
-define("DATABASE", DATABASE);               // Define your default database
+//define("DATABASE", DATABASE);               // Define your default database
 define("SUCCESS", true);              // Successful operation flag
 define("FAILURE", false);             // Failed operation flag
 
@@ -330,7 +330,7 @@ function multi_insert($database, $table, $data_array, $colheads) {
 	);
 
 	# If table is empty return false
-	if (!isset($data_array)) {
+	if ($data_array == null) {
 		throw new Exception("No data provided for multi_insert into $table");
 	}
 
