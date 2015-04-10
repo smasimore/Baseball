@@ -412,7 +412,7 @@ function multi_insert($database, $table, $data_array, $colheads) {
                 $insert_row[] = "'$insert_data'";
             }
         }
-        $sql[] = '('.implode(',', $insert_row).')';
+		$sql[] = '('.implode(',', $insert_row).')';
     }
 
     # Create and execute SQL command
