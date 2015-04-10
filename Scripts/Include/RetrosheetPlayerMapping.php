@@ -190,7 +190,8 @@ class RetrosheetPlayerMapping {
             $espn_id
         );
         $data = exe_sql(DATABASE, $sql);
-        return reset($data)['player_id'];
+        $data = reset($data);
+        return idx($data, 'player_id');
     }
 
     public static function getIDFromFirstLast($first, $last, $team = null) {
@@ -232,7 +233,7 @@ class RetrosheetPlayerMapping {
             return null;
         } else if ($num_results === 1) {
             $data = reset($data);
-            return $data['player_id'];
+            return idx($data, 'player_id');
         } else if (idx(self::$ambiguousNameTeamMap, $first.$last) !== null) {
             return self::$ambiguousNameTeamMap[$first.$last][$team];
         }

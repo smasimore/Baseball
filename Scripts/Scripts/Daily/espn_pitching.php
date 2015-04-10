@@ -19,9 +19,10 @@ $splitMap = array(
     'VsRight' => 32
 );
 $season = date('Y');
-if ($argv[1]) {
+if (idx($argv, 1) !== null) {
     $season = $argv[1];
 }
+$countup = 0;
 $insert_table = 'espn_pitching';
 
 foreach ($splitMap as $split_name => $split) {

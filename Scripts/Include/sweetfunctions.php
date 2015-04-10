@@ -440,32 +440,22 @@ function format_double($number, $dec) {
 
 function getBattingColheads($source_code, $exclude = 'batting_average', $dupe = false)  {
 
-    if ($countup == 0) {
-        $colheads = array();
-        $colheads_start = " title=\"";
-        $colheads_end = "\">";
-        $colheads_stg = parse_array_clean($source_code, $colheads_start, $colheads_end);
-        foreach ($colheads_stg as $head) {
-            $head = format_for_mysql($head);
-            $head = str_replace("ops_=_obp_+_slg", "ops", $head);
-            $head = str_replace("/", "_", $head);
-            $head = str_replace("(per_start)", "per_start", $head);
-            if (in_array($head, $colheads) || $head == $exclude) {
-                continue;
-            }
-            // Rename WHIP and K/9 since they're in there twice
-            if ($whip) {
-                if ($head == 'walks_and_hits_per_innings_pitched') {
-                    $head = 'walks_and_hits_per_innings_pitched_dupe';
-                } else if ($head == ' strikeouts_per_nine_innings') {
-                    $head = ' strikeouts_per_nine_innings_dupe';
-                }
-            }
-            array_push($colheads, $head);
+    $colheads = array();
+    $colheads_start = " title=\"";
+    $colheads_end = "\">";
+    $colheads_stg = parse_array_clean($source_code, $colheads_start, $colheads_end);
+    foreach ($colheads_stg as $head) {
+        $head = format_for_mysql($head);
+        $head = str_replace("ops_=_obp_+_slg", "ops", $head);
+        $head = str_replace("/", "_", $head);
+        $head = str_replace("(per_start)", "per_start", $head);
+        if (in_array($head, $colheads) || $head == $exclude) {
+            continue;
         }
-        $colheads = array_slice($colheads, 3);
-        return $colheads;
+        array_push($colheads, $head);
     }
+    $colheads = array_slice($colheads, 3);
+    return $colheads;
 }
 
 function pullAllData($table, $date = null) {

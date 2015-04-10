@@ -19,7 +19,7 @@ $splitMap = array(
 	'VsRight' => 32
 );
 $season = date('Y');
-if ($argv[1]) {
+if (idx($argv, 1) !== null) {
 	$season = $argv[1];
 }
 $insert_table = 'espn_batting';
@@ -27,7 +27,7 @@ $insert_table = 'espn_batting';
 foreach ($splitMap as $split_name => $split) {
 	$player_stats = array();
 	$countup = 0;
-	for ($id = 1; $id < 20; $id += 30) {
+	for ($id = 1; $id < 2000; $id += 30) {
 		// Here we will do three pulls: one for regular stats, one for expanded stats,
 		// and one for sabermetric stats.
 		$target = "http://espn.go.com/mlb/stats/batting/_/year/$season/split/$split/count/$id/qualified/false";
