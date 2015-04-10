@@ -1,18 +1,14 @@
 <?php
 //Copyright 2014, Saber Tooth Ventures, LLC
-ini_set('memory_limit', '-1');
-ini_set('mysqli.reconnect', '1');
-ini_set('mysqli.connect_timeout', '-1');
-ini_set('default_socket_timeout', '-1');
-ini_set('max_execution_time', '-1');
+
 include('/Users/constants.php');
-include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
+include(HOME_PATH . 'Scripts/Include/sweetfunctions.php');
 
 const EMAIL_INTERVAL = 1800; // 5 minutes
 const MAX_FREQUENCY = 30;
-const PATH = HOME_PATH.'Scripts/Scripts/2014/';
 
-//global variables
+// global variables
+$path = HOME_PATH . 'Scripts/Scripts/Daily/';
 $masterStatus = 'In Progress';
 $frequencyMap = array(
     'Hourly' => 3600,
@@ -97,10 +93,10 @@ function runScripts() {
 }
 
 function executeScript($script, $script_path) {
-    global $scriptArray;
+    global $scriptArray, $path;
 
     // last piece for parallel calls
-    $cmd = '/usr/bin/php ' . PATH . $script_path . ' > /dev/null 2>/dev/null &';
+    $cmd = '/usr/bin/php ' . $path . $script_path . ' > /dev/null 2>/dev/null &';
     echo $cmd . "\n";
     shell_exec($cmd);
     $scriptArray[$script]['status'] = 'In Progress';
@@ -224,230 +220,57 @@ function sendStatusEmail() {
 // completed and succeeded attribute will be stored in mysql table
 function getScriptArray() {
     return array(
-        'odds_2014' => array(
-            'script' => 'odds_2014.php',
+        'odds' => array(
+            'script' => 'odds.php',
             'dependencies' => array(),
             'status' => 'Not Started',
             'frequency' => 'Daily',
             'last_start_time' => 0,
         ),
-        'players_2014' => array(
-            'script' => 'players_2014.php',
+        'players' => array(
+            'script' => 'players.php',
             'dependencies' => array(),
             'status' => 'Not Started',
             'frequency' => 'Daily',
             'last_start_time' => 0,
         ),
-        'batting_total_2014' => array(
-            'script' => 'batting_total_2014.php',
-            'dependencies' => array(),
-            'status' => 'Not Started',
-            'frequency' => 'Daily',
-            'last_start_time' => 0,
-        ),
-        'batting_vsleft_2014' => array(
-            'script' => 'batting_vsleft_2014.php',
-            'dependencies' => array(),
-            'status' => 'Not Started',
-            'frequency' => 'Daily',
-            'last_start_time' => 0,
-        ),
-        'batting_vsright_2014' => array(
-            'script' => 'batting_vsright_2014.php',
-            'dependencies' => array(),
-            'status' => 'Not Started',
-            'frequency' => 'Daily',
-            'last_start_time' => 0,
-        ),
-        'batting_home_2014' => array(
-            'script' => 'batting_home_2014.php',
-            'dependencies' => array(),
-            'status' => 'Not Started',
-            'frequency' => 'Daily',
-            'last_start_time' => 0,
-        ),
-        'batting_away_2014' => array(
-            'script' => 'batting_away_2014.php',
-            'dependencies' => array(),
-            'status' => 'Not Started',
-            'frequency' => 'Daily',
-            'last_start_time' => 0,
-        ),
-        'batting_basesloaded_2014' => array(
-            'script' => 'batting_basesloaded_2014.php',
-            'dependencies' => array(),
-            'status' => 'Not Started',
-            'frequency' => 'Daily',
-            'last_start_time' => 0,
-        ),
-        'batting_noneon_2014' => array(
-            'script' => 'batting_noneon_2014.php',
-            'dependencies' => array(),
-            'status' => 'Not Started',
-            'frequency' => 'Daily',
-            'last_start_time' => 0,
-        ),
-        'batting_runnerson_2014' => array(
-            'script' => 'batting_runnerson_2014.php',
-            'dependencies' => array(),
-            'status' => 'Not Started',
-            'frequency' => 'Daily',
-            'last_start_time' => 0,
-        ),
-        'batting_scoringpos2out_2014' => array(
-            'script' => 'batting_scoringpos2out_2014.php',
-            'dependencies' => array(),
-            'status' => 'Not Started',
-            'frequency' => 'Daily',
-            'last_start_time' => 0,
-        ),
-        'batting_scoringpos_2014' => array(
-            'script' => 'batting_scoringpos_2014.php',
-            'dependencies' => array(),
-            'status' => 'Not Started',
-            'frequency' => 'Daily',
-            'last_start_time' => 0,
-        ),
-        /*'lineups_2014' => array(
-            'script' => 'lineups_2014.php',
-            'dependencies' => array(),
-            'status' => 'Not Started',
-            'frequency' => 'Daily',
-            'last_start_time' => 0,
-        ),*/
-        'pitching_expanded_2014' => array(
-            'script' => 'pitching_expanded_2014.php',
-            'dependencies' => array(),
-            'status' => 'Not Started',
-            'frequency' => 'Daily',
-            'last_start_time' => 0,
-        ),
-        'batting_vspitcher_aggregate_2014' => array(
-            'script' => 'batting_vspitcher_aggregate_2014.php',
-            'dependencies' => array('batting_vspitcher_2014'),
-            'status' => 'Not Started',
-            'frequency' => 'Daily',
-            'last_start_time' => 0,
-        ),
-        'fielding_2014' => array(
-            'script' => 'fielding_2014.php',
-            'dependencies' => array('players_2014'),
-            'status' => 'Not Started',
-            'frequency' => 'Daily',
-            'last_start_time' => 0,
-        ),
-        'pitching_2014' => array(
-            'script' => 'pitching_2014.php',
-            'dependencies' => array('players_2014'),
-            'status' => 'Not Started',
-            'frequency' => 'Daily',
-            'last_start_time' => 0,
-        ),
-        'pitcher_batting_2014' => array(
-            'script' => 'pitcher_batting_2014.php',
-            'dependencies' => array('players_2014'),
-            'status' => 'Not Started',
-            'frequency' => 'Daily',
-            'last_start_time' => 0,
-        ),
-        'batting_simple_2014' => array(
-            'script' => 'batting_simple_2014.php',
-            'dependencies' => array('players_2014'),
-            'status' => 'Not Started',
-            'frequency' => 'Daily',
-            'last_start_time' => 0,
-        ),
-        'batting_vspitcher_2014' => array(
-            'script' => 'batting_vspitcher_2014.php',
-            'dependencies' => array('players_2014'),
-            'status' => 'Not Started',
-            'frequency' => 'Daily',
-            'last_start_time' => 0,
-        ),
-        'batting_byfield_nomagic_2014' => array(
-            'script' => 'batting_byfield_nomagic_2014.php',
-            'dependencies' => array('batting_simple_2014'),
-            'status' => 'Not Started',
-            'frequency' => 'Daily',
-            'last_start_time' => 0,
-        ),
-        'batting_byfield_magic_2014' => array(
-            'script' => 'batting_byfield_magic_2014.php',
-            'dependencies' => array('batting_simple_2014'),
-            'status' => 'Not Started',
-            'frequency' => 'Daily',
-            'last_start_time' => 0,
-        ),
-        'batting_final_nomagic_2014' => array(
-            'script' => 'batting_final_nomagic_2014.php',
+        'espn_batting' => array(
+            'script' => 'espn_batting.php',
             'dependencies' => array(
-                'players_2014',
-                'batting_total_2014',
-                'batting_vsleft_2014',
-                'batting_vsright_2014',
-                'batting_home_2014',
-                'batting_away_2014',
-                'batting_basesloaded_2014',
-                'batting_noneon_2014',
-                'batting_runnerson_2014',
-                'batting_scoringpos2out_2014',
-                'batting_scoringpos_2014',
-                'fielding_2014',
-                'pitching_2014',
-                'batting_simple_2014',
-                'batting_vspitcher_2014',
-                'batting_byfield_magic_2014',
-                'batting_byfield_nomagic_2014',
+                'players'
             ),
             'status' => 'Not Started',
             'frequency' => 'Daily',
             'last_start_time' => 0,
         ),
-/*
-        'batting_final_magic_2014' => array(
-            'script' => 'batting_final_magic_2014.php',
+        'espn_pitching' => array(
+            'script' => 'espn_pitching.php',
             'dependencies' => array(
-                'players_2014',
-                'batting_total_2014',
-                'batting_vsleft_2014',
-                'batting_vsright_2014',
-                'batting_home_2014',
-                'batting_away_2014',
-                'batting_basesloaded_2014',
-                'batting_noneon_2014',
-                'batting_runnerson_2014',
-                'batting_scoringpos2out_2014',
-                'batting_scoringpos_2014',
-                'fielding_2014',
-                'pitching_2014',
-                'batting_simple_2014',
-                'batting_vspitcher_2014',
-                'batting_byfield_magic_2014',
-                'batting_byfield_nomagic_2014',
+                'players'
             ),
             'status' => 'Not Started',
             'frequency' => 'Daily',
             'last_start_time' => 0,
         ),
-
-        'sim_nomagic_2014' => array(
-            'script' => 'sim_nomagic_2014',
+        'espn_fielding' => array(
+            'script' => 'espn_fielding.php',
             'dependencies' => array(
-                'batting_final_nomagic_2014',
-                'lineups_2014'),
+                'players'
+            ),
             'status' => 'Not Started',
             'frequency' => 'Daily',
             'last_start_time' => 0,
         ),
-
-        'sim_magic_2014' => array(
-            'script' => 'sim_magic_2014',
-            'dependencies' => array('batting_final_nomagic_2014'),
+        'lineups' => array(
+            'script' => 'lineups.php',
+            'dependencies' => array(
+                'players',
+            ),
+            'dependencies' => array(),
             'status' => 'Not Started',
             'frequency' => 'Daily',
             'last_start_time' => 0,
-        ),
-*/
+        )
     );
 }
 ?>

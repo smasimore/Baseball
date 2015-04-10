@@ -231,7 +231,8 @@ class RetrosheetPlayerMapping {
             }
             return null;
         } else if ($num_results === 1) {
-            return reset($data)['player_id'];
+            $data = reset($data);
+            return $data['player_id'];
         } else if (idx(self::$ambiguousNameTeamMap, $first.$last) !== null) {
             return self::$ambiguousNameTeamMap[$first.$last][$team];
         }
@@ -268,6 +269,8 @@ class RetrosheetPlayerMapping {
                 $sql_insert,
                 $colheads
             );
+        } else {
+            logInsert('players', true);
         }
         return;
     }

@@ -1,11 +1,6 @@
 <?php
 //Copyright 2014, Saber Tooth Ventures, LLC
 
-ini_set('memory_limit', '-1');
-ini_set('default_socket_timeout', -1);
-ini_set('max_execution_time', -1);
-ini_set('mysqli.connect_timeout', -1);
-ini_set('mysqli.reconnect', '1');
 include('/Users/constants.php');
 include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
 include(HOME_PATH.'Scripts/Include/Teams.php');
@@ -163,6 +158,15 @@ function pullCasinoOdds(
 	return $stats_stg;
 }
 
+function checkValidURL($source_code) {
+	if (strpos($source_code, "Sports Betting and Gambling News") ||
+		strpos($source_code, "unexpected error") ||
+		strpos($source_code, "cannot be found")) {
+		return false;
+	}
+	return true;	
+}
+
 $colheads = array(
 	'game_date',
 	'game_time',
@@ -234,10 +238,18 @@ foreach ($games as $game) {
 	$offshore =
 		"http://www.vegasinsider.com/mlb/odds/offshore/line-movement/$away_team-@-$home_team.cfm/date/$month-$day-$year/time/$hour";
 	$vegas_source_code = get_html($vegas);
-	if (strpos($vegas_source_code, "Sports Betting and Gambling News") ||
-		strpos($vegas_source_code, "unexpected error") ||
-		strpos($vegas_source_code, "cannot be found")) {
+	// Check to make sure URL is valid. It often isn't if times are messed up
+	// from the lineups script and the odds site. If so remove the time from
+	// the pull.
+	$valid_url = checkValidURL($vegas_source_code);
+	if ($valid_url === false) {
+		$vegas = "http://www.vegasinsider.com/mlb/odds/las-vegas/line-movement/$away_team-@-$home_team.cfm/date/$month-$day-$year/";
+		$offshore = "http://www.vegasinsider.com/mlb/odds/offshore/line-movement/$away_team-@-$home_team.cfm/date/$month-$day-$year/";
+		$vegas_source_code = get_html($vegas);
+		$valid_url = checkValidURL($vegas_source_code);
+		if ($valid_url === false) {
 			exit('Invalid URL');
+		}
 	}
 	$offshore_source_code = get_html($offshore);
 

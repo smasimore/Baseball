@@ -244,7 +244,41 @@ function add_partition($database, $table, $partition_keys) {
         mysqli_close($mysql_connect);
     }
 }
-	
+
+/***********************************************************************
+ * logInsert($table)
+ * Create entry in 'table_status' if the table has been written to. This
+ * is used for the daily.php script, etc.
+ **********************************************************************/
+function logInsert($table, $force_write = false) {
+	$ds = date('Y-m-d');
+	$ts = date("Y-m-d H:i:s");
+	$sql = sprintf(
+		"SELECT count(1) as instances
+		FROM %s
+		WHERE ds = '%s'",
+		$table,
+		$ds
+	);
+	$data = exe_sql(DATABASE, $sql);
+	if ($data !== null) {
+		$data = reset($data);
+		$num_rows = idx($data, 'instances', 0);
+	}
+	if ($num_rows > 0 || $force_write) {
+		$table_status = array(
+			'table_name' => $table,
+			'num_rows' => $force_write === false ? $num_rows : 999,
+			'ts' => $ts,
+			'ds' => $ds
+		);
+		insert(
+			DATABASE,
+			'table_status',
+			$table_status
+		);
+	}
+}
 
 /***********************************************************************
 drop_partition(string $database, string table, array<> partition_keys)
@@ -431,7 +465,8 @@ function multi_insert($database, $table, $data_array, $colheads) {
             "d"
         );
         exit("Mysqli error during multi_insert into $table");
-    } else {
+	} else {
+		logInsert($table);
         mysqli_close($mysql_connect);
     }
 }

@@ -1,12 +1,7 @@
 <?php
 //Copyright 2014, Saber Tooth Ventures, LLC
 
-ini_set('memory_limit', '-1');
-ini_set('mysqli.reconnect', '1');
-ini_set('mysqli.connect_timeout', '-1');
-ini_set('default_socket_timeout', '-1');
-ini_set('max_execution_time', '-1');
-include('/Users/constants.php'); 
+include('/Users/constants.php');
 include(HOME_PATH.'Scripts/Include/Teams.php');
 include(HOME_PATH.'Scripts/Include/RetrosheetPlayerMapping.php');
 
@@ -240,11 +235,15 @@ foreach ($game_info as $date => $games) {
 		}
 }
 
-multi_insert(
-	DATABASE,
-	'lineups',
-	$data,
-	$colheads
-);
+if ($data == null) {
+	logInsert('lineups', true);
+} else {
+	multi_insert(
+		DATABASE,
+		'lineups',
+		$data,
+		$colheads
+	);
+}
 
 ?>
