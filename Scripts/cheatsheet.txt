@@ -94,6 +94,10 @@ sudo apachectl -k restart
 # mass stage removed files
 git rm $(git ls-files --deleted)  
 
+# Add file to .gitignore that is already tracked in the system
+# In .gitignore (localted in base dir) add the file type and run command below:
+for file in `cat .gitignore`  ; do git rm -r --cached $file; done
+
 # Profile processing cost for Python
 python -m cProfile test.py
 
