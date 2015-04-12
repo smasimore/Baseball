@@ -1,5 +1,5 @@
 <?php
-//Copyright 2014, Saber Tooth Ventures, LLC
+// Copyright 2013-Present, Saber Tooth Ventures, LLC
 ini_set('memory_limit', '-1');
 ini_set('mysqli.reconnect', '1');
 ini_set('mysqli.connect_timeout', '-1');

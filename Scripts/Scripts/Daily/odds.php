@@ -1,5 +1,5 @@
 <?php
-//Copyright 2014, Saber Tooth Ventures, LLC
+// Copyright 2013-Present, Saber Tooth Ventures, LLC
 
 include('/Users/constants.php');
 include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
