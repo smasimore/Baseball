@@ -1,25 +1,13 @@
 <?php
 
 include('/Users/constants.php');
-include(HOME_PATH.'Scripts/Include/mysql.php');
+include(HOME_PATH.'Scripts/Classes/BattingStats.php');
 
-$test = array(
-    array(
-        'last' => 'trout',
-        'first' => 'mike'
-    ),
-    array(
-        'last' => 'carpenter',
-        'first' => 'david',
-        'team' => 'ATL'
-    ),
-    array(
-        'last' => 'posey',
-        'first' => 'buster'
-    )
-);
+$test = new BattingStats;
+//$test->setBackFillRetrosheet();
+//$test->setTest();
+$test->aggregateStats();
+$test->writeToCareerBatting();
 
-$data = exe_sql('baseball', "SELECT * FROM live_scores  WHERE ds = '2015-04-07' LIMIT 10");
-print_r($data);
 
 ?>

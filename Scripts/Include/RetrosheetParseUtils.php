@@ -50,7 +50,8 @@ class RetrosheetParseUtils {
             "SELECT *
             FROM historical_joe_average
             WHERE season = $season";
-        return reset(exe_sql(DATABASE, $sql));
+        $data = exe_sql(DATABASE, $sql);
+        return reset($data);
     }
 
     public static function getGameID(
@@ -435,6 +436,42 @@ class RetrosheetParseUtils {
             $where .= " AND PITCHER_TYPE = '$pitcher_type'";
         }
         return $where;
+    }
+
+    private static function getMaxRetrosheetTableDate($table) {
+        $sql = sprintf(
+            'SELECT max(ds) as ds
+            FROM %s
+            WHERE season >= 2013',
+            $table
+        );
+        $data = exe_sql(DATABASE, $sql);
+        $data = reset($data);
+        $ds = idx($data, 'ds');
+        return array($ds, substr($ds, 0, 4));
+    }
+
+    public static function getHistoricalBattingStats($test_player = null) {
+        list($ds, $season) = self::getMaxRetrosheetTableDate(
+            RetrosheetTables::RETROSHEET_HISTORICAL_BATTING_CAREER
+        );
+        $sql = sprintf(
+            "SELECT *
+            FROM %s
+            WHERE season = %d
+            AND ds = '%s'",
+            RetrosheetTables::RETROSHEET_HISTORICAL_BATTING_CAREER,
+            $season,
+            $ds
+        );
+        if ($test_player !== null) {
+            $sql .= sprintf(
+                " AND player_id = '%s'",
+                $test_player
+            );
+        }
+        $data = exe_sql(DATABASE, $sql);
+        return safe_index_by($data, 'player_id', 'split');
     }
 }
 

@@ -169,6 +169,10 @@ class RetrosheetTables {
         'retrosheet_historical_pitching';
     const RETROSHEET_HISTORICAL_PITCHING_CAREER =
         'retrosheet_historical_pitching_career';
+    const RETROSHEET_HISTORICAL_BATTING =
+        'retrosheet_historical_batting';
+    const RETROSHEET_HISTORICAL_BATTING_CAREER =
+        'retrosheet_historical_batting_career';
 
     const EVENTS = 'events';
     const ID = 'id';

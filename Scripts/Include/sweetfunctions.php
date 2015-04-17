@@ -432,7 +432,7 @@ function scrape_backup($target) {
     return($result);
 }
 
-function format_double($number, $dec) {
+function format_double($number, $dec = 2) {
     $type = gettype($number);
     return
         $type == 'double' ? number_format($number, $dec, ".", "") : $number;
@@ -515,6 +515,34 @@ function export_csv($csv, $arrayname) {
         fputcsv($f, $x);
     }
     fclose($f);
+}
+
+// Index an array without accidentally dropping data if array_keys are missing.
+function safe_index_by($data, $index, $index2, $backup_index = null) {
+    if ($data == null) {
+        throw new Exception(
+            'Cannot index empty dataset'
+        );
+    }
+    $indexed_array = array();
+    foreach ($data as $row) {
+        if (idx($row, $index) === null) {
+            $id = idx($row, $backup_index);
+            throw new Exception(sprintf(
+                'No %s index for %s',
+                $index,
+                $id
+            ));
+        }
+        $i1 = idx($row, $index);
+        if ($index2 !== null) {
+            $i2 = idx($row, $index2);
+            $indexed_array[$i1][$i2] = $row;
+        } else {
+            $indexed_array[$i1] = $row;
+        }
+    }
+    return $indexed_array;
 }
 
 function index_by($data, $index, $index_2 = null, $index_3 = null) {
