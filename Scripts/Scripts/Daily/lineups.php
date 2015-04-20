@@ -27,7 +27,7 @@ $colheads = array(
 	'season' => '!',
 	'ds' => '!'
 );
-$data = array();
+$insert_data = array();
 
 date_default_timezone_set('America/Los_Angeles');
 if (!$backfill) {
@@ -208,17 +208,32 @@ function pullLineups($month, $day, $ds) {
 }
 
 list($lineups, $game_info) = pullLineups($month, $day, $ds);
+// Grab today's lineup so we don't keep writing the same games to it.
+$pitchers = array();
+if ($ds === date('Y-m-d')) {
+	$sql = sprintf(
+		"SELECT home_pitcher_id
+		FROM %s
+		WHERE ds = '%s'",
+		'lineups',
+		$ds
+	);
+	$data = exe_sql(DATABASE, $sql);
+	$pitchers = array_column($data, 'home_pitcher_id');
+}
 foreach ($game_info as $date => $games) {
 		$month = formatDayMonth(split_string($date, '/', BEFORE, EXCL));
 		$day = formatDayMonth(return_between($date, '/', '/', EXCL));
 		$year = substr($date, -4);
 		$ds = "$year-$month-$day";
-		$subject = null;
 		foreach ($games as $i => $game) {
+			// Skip games that are already logged.
+        	$home_pit_id = $game['home_pitcher_id'];
+			if (in_array($home_pit_id, $pitchers)) {
+            	continue;
+        	}
 			$time = $game['time_est'];
-			if ($game['away_pitcher_first'] == 'Unknown' ||
-				$game['home_pitcher_first'] == 'Unknown' ||
-				$lineups[$date][$time][$game['away']] == 'Unknown' ||
+			if ($lineups[$date][$time][$game['away']] == 'Unknown' ||
 				$lineups[$date][$time][$game['home']] == 'Unknown') {
 				continue;
 			}
@@ -228,20 +243,17 @@ foreach ($game_info as $date => $games) {
 			$game_info[$date][$i]['home_lineup'] = json_encode($lineups[$date][$time][$home_team]);
 			$game_info[$date][$i]['season'] = $year;
 			$game_info[$date][$i]['ds'] = $ds;
-			array_push($data, $game_info[$date][$i]);
-		}
-		if ($subject) {
-			//send_email('Missing Lineup or Starting Pitcher', $subject);
+			array_push($insert_data, $game_info[$date][$i]);
 		}
 }
 
-if ($data == null) {
-	logInsert('lineups', true);
+if ($insert_data == null) {
+	exit('No New Games');
 } else {
 	multi_insert(
 		DATABASE,
 		'lineups',
-		$data,
+		$insert_data,
 		$colheads
 	);
 }
