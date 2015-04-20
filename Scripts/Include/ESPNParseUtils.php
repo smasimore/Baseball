@@ -72,12 +72,10 @@ class ESPNParseUtils {
             $pas = $split_stats['plate_appearances'];
             $split = $split_stats['split'];
             if ($pas === null || $pas < self::MIN_PLATE_APPEARANCE) {
-                $final_stats[$split] = json_encode(
-                    self::getJoeAverageWaterfall(
-                        $pct_stats,
-                        $stats['Total'],
-                        $joe_average[$split]
-                    )
+                $final_stats[$split] = self::getJoeAverageWaterfall(
+                    $pct_stats,
+                    $stats['Total'],
+                    $joe_average[$split]
                 );
                 continue;
             }

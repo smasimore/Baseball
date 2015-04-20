@@ -178,8 +178,7 @@ class AggregateBattingStats {
             }
         }
         if ($this->testPlayer !== null) {
-            print_r($final_stats);
-            exit('COMPLETED TEST RUN');
+            exit('CANNOT BACKFILL ON TEST RUN');
         }
         multi_insert(
             DATABASE,
@@ -187,6 +186,7 @@ class AggregateBattingStats {
             $final_stats,
             self::$ldos_colheads
         );
+        exit('BACKFILL COMPLETE');
     }
 
     private function combineStats(

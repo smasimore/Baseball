@@ -330,7 +330,7 @@ function drop_partition($database, $table, $partition_keys) {
     }
 	$partitions = trim($partitions, ",");
     $final_sql =
-        "ALTER TABLE $table DROP PARTITION $partition_string";
+		"ALTER TABLE $table DROP PARTITION $partition_string";
     $result = mysqli_query($mysql_connect, $final_sql);
 
     # Report SQL error, if one occured, otherwise return result

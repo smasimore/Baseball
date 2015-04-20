@@ -518,7 +518,7 @@ function export_csv($csv, $arrayname) {
 }
 
 // Index an array without accidentally dropping data if array_keys are missing.
-function safe_index_by($data, $index, $index2, $backup_index = null) {
+function safe_index_by($data, $index, $index2 = null, $backup_index = null) {
     if ($data == null) {
         throw new Exception(
             'Cannot index empty dataset'
