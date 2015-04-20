@@ -136,7 +136,7 @@ foreach ($splitMap as $split_name => $split) {
 			$insert_row['season'] = $season;
 			$insert_row['split'] = $split_name;
 			$insert_row['ts'] = date('Y-m-d H:i:s');
-			$player_stats[$player_name] = $insert_row;
+			$player_stats[$espn_id] = $insert_row;
 		}
 	}
     $insert_colheads = array();
