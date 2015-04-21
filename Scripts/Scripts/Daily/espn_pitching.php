@@ -159,7 +159,8 @@ foreach ($splitMap as $split_name => $split) {
         $insert_table,
         $player_stats,
         $insert_colheads
-    );
+	);
+	logInsert($insert_table);
 }
 
 ?>

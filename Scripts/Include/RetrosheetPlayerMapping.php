@@ -263,15 +263,19 @@ class RetrosheetPlayerMapping {
             $player['ds'] = date('Y-m-d');
             $sql_insert[] = $player;
         }
+        $insert_table = 'players';
         if ($sql_insert !== array()) {
             multi_insert(
                 DATABASE,
-                'players',
+                $insert_table,
                 $sql_insert,
                 $colheads
             );
+            logInsert($insert_table);
         } else {
-            logInsert('players', true);
+            // Log even if there aren't new players so the daily script doesn't
+            // fail.
+            logInsert($insert_table, true);
         }
         return;
     }

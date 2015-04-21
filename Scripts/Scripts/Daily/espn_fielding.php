@@ -104,5 +104,6 @@ multi_insert(
 	$insert_array,
 	$insert_colheads
 );
+logInsert($insert_table);
 
 ?>

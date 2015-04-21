@@ -146,6 +146,7 @@ foreach ($splitMap as $split_name => $split) {
 		$player_stats,
 		$insert_colheads
 	);
+	logInsert($insert_table);
 }
 
 ?>

@@ -466,7 +466,6 @@ function multi_insert($database, $table, $data_array, $colheads) {
         );
         exit("Mysqli error during multi_insert into $table");
 	} else {
-		logInsert($table);
         mysqli_close($mysql_connect);
     }
 }

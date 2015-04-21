@@ -315,5 +315,6 @@ multi_insert(
 	$final_odds,
 	$colheads
 );
+logInsert($insert_table);
 
 ?>

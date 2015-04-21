@@ -247,15 +247,17 @@ foreach ($game_info as $date => $games) {
 		}
 }
 
+$insert_table = 'lineups';
 if ($insert_data == null) {
 	exit('No New Games');
 } else {
 	multi_insert(
 		DATABASE,
-		'lineups',
+		$insert_table,
 		$insert_data,
 		$colheads
 	);
+	logInsert($insert_table);
 }
 
 ?>
