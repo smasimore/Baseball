@@ -93,7 +93,7 @@ class AggregateBattingStats {
         }
     }
 
-    public function writeToCareerBatting() {
+    public function write() {
         if ($this->testPlayer !== null) {
             print_r($this->finalStats);
             exit('COMPLETED TEST RUN');
@@ -122,6 +122,7 @@ class AggregateBattingStats {
             $this->finalPctStats,
             self::$colheads
         );
+        logInsert(self::BATTING_CAREER);
     }
 
     private function getPreviousData($season) {

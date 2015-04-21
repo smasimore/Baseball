@@ -261,12 +261,11 @@ function getScriptArray() {
             'frequency' => 'Daily',
             'last_start_time' => 0,
         ),
-        'lineups' => array(
-            'script' => 'lineups.php',
+        'batting_career' => array(
+            'script' => 'batting_career.php',
             'dependencies' => array(
-                'players',
+                'espn_batting',
             ),
-            'dependencies' => array(),
             'status' => 'Not Started',
             'frequency' => 'Daily',
             'last_start_time' => 0,

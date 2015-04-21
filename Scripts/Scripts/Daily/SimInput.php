@@ -146,6 +146,7 @@ class SimInput {
             $this->simInputData,
             self::$colheads
         );
+        logInsert(self::SIM_INPUT);
     }
 
     public function setTest($player = 'poseb001') {
