@@ -161,6 +161,20 @@ class RetrosheetPlayerMapping {
             'OAK' => 'younc004'
         )
     );
+    private static $nameCorrectionMap = array(
+        'stevensouza_jr.' => 'souzs01',
+        'noriaoki' => 'aokin001',
+        'wei_yinchen' => 'chenw001',
+        'rubbyde' => 'delar003',
+        'stevegeltz' => 'gelts001',
+        'jonniese' => 'niesj001',
+        'tjhouse' => 'houst01',
+        'seanosullivan' => 'osuls001',
+        'delinodeshields' => 'deshd01',
+        'kristophernegron' => 'negrk001',
+        'j.t.realmuto' => 'realj01',
+        'jorgede' => 'delaj001'
+    );
 
     // This function should only be called by the players.php script with
     // players and their corresponding ESPN IDs.
@@ -194,7 +208,20 @@ class RetrosheetPlayerMapping {
         return idx($data, 'player_id');
     }
 
+    // Try to get an ID but don't fail if one isn't found.
     public static function getIDFromFirstLast($first, $last, $team = null) {
+        try {
+            self::getIDFromFirstLastStrict($first, $last, $team);
+        } catch (Exception $e) {
+            $error = $e->getMessage();
+            $trace = $e->getTraceAsString();
+            echo $error . "\n";
+            echo $trace . "\n";
+            send_email($error, $trace, 'd');
+        }
+    }
+
+    private static function getIDFromFirstLastStrict($first, $last, $team) {
         $first = format_for_mysql($first);
         $last = format_for_mysql($last);
         $sql = sprintf(
@@ -209,28 +236,16 @@ class RetrosheetPlayerMapping {
         $data = exe_sql(DATABASE, $sql);
         $num_results = count($data);
         if ($num_results === 0) {
-            // Check to make sure it's not a first-name discrepency.
-            $sql = sprintf(
-                "SELECT *
-                FROM %s
-                WHERE last = '%s'",
-                'players',
-                $last
-            );
-            $last_name_data = exe_sql(DATABASE, $sql);
-            if (count($last_name_data) !== 0) {
-                if (idx(self::$ambiguousNameTeamMap, $first.$last) !== null) {
-                    return self::$ambiguousNameTeamMap[$first.$last][$team];
-                }
-                /*
-                throw new Exception(sprintf(
-                    'Add first name correction for player %s %s',
-                    $first,
-                    $last
-                ));
-                 */
+            if (idx(self::$ambiguousNameTeamMap, $first.$last) !== null) {
+                return self::$ambiguousNameTeamMap[$first.$last][$team];
+            } else if (idx(self::$nameCorrectionMap, $first.$last) !== null) {
+                return self::$nameCorrectionMap[$first.$last];
             }
-            return null;
+            throw new Exception(sprintf(
+                'Add first name correction for player %s %s',
+                $first,
+                $last
+            ));
         } else if ($num_results === 1) {
             $data = reset($data);
             return idx($data, 'player_id');

@@ -190,12 +190,12 @@ function pullLineups($month, $day, $ds) {
 					);
 				} else {
 					$lineups[$day][$time][$home_team][$l_num] = array(
+						'player_name' => format_for_mysql($batter),
 						'player_id' => RetrosheetPlayerMapping::getIDFromFirstLast(
 							split_string(format_for_mysql($batter), '_', BEFORE, EXCL),
 							split_string(format_for_mysql($batter), '_', AFTER, EXCL),
 							$home_team
 						),
-                        'player_name' => format_for_mysql($batter),
                         'position' => format_for_mysql($position),
                         'batting' => format_for_mysql($batting),
 					);
