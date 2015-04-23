@@ -517,6 +517,32 @@ function export_csv($csv, $arrayname) {
     fclose($f);
 }
 
+// PHP version-safe array_column function.
+function safe_array_column(array $input, $columnKey, $indexKey = null) {
+    $array = array();
+    foreach ($input as $value) {
+        if (!isset($value[$columnKey])) {
+            trigger_error("Key \"$columnKey\" does not exist in array");
+            return false;
+        }
+        if (is_null($indexKey)) {
+            $array[] = $value[$columnKey];
+        }
+        else {
+            if (!isset($value[$indexKey])) {
+                trigger_error("Key \"$indexKey\" does not exist in array");
+                return false;
+            }
+            if (!is_scalar($value[$indexKey])) {
+                trigger_error("Key \"$indexKey\" does not contain scalar value");
+                return false;
+            }
+            $array[$value[$indexKey]] = $value[$columnKey];
+        }
+    }
+    return $array;
+}
+
 // Index an array without accidentally dropping data if array_keys are missing.
 function safe_index_by($data, $index, $index2 = null, $backup_index = null) {
     if ($data == null) {

@@ -219,7 +219,7 @@ if ($ds === date('Y-m-d')) {
 		$ds
 	);
 	$data = exe_sql(DATABASE, $sql);
-	$pitchers = array_column($data, 'home_pitcher_id');
+	$pitchers = safe_array_column($data, 'home_pitcher_id');
 }
 foreach ($game_info as $date => $games) {
 		$month = formatDayMonth(split_string($date, '/', BEFORE, EXCL));
