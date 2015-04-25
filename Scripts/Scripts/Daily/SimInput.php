@@ -44,6 +44,24 @@ class SimInput {
             $ds <= $this->endDate;
             $ds = DateTimeUtils::addDay($ds)
         ) {
+            $logged_games = array();
+            if ($ds === date('Y-m-d')) {
+                $sql = sprintf(
+                    "SELECT gameid
+                    FROM %s
+                    WHERE season = %d
+                    AND stats_type = '%s'
+                    AND stats_year = '%s'
+                    AND game_date = '%s'",
+                    self::SIM_INPUT,
+                    date('Y'),
+                    $this->statsType,
+                    $this->statsYear,
+                    $ds
+                );
+                $data = exe_sql(DATABASE, $sql);
+                $logged_games = safe_array_column($data, 'gameid');
+            }
             $season = substr($ds, 0, 4);
             // TODO(cert): Create ESPN Joe Averages
             $joe_average = RetrosheetParseUtils::getJoeAverageStats(2013);
@@ -60,8 +78,15 @@ class SimInput {
             foreach ($lineups as $lineup) {
                 $gameid = $lineup['home'] . str_replace('-', '', $ds) .
                     substr($lineup['time_est'], 0, 2);
+                $rand_bucket = rand(0, 29);
+                // For daily logging, skip any games already written to
+                // sim_input (this won't work for backfills at the moment).
+                if (in_array($gameid, $logged_games)) {
+                    continue;
+                }
                 $this->simInputData[$gameid] = array(
                     'gameid' => $gameid,
+                    'rand_bucket' => $rand_bucket,
                     'home' => $lineup['home'],
                     'away' => $lineup['away'],
                     'season' => $lineup['season'],
@@ -139,6 +164,8 @@ class SimInput {
         if ($this->testPlayer !== null) {
             print_r($this->simInputData);
             exit();
+        } else if ($this->simInputData == null) {
+            exit('No New Games');
         }
         multi_insert(
             DATABASE,
@@ -146,7 +173,6 @@ class SimInput {
             $this->simInputData,
             self::$colheads
         );
-        logInsert(self::SIM_INPUT);
     }
 
     public function setTest($player = 'poseb001') {

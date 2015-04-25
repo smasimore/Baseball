@@ -257,7 +257,6 @@ if ($insert_data == null) {
 		$insert_data,
 		$colheads
 	);
-	logInsert($insert_table);
 }
 
 ?>

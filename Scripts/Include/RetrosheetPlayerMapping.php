@@ -210,8 +210,9 @@ class RetrosheetPlayerMapping {
 
     // Try to get an ID but don't fail if one isn't found.
     public static function getIDFromFirstLast($first, $last, $team = null) {
+        $player_id = null;
         try {
-            self::getIDFromFirstLastStrict($first, $last, $team);
+            $player_id = self::getIDFromFirstLastStrict($first, $last, $team);
         } catch (Exception $e) {
             $error = $e->getMessage();
             $trace = $e->getTraceAsString();
@@ -219,6 +220,7 @@ class RetrosheetPlayerMapping {
             echo $trace . "\n";
             send_email($error, $trace, 'd');
         }
+        return $player_id;
     }
 
     private static function getIDFromFirstLastStrict($first, $last, $team) {
