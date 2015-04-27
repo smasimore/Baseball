@@ -173,7 +173,8 @@ class RetrosheetPlayerMapping {
         'delinodeshields' => 'deshd01',
         'kristophernegron' => 'negrk001',
         'j.t.realmuto' => 'realj01',
-        'jorgede' => 'delaj001'
+        'jorgede' => 'delaj001',
+        'reynavarro' => 'navar01'
     );
 
     // This function should only be called by the players.php script with
