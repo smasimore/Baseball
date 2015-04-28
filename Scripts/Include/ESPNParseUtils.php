@@ -68,6 +68,15 @@ class ESPNParseUtils {
         }
         $joe_average = json_decode($joe_average, true);
         $pct_stats = RetrosheetPercentStats::getPctStats();
+        $all_splits = RetrosheetSplits::getSplits();
+        foreach ($all_splits as $split_name) {
+            if (idx($stats, $split_name) === null) {
+                $stats[$split_name] = array(
+                    'split' => $split_name,
+                    'plate_appearances' => 0
+                );
+            }
+        }
         foreach ($stats as $split_stats) {
             $pas = $split_stats['plate_appearances'];
             $split = $split_stats['split'];
