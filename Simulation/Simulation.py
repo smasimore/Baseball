@@ -104,8 +104,8 @@ class Simulation:
 
     def __init__(self,
         weights,
-        season = time.strftime("%Y"),
-        stats_year = 'season',
+        season = datetime.datetime.now().year,
+        stats_year = 'career',
         stats_type = 'basic'):
 
         self.startTime = datetime.datetime.now()
