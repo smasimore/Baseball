@@ -23,6 +23,12 @@ class ESPNParseUtils {
         return idx($data, 'ds');
     }
 
+    public static function createGameID($home, $date, $time) {
+        $date = str_replace('-', '', $date);
+        $hour = substr($time, 0, 2);
+        return $home . $date . $hour;
+    }
+
     public static function getAllBatters($ds, $test_player = null) {
         $sql = sprintf(
             "SELECT

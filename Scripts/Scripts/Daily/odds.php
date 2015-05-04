@@ -2,8 +2,7 @@
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
 include('/Users/constants.php');
-include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
-include(HOME_PATH.'Scripts/Include/Teams.php');
+include(HOME_PATH.'Scripts/Include/ScrapingInclude.php');
 
 function get_html($url) {
     $ch = curl_init();
@@ -168,6 +167,7 @@ function checkValidURL($source_code) {
 }
 
 $colheads = array(
+	'gameid',
 	'game_date',
 	'game_time',
 	'odds_date',
@@ -293,6 +293,11 @@ foreach ($stats_stg as $home_team) {
 					if (!$odds['home_odds']) {
 						continue;
 					}
+					$odds['gameid'] = ESPNParseUtils::createGameID(
+						$odds['home'],
+						$odds['game_date'],
+						$odds['game_time']
+					);
 					$odds['ds'] = date('Y-m-d');
 					$odds['ts'] = date('Y-m-d H:i:s');
 					$odds['season'] = date('Y');

@@ -4,8 +4,7 @@
 if (!defined('DATABASE')) {
 	include('/Users/constants.php');
 }
-include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
-include(HOME_PATH.'Scripts/Include/Teams.php');
+include(HOME_PATH.'Scripts/Include/ScrapingInclude.php');
 
 function get_html($url) {
     $ch = curl_init();
@@ -57,6 +56,7 @@ function getLatestOddsData($date) {
 }
 
 $colheads = array(
+	'gameid' => '!',
 	'game_time' => '!',
 	'game_date' => '!',
 	'away' => '!',
@@ -168,6 +168,11 @@ foreach ($final_array as $i => $game) {
 	if ($home_odds_same && $away_odds_same) {
 		continue;
 	}
+	$game['gameid'] = ESPNParseUtils::createGameID(
+		$game['home'],
+		$game['game_date'],
+		$game['game_time']
+	);
 	$insert_array[] = $game;
 }
 

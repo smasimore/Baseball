@@ -8,7 +8,6 @@
  */
 
 ini_set('memory_limit', '-1');
-ini_set('default_socket_timeout', -1);
 ini_set('max_execution_time', -1);
 ini_set('mysqli.connect_timeout', -1);
 ini_set('mysqli.reconnect', '1');
@@ -18,5 +17,6 @@ if (!defined('HOME_PATH')) {
 include(HOME_PATH.'Scripts/Include/Enum.php');
 include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
 include(HOME_PATH.'Scripts/Include/Teams.php');
+include(HOME_PATH.'Scripts/Include/ESPNParseUtils.php');
 
 ?>
