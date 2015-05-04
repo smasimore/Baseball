@@ -65,9 +65,6 @@ MySQL Constants (scope = global)
 ----------------------------------------------------------------------*/
 define("MYSQL_ADDRESS", HOST);          // Define the IP address of your MySQL Server
 define("MYSQL_USERNAME", MYSQL_USER);         // Define your MySQL user name
-define("MYSQL_PASSWORD", MYSQL_PASSWORD);         // Define your MySQL password
-// Cert edited this out since it's defined in constants.php
-//define("DATABASE", DATABASE);               // Define your default database
 define("SUCCESS", true);              // Successful operation flag
 define("FAILURE", false);             // Failed operation flag
 

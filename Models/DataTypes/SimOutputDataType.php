@@ -1,7 +1,8 @@
 <?php
 
 include_once 'DataType.php';
-include_once __DIR__ . '/../includes/SimConstants.php';
+include_once __DIR__ . '/Models/Constants/StatsYears.php';
+include_once __DIR__ . '/Models/Constants/StatsTypes.php';
 
 final class SimOutputDataType extends DataType {
 
@@ -27,8 +28,8 @@ final class SimOutputDataType extends DataType {
             'game_date' => $this->gameDate,
             'season' => $season,
             'weights' => 'b_total_100',
-            'stats_year' => StatsYear::CAREER,
-            'stats_type' => StatsType::BASIC,
+            'stats_year' => StatsYears::CAREER,
+            'stats_type' => StatsTypes::BASIC,
             'weights_mutator' => null, // will this work?
             'analysis_runs' => 5000,
             'use_reliever' => false

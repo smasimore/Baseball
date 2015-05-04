@@ -1,8 +1,7 @@
 <?php
 include_once 'Page.php';
-include_once __DIR__ .'/../includes/SimConstants.php';
-include_once __DIR__ .'/../data/SimOutputDataType.php';
-include_once __DIR__ .'/../data/SimInputDataType.php';
+include_once __DIR__ .'/../../Models/DataTypes/SimOutputDataType.php';
+include_once __DIR__ .'/../../Models/DataTypes/SimInputDataType.php';
 
 class GamesPage2 extends Page {
 

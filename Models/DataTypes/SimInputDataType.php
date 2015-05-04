@@ -1,7 +1,8 @@
 <?php
 
 include_once 'DataType.php';
-include_once __DIR__ . '/../includes/SimConstants.php';
+include_once __DIR__ . '/Models/Constants/StatsYears.php';
+include_once __DIR__ . '/Models/Constants/StatsTypes.php';
 
 final class SimInputDataType extends DataType {
 
@@ -32,8 +33,8 @@ final class SimInputDataType extends DataType {
         return array(
             'game_date' => $this->gameDate,
             'season' => $season,
-            'stats_year' => StatsYear::CAREER,
-            'stats_type' => StatsType::BASIC
+            'stats_year' => StatsYears::CAREER,
+            'stats_type' => StatsTypes::BASIC
         );
     }
 

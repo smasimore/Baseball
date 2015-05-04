@@ -1,8 +1,8 @@
 <?php
 include_once 'Page.php';
 include_once __DIR__ . '/../ui/UOList.php';
-include_once __DIR__ .'/../includes/Bases.php';
-include_once __DIR__ .'/../data/SimDebugDataType.php';
+include_once __DIR__ .'/../../Models/Constants/Bases.php';
+include_once __DIR__ .'/../../Models/DataTypes/SimDebugDataType.php';
 
 class SimDebugPage extends Page {
 

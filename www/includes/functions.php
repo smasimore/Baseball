@@ -855,14 +855,6 @@ function ds_modify($date, $day_change) {
     return $new_date;
 }
 
-function array_column($array, $key) {
-    $ret_array = array();
-    foreach ($array as $row) {
-        $ret_array[] = $row[$key];
-    }
-    return $ret_array;
-}
-
 function idx($array, $i, $default = null) {
     if (isset($array[$i])) {
         return $array[$i];

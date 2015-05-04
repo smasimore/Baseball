@@ -1,5 +1,5 @@
 <?php
-include_once 'data/SimDebugDataType.php';
+include_once __DIR__ . '/../Models/DataTypes/SimDebugDataType.php';
 
 $dt = new SimDebugDataType();
 $dt->gen();
