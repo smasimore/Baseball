@@ -43,8 +43,7 @@ trait TSimParams {
     }
 
     public function setWeights($weights) {
-        StatsCategories::getReadableWeights($weights);
-        $this->weights = $weights;
+        $this->weights = StatsCategories::getReadableWeights($weights);
         return $this;
     }
 

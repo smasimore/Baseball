@@ -1,13 +1,13 @@
 <?php
 include_once 'Page.php';
-include_once __DIR__ .'/../../Models/DataTypes/SimOutputDataType.php';
 include_once __DIR__ .'/../../Models/DataTypes/SimInputDataType.php';
+include_once __DIR__ .'/../../Models/DataTypes/BetsDataType.php';
 
 class GamesPage2 extends Page {
 
     private $date = array();
-    private $simData;
-    private $gameDT;
+    private $simInputDT;
+    private $betsDT;
 
     public function __construct($logged_in, $date) {
         parent::__construct($logged_in, true);
@@ -26,20 +26,15 @@ class GamesPage2 extends Page {
     }
 
     private function fetchData() {
-        // TODO(smas): remove this. Overriding for testing.
-        $this->date = '1955-04-13';
-        $date = '1990-04-09'; // For sim_input data.
-
-        $sim_output_dt = new SimOutputDataType();
-        $sim_output_dt->setGameDate($this->date)->gen();
-        $this->simData = $sim_output_dt->getData();
-
-        $this->gameDT = new SimInputDataType();
-        $this->gameDT->setGameDate($date)->gen();
+        $this->simInputDT = new SimInputDataType();
+        $this->simInputDT->setGameDate($this->date)->gen();
+        $weights = array(StatsCategories::B_HOME_AWAY => 1.0);
+        $this->betsDT = new BetsDataType();
+        $this->betsDT->setWeights($weights)->setGameDate($this->date)->gen();
     }
 
     private function display() {
-        $sim_output_table = new Table($this->simData, 'sim_data');
+        $sim_output_table = new Table($this->betsDT->getData(), 'bets_data');
         $sim_output_table->display();
     }
 }

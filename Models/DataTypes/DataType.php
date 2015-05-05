@@ -44,6 +44,8 @@ abstract class DataType {
         if (!$this->data) {
             throw new Exception("No data available for $query");
         }
+
+        return $this;
     }
 
     public function getData() {
