@@ -1,12 +1,12 @@
 <?php
+// Copyright 2013-Present, Saber Tooth Ventures, LLC
 
 include_once 'DataType.php';
-include_once __DIR__ . '/Models/Constants/StatsYears.php';
-include_once __DIR__ . '/Models/Constants/StatsTypes.php';
+include_once __DIR__ . '/../Traits/TSimParams.php';
 
 final class SimOutputDataType extends DataType {
 
-    private $gameDate;
+    use TSimParams;
 
     protected function getTable() {
         return 'sim_output';
@@ -17,28 +17,6 @@ final class SimOutputDataType extends DataType {
     }
 
     protected function getParams() {
-        if ($this->gameDate === null) {
-            throw new Exception('Game date must be set.');
-        }
-
-        $date = DateTime::createFromFormat('Y-m-d', $this->gameDate);
-        $season = $date->format('Y');
-
-        return array(
-            'game_date' => $this->gameDate,
-            'season' => $season,
-            'weights' => 'b_total_100',
-            'stats_year' => StatsYears::CAREER,
-            'stats_type' => StatsTypes::BASIC,
-            'weights_mutator' => null, // will this work?
-            'analysis_runs' => 5000,
-            'use_reliever' => false
-        );
+        return $this->getSimParams();
     }
-
-    public function setGameDate($game_date) {
-        $this->gameDate = $game_date;
-        return $this;
-    }
-
 }

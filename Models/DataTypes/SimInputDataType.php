@@ -1,12 +1,13 @@
 <?php
+// Copyright 2013-Present, Saber Tooth Ventures, LLC
 
 include_once 'DataType.php';
-include_once __DIR__ . '/Models/Constants/StatsYears.php';
-include_once __DIR__ . '/Models/Constants/StatsTypes.php';
+include_once __DIR__ . '/../Constants/StatsYears.php';
+include_once __DIR__ . '/../Constants/StatsTypes.php';
 
 final class SimInputDataType extends DataType {
 
-    private $gameDate;
+    use TSimParams;
 
     protected function getTable() {
         return 'sim_input';
@@ -27,14 +28,11 @@ final class SimInputDataType extends DataType {
             throw new Exception('Game date must be set.');
         }
 
-        $date = DateTime::createFromFormat('Y-m-d', $this->gameDate);
-        $season = $date->format('Y');
-
         return array(
             'game_date' => $this->gameDate,
-            'season' => $season,
-            'stats_year' => StatsYears::CAREER,
-            'stats_type' => StatsTypes::BASIC
+            'season' => $this->getSeason(),
+            'stats_year' => $this->statsYear,
+            'stats_type' => $this->statsType
         );
     }
 
@@ -49,11 +47,6 @@ final class SimInputDataType extends DataType {
         }
 
         $this->data = $formatted_data;
-    }
-
-    public function setGameDate($game_date) {
-        $this->gameDate = $game_date;
-        return $this;
     }
 
     public function getHomePitcherName($game_id) {

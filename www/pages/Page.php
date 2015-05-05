@@ -1,4 +1,6 @@
 <?php
+// Copyright 2013-Present, Saber Tooth Ventures, LLC
+
 ini_set('memory_limit', '-1');
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
@@ -37,7 +39,9 @@ class Page {
     }
 
     final protected function setHeader($header, $sub_header = null) {
-        $this->header = new PageHeader($this->loggedIn, $header, $sub_header);
+        $this->header = (new PageHeader($this->loggedIn))
+            ->setTitle($header)
+            ->setSubtitle($sub_header);
         $this->displayHeader();
     }
 

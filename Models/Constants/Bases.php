@@ -13,7 +13,7 @@ class Bases {
     const SECOND_THIRD = 6;
     const LOADED = 7;
 
-    public function basesToString($bases) {
+    public static function basesToString($bases) {
         switch ($bases) {
             case self::NONE_ON:
                 return 'None On';
