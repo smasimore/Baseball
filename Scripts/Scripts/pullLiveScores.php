@@ -1,12 +1,8 @@
 <?php
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
-ini_set('memory_limit', '-1');
-ini_set('default_socket_timeout', -1);
-ini_set('max_execution_time', -1);
-ini_set('mysqli.connect_timeout', -1);
-ini_set('mysqli.reconnect', '1');
 include('/Users/constants.php');
+include(HOME_PATH.'Scripts/Include/ESPNParseUtils.php');
 include(HOME_PATH.'Scripts/Include/DateTimeUtils.php');
 include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
 
@@ -45,6 +41,7 @@ $types = parse_array_clean($source_code, $types_start, $types_end);
 
 $final_array = array();
 $colheads = array(
+	'gameid',
 	'home',
 	'away',
 	'home_score',
@@ -98,6 +95,11 @@ foreach ($game_time as $i => $time) {
 	list($converted_date, $converted_time) =
 		DateTimeUtils::getESTDateTimeFromGMT($game_date, $time);
 	$overall_game_date = $converted_date;
+	$final_array[$i]['gameid'] = ESPNParseUtils::createGameID(
+		$final_array[$i]['home'],
+		$converted_date,
+		$converted_time
+	);
 	$final_array[$i]['game_date'] = $converted_date;
 	$final_array[$i]['game_time'] = $converted_time;
 	$final_array[$i]['season'] = $season;
