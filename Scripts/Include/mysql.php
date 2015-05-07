@@ -368,7 +368,7 @@ function multi_insert($database, $table, $data_array, $colheads) {
     # Connect to MySQL server and select database
     $attempts = 0;
     $mysql_connect = connect_to_database();
-    echo '========'."\n";
+	echo '========'."\n";
     while ($attempts < 10 && mysqli_connect_errno()) {
         $mysql_connect = connect_to_database();
         $attempts ++;

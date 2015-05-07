@@ -5,7 +5,7 @@ include_once(HOME_PATH.'Scripts/Include/sweetfunctions.php');
 
 echo "HI"."\n";
 echo 'long lineeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
-echo 'it shouldntt
-//send_email('test', 'test');
+echo 'it shouldntt';
+
 
 ?>
