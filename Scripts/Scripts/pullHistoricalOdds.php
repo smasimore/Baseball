@@ -7,8 +7,9 @@ ini_set('max_execution_time', -1);
 ini_set('mysqli.connect_timeout', -1);
 ini_set('mysqli.reconnect', '1');
 include('/Users/constants.php');
+include(HOME_PATH.'Models/Constants/Tables.php');
 include(HOME_PATH.'Scripts/Include/RetrosheetInclude.php');
-include(HOME_PATH.'Scripts/Include/Odds.php');
+include(HOME_PATH.'Models/Utils/OddsUtils.php');
 
 const GAMEDATE = 0;
 const OPPONENT = 1;
@@ -116,7 +117,7 @@ for ($season = $startYear; $season < 2015; $season++) {
 					$pct_index = $home_away."_pct_win";
 					$team_odds[$game_date][$game_num][$ml_index] = $line;
 					$team_odds[$game_date][$game_num][$pct_index] =
-						Odds::convertOddsToPct($line);
+						OddsUtils::convertOddsToPct($line);
 					break;
 			}
 		}
@@ -165,7 +166,7 @@ for ($season = $startYear; $season < 2015; $season++) {
 	if (!$test && isset($insert_table)) {
 		multi_insert(
 			DATABASE,
-			Odds::HISTORICAL_ODDS_TABLE,
+			Tables::HISTORICAL_ODDS_TABLE,
 			$insert_table,
 			$colheads
 		);
