@@ -211,6 +211,9 @@ class RetrosheetPlayerMapping {
 
     // Try to get an ID but don't fail if one isn't found.
     public static function getIDFromFirstLast($first, $last, $team = null) {
+        if ($first === null && $last === null) {
+            return null;
+        }
         $player_id = null;
         try {
             $player_id = self::getIDFromFirstLastStrict($first, $last, $team);
