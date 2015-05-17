@@ -102,24 +102,10 @@ class Team:
 
         return weighted_batter_stats
 
-
-
-    ########## SETTERS ##########
-
     def __setCategoryWeights(self, inning, outs, bases, winning):
         if self.weightsMutator:
             method = getattr(WeightsMutator(), self.weightsMutator)
             self.categoryWeights = method(inning, outs, bases, winning)
-
-    def setWeightsMutator(self, weights_mutator):
-        self.weightsMutator = weights_mutator
-
-    def setUseReliever(self, use_reliever):
-        self.useReliever = use_reliever
-
-
-
-    ########## GETTERS ##########
 
     # Dependent on inning, outs, and bases.
     def __getStatWeights(self, inning, outs, bases, batter):
@@ -213,3 +199,12 @@ class Team:
             return Pitcher.STARTER
 
         return Pitcher.RELIEVER
+
+
+    ########## SETTERS ##########
+
+    def setWeightsMutator(self, weights_mutator):
+        self.weightsMutator = weights_mutator
+
+    def setUseReliever(self, use_reliever):
+        self.useReliever = use_reliever

@@ -5,21 +5,21 @@ import random, json
 
 class Game:
 
-    HOME = 'Home'
-    AWAY = 'Away'
+    __HOME = 'Home'
+    __AWAY = 'Away'
 
     def __init__(self, weights, input_data, at_bat_impact_data):
         self.atBatImpactData = at_bat_impact_data
         self.gameID = input_data['gameid']
         self.teams = {
-            self.HOME :
+            self.__HOME :
                  Team(
                     HomeAway.HOME,
                     weights,
                     input_data['pitching_a'],
                     input_data['batting_h'],
                 ),
-            self.AWAY :
+            self.__AWAY :
                 Team(
                     HomeAway.AWAY,
                     weights,
@@ -36,28 +36,28 @@ class Game:
 
         # Set starting state of game.
         self.inning = 1
-        self.batter = {self.HOME : 1, self.AWAY : 1}
-        self.score = {self.HOME : 0, self.AWAY : 0}
+        self.batter = {self.__HOME : 1, self.__AWAY : 1}
+        self.score = {self.__HOME : 0, self.__AWAY : 0}
 
         while True:
-            self.__playInning(self.AWAY)
+            self.__playInning(self.__AWAY)
 
             # End game before bottom of inning if >= 9 and home winning.
             if (self.inning >= 9 and
-                self.score[self.HOME] > self.score[self.AWAY]):
+                self.score[self.__HOME] > self.score[self.__AWAY]):
                 break
 
-            self.__playInning(self.HOME)
+            self.__playInning(self.__HOME)
 
             # End game if inning >= 9 and not tied.
             if (self.inning >= 9 and
-                self.score[self.HOME] is not self.score[self.AWAY]):
+                self.score[self.__HOME] is not self.score[self.__AWAY]):
                 break
 
             self.inning += 1
 
-        self.results[self.HOME]['runs'] = self.score[self.HOME]
-        self.results[self.AWAY]['runs'] = self.score[self.AWAY]
+        self.results[self.__HOME]['runs'] = self.score[self.__HOME]
+        self.results[self.__AWAY]['runs'] = self.score[self.__AWAY]
         return self.results, self.log
 
 
@@ -161,17 +161,20 @@ class Game:
             'ground_out' : 0,
             'fly_out' : 0
         }
-        self.results = {self.HOME : events.copy(), self.AWAY : events.copy()}
+        self.results = {
+            self.__HOME : events.copy(),
+            self.__AWAY : events.copy()
+        }
 
     ########## SETTERS ##########
 
     def setWeightsMutator(self, weights_mutator):
-        self.teams[self.HOME].setWeightsMutator(weights_mutator)
-        self.teams[self.AWAY].setWeightsMutator(weights_mutator)
+        self.teams[self.__HOME].setWeightsMutator(weights_mutator)
+        self.teams[self.__AWAY].setWeightsMutator(weights_mutator)
 
     def setLogging(self, log):
         self.loggingOn = log
 
     def setUseReliever(self, use_reliever):
-        self.teams[self.HOME].setUseReliever(use_reliever)
-        self.teams[self.AWAY].setUseReliever(use_reliever)
+        self.teams[self.__HOME].setUseReliever(use_reliever)
+        self.teams[self.__AWAY].setUseReliever(use_reliever)

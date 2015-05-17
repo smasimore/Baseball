@@ -17,7 +17,7 @@ class Simulation:
     __THREADS = 10
 
     ########## COLUMN LISTS ##########
-    SIM_OUTPUT_COLUMNS = [
+    __SIM_OUTPUT_COLUMNS = [
         'home_win_pct',
         'game_details',
         'gameid',
@@ -37,7 +37,7 @@ class Simulation:
         'use_reliever'
     ]
 
-    DEBUG_COLUMNS = [
+    __DEBUG_COLUMNS = [
         'score',
         'inning',
         'team',
@@ -61,12 +61,12 @@ class Simulation:
     ]
 
     ########## PARAM VALIDATION LISTS ##########
-    STATS_TYPES = [
+    __STATS_TYPES = [
         'basic',
         'magic',
     ]
 
-    STATS = [
+    __STATS = [
         StatCategories.B_TOTAL,
         StatCategories.B_HOME_AWAY,
         StatCategories.B_PITCHER_HANDEDNESS,
@@ -79,7 +79,7 @@ class Simulation:
         StatCategories.P_STADIUM,
     ]
 
-    STATS_YEAR = [
+    __STATS_YEAR = [
         'career',
         'season',
         'previous',
@@ -88,17 +88,17 @@ class Simulation:
 
 
     ########## DEFAULT PARAMS - use setter functions to override. ##########
-    ANALYSIS_RUNS = 5000
-    GAME_DATE = None # Set a date to run a specific day of games.
+    __ANALYSIS_RUNS = 5000
+    __GAME_DATE = None # Set a date to run a specific day of games.
                      # Timespan not currently available.
-    TEST_RUN = False
-    WEIGHTS_MUTATOR = None
-    DEBUG_LOGGING = True
-    USE_RELIEVER = False
+    __TEST_RUN = False
+    __WEIGHTS_MUTATOR = None
+    __DEBUG_LOGGING = True
+    __USE_RELIEVER = False
 
     # Input data split into 30 rand groups.
-    SAMPLE_MIN = 0
-    SAMPLE_MAX = 29
+    __SAMPLE_MIN = 0
+    __SAMPLE_MAX = 29
 
 
 
@@ -110,11 +110,11 @@ class Simulation:
 
         self.startTime = datetime.datetime.now()
 
-        self.validateWeights(weights, stats_type)
-        self.validateSeasonYear(season)
-        self.validateInList(stats_type, self.STATS_TYPES)
-        self.validateInList(stats_year, self.STATS_YEAR)
-        self.validateUseReliever(self.USE_RELIEVER)
+        self.__validateWeights(weights, stats_type)
+        self.__validateSeasonYear(season)
+        self.__validateInList(stats_type, self.__STATS_TYPES)
+        self.__validateInList(stats_year, self.__STATS_YEAR)
+        self.__validateUseReliever(self.__USE_RELIEVER)
 
         self.weights = weights
         self.season = season
@@ -123,14 +123,14 @@ class Simulation:
         self.inputData = []
 
         # Extra, defaulted params. To change call setters.
-        self.analysisRuns = self.ANALYSIS_RUNS
-        self.gameDate = self.GAME_DATE
-        self.testRun = self.TEST_RUN
-        self.weightsMutator = self.WEIGHTS_MUTATOR
-        self.debugLoggingOn = self.DEBUG_LOGGING
-        self.useReliever = self.USE_RELIEVER
-        self.sampleMin = self.SAMPLE_MIN
-        self.sampleMax = self.SAMPLE_MAX
+        self.analysisRuns = self.__ANALYSIS_RUNS
+        self.gameDate = self.__GAME_DATE
+        self.testRun = self.__TEST_RUN
+        self.weightsMutator = self.__WEIGHTS_MUTATOR
+        self.debugLoggingOn = self.__DEBUG_LOGGING
+        self.useReliever = self.__USE_RELIEVER
+        self.sampleMin = self.__SAMPLE_MIN
+        self.sampleMax = self.__SAMPLE_MAX
 
     def run(self):
         self.__addWeightsIndex()
@@ -145,7 +145,7 @@ class Simulation:
         print 'Time Taken: ' + str(datetime.datetime.now() - self.startTime)
 
         # Return first row with cols for tests.
-        return dict(zip(self.SIM_OUTPUT_COLUMNS, self.__exportResults()[0]))
+        return dict(zip(self.__SIM_OUTPUT_COLUMNS, self.__exportResults()[0]))
 
     def __runGame(self, row_number, sim_results, debug_log):
         game_data = self.inputData[row_number]
@@ -354,7 +354,7 @@ class Simulation:
             at_bat.append(self.testRun)
 
         MySQL.delete("DELETE FROM %s" % self.__DEBUG_TABLE)
-        MySQL.insert(self.__DEBUG_TABLE, self.DEBUG_COLUMNS, debug_log)
+        MySQL.insert(self.__DEBUG_TABLE, self.__DEBUG_COLUMNS, debug_log)
 
     def __processGameResults(self, game_results):
         totals = {}
@@ -425,51 +425,11 @@ class Simulation:
             )
             MySQL.insert(
                 self.__OUTPUT_TABLE,
-                self.SIM_OUTPUT_COLUMNS,
+                self.__SIM_OUTPUT_COLUMNS,
                 results
             )
 
         return results
-
-
-    ########## EXTRA PARAM FUNCTIONS ##########
-
-    def setAnalysisRuns(self, runs):
-        self.validateAnalysisRuns(runs)
-        self.analysisRuns = runs
-
-    def setGameDate(self, date):
-        self.validateDate(date)
-        self.gameDate = date
-
-    # Use this in conjunction with setInputData for unit tests. If inputData
-    # is not set, sim_input data will be used. Either way, sim_output will not
-    # be written to if testRun is true.
-    def setTestRun(self, test_run):
-        self.validateTestRun(test_run)
-        self.testRun = test_run
-
-    # TODO(smas): If changed, this will override non-mutated data.
-    def setWeightsMutator(self, weights_mutator):
-        self.validateWeightsMutator(weights_mutator)
-        self.weightsMutator = weights_mutator
-
-    # Override inputData for tests.
-    def setInputData(self, input_data):
-        self.inputData = input_data
-
-    def setSample(self, mini, maxi):
-        self.validateSample(mini, maxi)
-        self.sampleMin = mini
-        self.sampleMax = maxi
-
-    def setDebugLogging(self, log):
-        self.validateDebugLogging(log)
-        self.debugLoggingOn = log
-
-    def setUseReliever(self, use_reliever):
-        self.validateUseReliever(use_reliever)
-        self.useReliever = use_reliever
 
     def __getSimParams(self):
         weights_readable = self.__getReadableWeights()
@@ -485,16 +445,57 @@ class Simulation:
             self.useReliever
         ]
 
+
+    ########## EXTRA PARAM FUNCTIONS ##########
+
+    def setAnalysisRuns(self, runs):
+        self.__validateAnalysisRuns(runs)
+        self.analysisRuns = runs
+
+    def setGameDate(self, date):
+        self.__validateDate(date)
+        self.gameDate = date
+
+    # Use this in conjunction with setInputData for unit tests. If inputData
+    # is not set, sim_input data will be used. Either way, sim_output will not
+    # be written to if testRun is true.
+    def setTestRun(self, test_run):
+        self.__validateTestRun(test_run)
+        self.testRun = test_run
+
+    # TODO(smas): If changed, this will override non-mutated data.
+    def setWeightsMutator(self, weights_mutator):
+        self.__validateWeightsMutator(weights_mutator)
+        self.weightsMutator = weights_mutator
+
+    # Override inputData for tests.
+    def setInputData(self, input_data):
+        self.inputData = input_data
+
+    def setSample(self, mini, maxi):
+        self.__validateSample(mini, maxi)
+        self.sampleMin = mini
+        self.sampleMax = maxi
+
+    def setDebugLogging(self, log):
+        self.__validateDebugLogging(log)
+        self.debugLoggingOn = log
+
+    def setUseReliever(self, use_reliever):
+        self.__validateUseReliever(use_reliever)
+        self.useReliever = use_reliever
+
+
     ########## PARAM VALIDATION FUNCTIONS ##########
 
-    def validateWeights(self, weights, stats_type):
+    def __validateWeights(self, weights, stats_type):
         # Check if param is dictionary.
         if type(weights) is not dict:
             raise ValueError('Weight param needs to be a dict. %s is not.'
                 % weights)
-        # Check if stats in STATS.
+        # Check if stats in __STATS.
         for stat in weights:
-            self.validateInList(stat, self.STATS)
+            self.__validateInList(stat, self.__STATS)
             if type(weights[stat]) is not float:
                 raise ValueError('Weight value needs to be a float. %s is not.'
                     % weights[stat])
@@ -506,38 +507,38 @@ class Simulation:
                     "Weights must add to 1 (not %s) for basic stats_type."
                     % sum(weights.values()))
 
-    def validateTestRun(self, test_run):
+    def __validateTestRun(self, test_run):
         if not isinstance(test_run, bool):
             raise ValueError(
                 'Test run param needs to be a bool. %s is not.'
                 % test_run)
 
-    def validateAnalysisRuns(self, runs):
+    def __validateAnalysisRuns(self, runs):
         if not isinstance(runs, int):
             raise ValueError(
                 'Analysis runs needs to be an int. %s is not.'
                 % runs)
 
-    def validateSeasonYear(self, year):
+    def __validateSeasonYear(self, year):
         if not isinstance(year, int):
             raise ValueError(
                 'Season needs to be an int. %s is not.'
                 % year)
 
-    def validateDate(self, date):
+    def __validateDate(self, date):
         datetime.datetime.strptime(date, '%Y-%m-%d')
 
-    def validateInList(self, param, param_list):
+    def __validateInList(self, param, param_list):
         if param not in param_list:
             raise ValueError('%s not a valid input' % param)
 
-    def validateWeightsMutator(self, weights_mutator):
+    def __validateWeightsMutator(self, weights_mutator):
         method = getattr(WeightsMutator(), weights_mutator)
         if not method:
             raise ValueError(
                 '%s is not a valid WeightsMutator function' % weights_mutator)
 
-    def validateSample(self, mini, maxi):
+    def __validateSample(self, mini, maxi):
         if not isinstance(mini, int):
             raise ValueError(
                 'Min sample value should be an int, %s is not' % mini)
@@ -549,24 +550,24 @@ class Simulation:
                 'Min sample value should be <= max, %s is not less than %s'
                 % (mini, maxi)
             )
-        if mini < self.SAMPLE_MIN:
+        if mini < self.__SAMPLE_MIN:
             raise ValueError(
                 'Min sample value should be >= %s, %s is not'
-                % (self.SAMPLE_MIN, mini)
+                % (self.__SAMPLE_MIN, mini)
             )
-        if maxi > self.SAMPLE_MAX:
+        if maxi > self.__SAMPLE_MAX:
             raise ValueError(
                 'Max sample value should be <= %s, %s is not'
-                % (self.SAMPLE_MAX, maxi)
+                % (self.__SAMPLE_MAX, maxi)
             )
 
-    def validateDebugLogging(self, log):
+    def __validateDebugLogging(self, log):
         if not isinstance(log, bool):
             raise ValueError(
                 'Debug logging param needs to be a bool. %s is not.'
                 % log)
 
-    def validateUseReliever(self, use_reliever):
+    def __validateUseReliever(self, use_reliever):
         if not isinstance(use_reliever, bool):
             raise ValueError(
                 'Use Reliever param needs to be a bool. %s is not.'
