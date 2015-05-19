@@ -15,7 +15,7 @@ trait TSimParams {
     private $analysisRuns = 5000;
     private $useReliever = false;
 
-    public function getSimParams() {
+    final protected function getSimParams() {
         if ($this->gameDate === null) {
             throw new Exception('Game date must be set.');
         }
@@ -37,37 +37,65 @@ trait TSimParams {
         return $date->format('Y');
     }
 
-    public function setGameDate($game_date) {
+    final public function getStatsYear() {
+        return $this->statsYear;
+    }
+
+    final public function getStatsType() {
+        return $this->statsType;
+    }
+
+    final public function getWeights() {
+        return $this->weights;
+    }
+
+    final public function getWeightsMutator() {
+        return $this->weightsMutator;
+    }
+
+    final public function getUseReliever() {
+        return $this->useReliever;
+    }
+
+    final public function getAnalysisRuns() {
+        return $this->analysisRuns;
+    }
+
+    final public function getGameDate() {
+        return $this->gameDate();
+    }
+
+    final public function setGameDate($game_date) {
         $this->gameDate = $game_date;
         return $this;
     }
 
-    public function setWeights($weights) {
+    final public function setWeights($weights) {
         $this->weights = StatsCategories::getReadableWeights($weights);
         return $this;
     }
 
-    public function setStatsYear($stats_year) {
+    final public function setStatsYear($stats_year) {
         $this->statsYear = $stats_year;
         return $this;
     }
 
-    public function setStatsType($stats_type) {
+    final public function setStatsType($stats_type) {
         $this->statsType = $stats_type;
         return $this;
     }
 
-    public function setWeightsMutator($weights_mutator) {
+    final public function setWeightsMutator($weights_mutator) {
         $this->weightsMutator = $weights_mutator;
         return $this;
     }
 
-    public function setAnalysisRuns($analysis_runs) {
+    final public function setAnalysisRuns($analysis_runs) {
         $this->analysisRuns = $analysis_runs;
         return $this;
     }
 
-    public function setUseReliever($use_reliever) {
+    final public function setUseReliever($use_reliever) {
         $this->useReliever = $use_reliever;
         return $this;
     }

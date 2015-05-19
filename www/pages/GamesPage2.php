@@ -30,12 +30,34 @@ class GamesPage2 extends Page {
         $this->simInputDT->setGameDate($this->date)->gen();
         $weights = array(StatsCategories::B_HOME_AWAY => 1.0);
         $this->betsDT = new BetsDataType();
-        $this->betsDT->setWeights($weights)->setGameDate($this->date)->gen();
+        $this->betsDT
+            ->setColumns($this->getBetColumns())
+            ->setWeights($weights)
+            ->setGameDate($this->date)
+            ->gen();
     }
 
     private function display() {
         $sim_output_table = new Table($this->betsDT->getData(), 'bets_data');
         $sim_output_table->display();
+    }
+
+    private function getBetColumns() {
+        return array(
+            'gameid',
+            'home',
+            'away',
+            'home_sim',
+            'away_sim',
+            'home_vegas_odds',
+            'away_vegas_odds',
+            'bet_team',
+            'home_score',
+            'away_score',
+            'status',
+            'bet',
+            'payout'
+        );
     }
 }
 ?>
