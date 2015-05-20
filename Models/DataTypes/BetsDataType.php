@@ -15,4 +15,8 @@ final class BetsDataType extends DataType {
     final protected function getParams() {
         return $this->getSimParams();
     }
+
+    protected function formatData() {
+        $this->data = index_by($this->data, 'gameid');
+    }
 }

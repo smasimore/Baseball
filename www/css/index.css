@@ -316,14 +316,24 @@ border : solid 0px #ffffff;
 
 .game_section {
   background-color: #579c57;
-  border: 1px solid #213a21;
   overflow: hidden;
   margin-top: 10px;
   margin-bottom: 20px;
   padding: 10px;
   width: auto;
   height: auto;
-  box-shadow: 2px 2px 2px #888888;
+}
+
+.game_header {
+    font-family: "Verdana";
+    color: white;
+    padding-left: 20px;
+}
+
+.game_header_final {
+    font-family: "Verdana";
+    color: yellow;
+    padding-left: 20px;
 }
 
 /* Errors.php */

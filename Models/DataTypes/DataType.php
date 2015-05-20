@@ -3,6 +3,7 @@
 
 include_once '/Users/constants.php';
 include_once __DIR__ . '/../../Scripts/Include/mysql.php';
+include_once __DIR__ . '/../Constants/Tables.php';
 
 abstract class DataType {
 

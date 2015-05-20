@@ -16,6 +16,8 @@ include_once __DIR__ .'/../ui/UOList.php';
 include_once __DIR__ .'/../ui/Selector.php';
 include_once __DIR__ .'/../ui/Enum.php';
 include_once __DIR__ .'/../ui/Colors.php';
+include_once __DIR__ .'/../ui/Div.php';
+include_once __DIR__ .'/../ui/Font.php';
 
 class Page {
 
@@ -39,7 +41,8 @@ class Page {
     }
 
     final protected function setHeader($header, $sub_header = null) {
-        $this->header = (new PageHeader($this->loggedIn))
+        $this->header = (new PageHeader())
+            ->setLoggedIn($this->loggedIn)
             ->setTitle($header)
             ->setSubtitle($sub_header);
         $this->displayHeader();
@@ -47,7 +50,7 @@ class Page {
 
     private function displayHeader() {
         if (!$this->header) {
-            $this->header = new PageHeader($this->loggedIn);
+            $this->header = (new PageHeader())->setLoggedIn($this->loggedIn);
         }
         $this->header->display();
 

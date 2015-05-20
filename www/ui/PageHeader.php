@@ -7,6 +7,7 @@ class PageHeader extends UIElement {
 
     private $title;
     private $subtitle;
+    private $loggedIn;
 
     // Sets up loggedIn header
     public function fetchData() {
@@ -62,6 +63,11 @@ class PageHeader extends UIElement {
             "| $$season_return Return ($1k Bets) | $season_progress% Season Complete";
     }
 
+    public function setLoggedIn($logged_in) {
+        $this->loggedIn = $logged_in;
+        return $this;
+    }
+
     public function setTitle($title) {
         $this->title = $title;
         return $this;
@@ -72,7 +78,7 @@ class PageHeader extends UIElement {
         return $this;
     } 
 
-    public function setHTML() {
+    protected function setHTML() {
         $html_title =
             "<p class='title'>
                 $this->title

@@ -8,7 +8,6 @@ class Selector extends UIElement {
     private $name;
     private $value;
     private $options;
-    private $class;
 
     public function __construct(
         $title,
