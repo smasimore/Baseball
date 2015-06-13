@@ -1,0 +1,22 @@
+# static ip
+http://www.maclife.com/article/howtos/how_remotely_monitor_your_transmission_torrent_downloads
+
+# ssh
+Enable remote login in sharing preferences
+
+# webserver
+Move over /etc/apache2/httpd.conf and /etc/apache2/extra/httpd-vhosts.conf
+
+# mysql
+https://github.com/MacMiniVault/Mac-Scripts/blob/master/mmvMySQL/mmvmysql-README.md
+# Also had to copy over data + ib_ files
+# Make sure server is STOPPED before copying files over
+sudo /usr/local/mysql/support-files/mysql.server stop
+sudo chown -R mysql:mysql data
+sudo chmod -R 777 data
+sudo /usr/local/mysql/support-files/mysql.server start
+
+# Create site user
+CREATE USER 'monty'@'localhost' IDENTIFIED BY 'some_pass';
+GRANT USAGE ON *.* TO 'site'@'localhost' IDENTIFIED BY '123';
+GRANT SELECT ON sim_input TO 'site'@'localhost';

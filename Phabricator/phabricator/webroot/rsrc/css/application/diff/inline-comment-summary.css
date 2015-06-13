@@ -1,0 +1,69 @@
+/**
+ * @provides inline-comment-summary-css
+ */
+
+.phabricator-inline-summary {
+  color: {$bluetext};
+  padding-top: 12px;
+  margin-top: 12px;
+  border-top: 1px solid {$thinblueborder};
+}
+
+.phabricator-remarkup + .phabricator-inline-summary {
+  padding-top: 16px;
+}
+
+.phabricator-inline-summary-table {
+  width: 100%;
+}
+
+.phabricator-inline-summary-table th {
+  padding: 6px 0px;
+  color: {$lightgreytext};
+}
+
+.phabricator-inline-summary-table td  {
+  padding: 0px 4px 6px;
+  white-space: nowrap;
+  color: {$darkbluetext};
+}
+
+.phabricator-inline-summary-table td.inline-line-number {
+  padding-left: 0px;
+  width: 100px;
+  white-space: nowrap;
+}
+
+.phabricator-inline-summary-table td.inline-which-diff {
+  color: {$greytext};
+  width: 120px;
+}
+
+.phabricator-inline-summary-table td.inline-summary-content {
+  vertical-align: top;
+  white-space: normal;
+}
+
+/* NOTE: These two rules provide a larger hit target for clicking line numbers
+   (by letting you click the entire cell) and a visual indicator that you're on
+   target (by highlighting the entire cell). */
+
+.phabricator-inline-summary-table td.inline-line-number a.num {
+  padding-left: 4px;
+  display: block;
+  font-weight: bold;
+  color: {$blue};
+}
+
+.phabricator-inline-summary-table td.inline-line-number a.num:hover {
+  background: {$blue};
+  border-radius: 3px;
+  color: white;
+  text-decoration: none;
+}
+
+.phui-timeline-core-content .phabricator-inline-summary:first-child {
+  border: none;
+  margin-top: 0;
+  padding-top: 0;
+}

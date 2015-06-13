@@ -1,0 +1,45 @@
+/**
+ * @provides phabricator-side-menu-view-css
+ */
+
+.phabricator-side-menu .phui-list-item-view {
+  display: block;
+  white-space: nowrap;
+  text-decoration: none;
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+}
+
+.phabricator-side-menu .phui-list-item-href {
+  display: block;
+  padding: 6px 8px 6px 24px;
+  color: {$darkbluetext};
+}
+
+.phabricator-side-menu .phui-list-item-selected {
+  background-color: {$hovergrey};
+  border-left: 4px solid {$sky};
+}
+
+.device-desktop .phabricator-side-menu .phui-list-item-selected
+ a.phui-list-item-href:hover {
+  background-color: {$hoverselectedgrey};
+}
+
+.phabricator-side-menu .phui-list-item-selected .phui-list-item-href {
+  padding-left: 20px;
+}
+
+.phabricator-side-menu .phui-list-item-type-label {
+  padding: 6px 8px 4px 12px;
+  color: {$darkbluetext};
+  text-transform: uppercase;
+  font-size: 12px;
+  font-weight: bold;
+  border-style: solid;
+}
+
+.device-desktop .phabricator-side-menu a.phui-list-item-href:hover {
+  text-decoration: none;
+  background-color: {$hovergrey};
+}

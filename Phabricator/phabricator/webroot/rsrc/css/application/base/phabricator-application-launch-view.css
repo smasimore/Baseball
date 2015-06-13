@@ -1,0 +1,95 @@
+/**
+ * @provides phabricator-application-launch-view-css
+ */
+
+
+/* - Application List ----------------------------------------------------------
+
+  Spacing container for the list of large application buttons.
+
+*/
+
+
+.application-tile-group {
+  overflow: hidden;
+}
+
+
+/* - Application Launch Button -------------------------------------------------
+
+  Spacing container for the list of large application buttons.
+
+*/
+
+a.phabricator-application-launch-container,
+div.phabricator-application-launch-container {
+  display: block;
+  float: left;
+  overflow: hidden;
+  position: relative;
+  text-decoration: none;
+  width: 100%;
+  height: 44px;
+  border-bottom: 1px solid {$hovergrey};
+}
+
+.device-phone div.phabricator-application-launch-container {
+  display: none;
+}
+
+.phabricator-application-launch-icon {
+  display: block;
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  top: 8px;
+  left: 8px;
+}
+
+.device-desktop a.phabricator-application-launch-container:hover {
+  background-color: {$hovergrey};
+  text-decoration: none;
+}
+
+.phabricator-application-launch-name {
+  display: block;
+  font-weight: bold;
+  color: {$darkbluetext};
+  font-size: 13px;
+  margin: 6px 0 2px 44px;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.9);
+}
+
+.phabricator-application-launch-description {
+  color: {$bluetext};
+  font-size: 11px;
+  margin-left: 44px;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.9);
+  text-overflow: ellipsis;
+  width: 150px;
+  overflow: hidden;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+.phabricator-application-launch-attention {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  color: {$darkbluetext};
+  font-weight: bold;
+  font-size: 12px;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.9);
+}
+
+.phabricator-application-attention-count {
+  color: {$sky};
+}
+
+a.phabricator-application-launch-phone-only {
+  display: none;
+}
+
+.device-phone a.phabricator-application-launch-phone-only {
+  display: block;
+}

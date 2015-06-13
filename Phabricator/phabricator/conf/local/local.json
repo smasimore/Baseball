@@ -1,0 +1,6 @@
+{
+  "phabricator.base-uri" : "http:\/\/phabricator.sabertoothventures.com\/",
+  "mysql.user"           : "root",
+  "mysql.host"           : "localhost",
+  "mysql.pass"           : "baseball"
+}
