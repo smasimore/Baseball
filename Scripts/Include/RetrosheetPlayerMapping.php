@@ -158,7 +158,10 @@ class RetrosheetPlayerMapping {
         ),
         'chrisyoung' => array(
             'SEA' => 'younc003',
-            'OAK' => 'younc004'
+            'KC' => 'younc003',
+            'OAK' => 'younc004',
+            'NYY' => 'younc004',
+            'NYM' => 'younc004'
         )
     );
     private static $nameCorrectionMap = array(
@@ -175,7 +178,8 @@ class RetrosheetPlayerMapping {
         'j.t.realmuto' => 'realj01',
         'jorgede' => 'delaj001',
         'reynavarro' => 'navar01',
-        'thomasfield' => 'fielt001'
+        'thomasfield' => 'fielt001',
+        'chichi' => 'chi_c01'
     );
 
     // This function should only be called by the players.php script with
@@ -244,6 +248,16 @@ class RetrosheetPlayerMapping {
         $num_results = count($data);
         if ($num_results === 0) {
             if (idx(self::$ambiguousNameTeamMap, $first.$last) !== null) {
+                if (idx(
+                    self::$ambiguousNameTeamMap[$first.$last],
+                    $team
+                    ) === null
+                ) {
+                    throw new Exception(sprintf(
+                        'Update ambiguous name map for %s',
+                        $first.$last
+                    ));
+                }
                 return self::$ambiguousNameTeamMap[$first.$last][$team];
             } else if (idx(self::$nameCorrectionMap, $first.$last) !== null) {
                 return self::$nameCorrectionMap[$first.$last];
