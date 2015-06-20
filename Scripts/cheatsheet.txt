@@ -39,6 +39,14 @@ sudo vim /etc/my.cnf
 # Can see backlog in http://phabricator.sabertoothventures.com/daemon/
 ~/Phabricator/phabricator/bin/phd restart
 
+# Install PCNTL
+# 1) Install autoconf
+https://gist.github.com/jellybeansoup/4192307
+# 2) Re-download php to extract pcntl
+http://serverfault.com/questions/158113/installing-pcntl-module-for-php-without-recompiling
+# Note, instead of /etc/php.d/pcntl.ini part just add extension=pcntl.so to php.ini
+# Start daemons with ./bin/phd start in /phabricator
+
 # Restart mail server
 sudo postfix start
 
@@ -47,6 +55,9 @@ tail f /var/log/mail.log
 
 # Fix gmail email post
 https://rtcamp.com/tutorials/linux/ubuntu-postfix-gmail-smtp/
+# For New OS (Yosemite, etc) do following in /etc/postfix/main.cf
+comment out smtp_tls_CAfile
+add smtp_sasl_mechanism_filter = plain
 
 # Monitor processes (not exactly sure what these do... but useful
 # to kill a process, e.g. daily.php)
