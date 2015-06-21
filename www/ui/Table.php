@@ -77,6 +77,7 @@ class Table extends UIElement {
         }
 
         $this->header = $header;
+
         return $this;
     }
 }
