@@ -47,7 +47,8 @@ abstract class DataType {
     }
 
     final public function gen() {
-        $this->data = exe_sql($this->getDatabase(), $this->getSQL());
+        $query = $this->getSQL();
+        $this->data = exe_sql($this->getDatabase(), $query);
 
         $this->formatData();
 

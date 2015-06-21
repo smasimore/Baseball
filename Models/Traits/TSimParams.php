@@ -34,7 +34,7 @@ trait TSimParams {
 
     private function getSeason() {
         $date = DateTime::createFromFormat('Y-m-d', $this->gameDate);
-        return $date->format('Y');
+        return (int)$date->format('Y');
     }
 
     final public function getStatsYear() {
