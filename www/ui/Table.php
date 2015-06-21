@@ -8,6 +8,7 @@ class Table extends UIElement {
     private $id;
     private $title;
     private $expanded = true;
+    private $header = null;
 
     public function __construct(
         $data,
@@ -17,12 +18,10 @@ class Table extends UIElement {
         $this->data = $data;
         $this->id = $id;
         $this->title = $title;
-        $this->setHTML();
     }
 
     public function setExpanded($expanded) {
         $this->expanded = $expanded;
-        $this->setHTML();
         return $this;
     }
 
@@ -33,7 +32,7 @@ class Table extends UIElement {
             return;
         }
 
-        $header = array_keys(reset($this->data));
+        $header = $this->header ?: array_keys(reset($this->data));
         $html = 
             "<div align='center'>
                 <b>$this->title</b>
@@ -68,6 +67,17 @@ class Table extends UIElement {
         }
         $html .= '</table>';
         $this->html = $html;
+    }
+
+    public function setCustomHeader($header) {
+        if (!is_array($header)) {
+            throw new Exception(
+                'Must pass in an array to Table->setCustomHeader()'
+            );
+        }
+
+        $this->header = $header;
+        return $this;
     }
 }
 

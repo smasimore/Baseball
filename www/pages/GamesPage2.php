@@ -35,7 +35,7 @@ class GamesPage2 extends Page {
             ->getData();
         $weights = array(StatsCategories::B_HOME_AWAY => 1.0);
         $this->betsData = (new BetsDataType())
-            ->setColumns($this->getBetColumns())
+            ->setColumns($this->getBetsColumns())
             ->setWeights($weights)
             ->setGameDate($this->date)
             ->gen()
@@ -54,31 +54,31 @@ class GamesPage2 extends Page {
     private function getTeamStats($game_data) {
         return array(
             array(
-                'pitcher_l' => 'Pitcher',
-                'pitcher_a' => 'Away Pitcher',
-                'pitcher_h' => 'Home Pitcher'
+                'Pitcher',
+                '--HOME PIT NAME--',
+                '--AWAY PIT NAME--'
             ),
             array(
-                'pitcher_era_l' => 'Pitcher ERA',
-                'pitcher_era_a' => 'Away Pitcher ERA',
-                'pitcher_era_h' => 'Home Pitcher ERA'
+                'Pitcher ERA',
+                '--HOME PIT ERA--',
+                '--AWAY PIT ERA--'
             )
         );
     }
 
     private function display() {
-        $sim_output_table = new Table($this->betsData, 'bets_data');
-        $sim_output_table->display();
+        // Summary table.
+        (new Table($this->betsData, 'bets_data'))->display();
 
-        $games_section = $this->getGamesSection();
-        $games_section->display();
+        // Games section.
+        $this->getGamesSection()->display();
 
     }
 
     private function getGamesSection() {
         $games = array();
         foreach ($this->gamesData as $gameid => $data) {
-            $games[] = (new Div($this->getGameSection($gameid)))
+            $games[] = (new Div($this->getGameSection($gameid, $data)))
                 ->setClass('game_section')
                 ->getHTML();
         }
@@ -86,9 +86,10 @@ class GamesPage2 extends Page {
         return new UOList($games);
     }
 
-    private function getGameSection($gameid) {
+    private function getGameSection($gameid, $data) {
         return (new UOList(array(
-            $this->getGameHeader($gameid)
+            $this->getGameHeader($gameid),
+            $this->getTeamSection($gameid, $data)
         )))->getHTML();
     }
 
@@ -107,8 +108,9 @@ class GamesPage2 extends Page {
             $bets_game['away_score'],
             $bets_game['home_score']
         );
-        $score_class = $bets_game['status'] === 'Final' ? 'game_header_final' :
-            'game_header';
+        $score_class = $bets_game['status'] === 'Final'
+            ? 'game_header_final'
+            : 'game_header';
 
         return
             (new Font($teams_header))->setClass('game_header')->getHTML() .
@@ -116,7 +118,13 @@ class GamesPage2 extends Page {
             (new Font($score_header))->setClass($score_class)->getHTML();
     }
 
-    private function getBetColumns() {
+    private function getTeamSection($gameid, $data) {
+        return (new Table($data['team_stats'], "team_data_$gameid"))
+            ->setCustomHeader(array('', 'Home', 'Away'))
+            ->getHTML();
+    }
+
+    private function getBetsColumns() {
         return array(
             'gameid',
             'game_time',
