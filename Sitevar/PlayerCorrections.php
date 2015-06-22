@@ -3,7 +3,7 @@
 
 class PlayerCorrections {
 
-    private static $nameCorrectionMap = array(
+    public static $nameCorrectionMap = array(
         'stevensouza_jr.' => 'souzs01',
         'noriaoki' => 'aokin001',
         'wei_yinchen' => 'chenw001',
@@ -21,7 +21,7 @@ class PlayerCorrections {
         'chichi' => 'chi_c01'
     );
 
-    private static $espnAmbiguousIDMap = array(
+    public static $espnAmbiguousIDMap = array(
         31125 => 'torra002',
         31984 => 'rasmc002',
         30578 => 'casts002',
@@ -139,7 +139,7 @@ class PlayerCorrections {
         29221 => 'carpd01'
     );
 
-    private static $ambiguousNameTeamMap = array(
+    public static $ambiguousNameTeamMap = array(
         'chriscarpenter' => array(
             'STL' => 'carpc002',
             'BOS' => 'carpc003'
