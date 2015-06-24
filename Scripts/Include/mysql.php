@@ -1,6 +1,6 @@
 <?php
 if (!defined('DATABASE')) {
-    include('/Users/constants.php');
+    include_once('/Users/constants.php');
 }
 
 /*
@@ -349,11 +349,10 @@ function drop_partition($database, $table, $partition_keys) {
 
 /***********************************************************************
 multi_insert($database, $table, $data_array, $col_heads)
-// TODO(cert): Update how this works
-NEW: If colheads is associative arrays checks for acceptable nulls
+DESCRIPTION: Insert An Array Of Data Into A Table
 ************************************************************************/
 
-function multi_insert($database, $table, $data_array, $colheads) {
+function multi_insert($database, $table, $data_array, $colheads = null) {
     error_log(
         format_log_data('multi_insert', $table, count($data_array)),
         3,
@@ -392,19 +391,31 @@ function multi_insert($database, $table, $data_array, $colheads) {
     }
     mysqli_select_db($mysql_connect, $database);
 
-	// Determine which columns allows for null values
-	$nullable_colheads = array();
-	if (is_assoc($colheads)) {
-		foreach ($colheads as $name => $nullable) {
-			if ($nullable == '?') {
-				$nullable_colheads[] = $name;
-			}
+	// If colheads are not set, get them from Tables class.
+	if ($colheads === null) {
+		if ($table !== 'bets') {
+			throw new Exception('You must specify colheads (for now)');
 		}
-		// Remove null indicators for mysql insertion
-		$colheads = array_keys($colheads);
+		$colheads = getColheads($table);
+		// If you use this method all colheads are nullable since enforcement
+		// occurs in MySQL.
+		$nullable_colheads = $colheads;
+	} else {
+		// Leaving for backwards compatibility.
+		// Determine which columns allows for null values.
+		$nullable_colheads = array();
+		if (is_assoc($colheads)) {
+			foreach ($colheads as $name => $nullable) {
+				if ($nullable == '?') {
+					$nullable_colheads[] = $name;
+				}
+			}
+			// Remove null indicators for mysql insertion.
+			$colheads = array_keys($colheads);
+		}
 	}
 
-	// Create INSERT statement based on colheads
+	// Create INSERT statement based on colheads.
 	$colheads_insert = implode(',', $colheads);
 	$sql = array(); 
 	foreach ($data_array as $row) {
@@ -668,6 +679,23 @@ function email($subject, $body) {
       '" sarahsmasimore@gmail.com, dan700and2@gmail.com ' . '<<EOF' . "\n"
       . $body . "\n" . 'EOF' . "\n";
     shell_exec($cmd);
+}
+
+function getColheads($table) {
+	$sql = sprintf(
+		"SELECT COLUMN_NAME
+		FROM INFORMATION_SCHEMA.COLUMNS
+		WHERE TABLE_SCHEMA = '%s'
+	  	AND TABLE_NAME = '%s'",
+		DATABASE,
+		$table
+	);	
+	$data = exe_sql(DATABASE, $sql);
+	$colheads = array();
+	foreach ($data as $row) {
+		$colheads[] = $row['COLUMN_NAME'];
+	}
+	return $colheads;
 }
 
 ?>
