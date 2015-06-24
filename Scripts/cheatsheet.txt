@@ -139,3 +139,10 @@ GRANT ALL ON fooDatabase.* TO fooUser@'1.2.3.4' IDENTIFIED BY 'my_password';
 1. Install MySQLdb package for python
 http://stackoverflow.com/questions/1448429/how-to-install-mysqldb-python-data-access-library-to-mysql-on-mac-os-x#1448476
 2. Create constants.py file
+
+# 'Keychain not found' dialog
+This is related to how Phabricator uses diffusion and daemons. Basically the
+daemons update the /var/repo/B thing so that Phabricator knows when the git
+repo has been updated. This error means the git keychain isn't there. Add it,
+dialog still shows up, then hit reset to defaults in dialog and magically it
+goes away. 
