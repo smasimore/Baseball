@@ -6,7 +6,8 @@ include(HOME_PATH.'Scripts/Include/Teams.php');
 include(HOME_PATH.'Scripts/Include/RetrosheetPlayerMapping.php');
 
 // Change this to backfill - backfill must be true
-if ($argv[1]) {
+$backfill = false;
+if (isset($argv[1])) {
 	$backfill = true;
 	$ds_override = $argv[1];
 }
