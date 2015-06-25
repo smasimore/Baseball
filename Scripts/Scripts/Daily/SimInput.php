@@ -81,7 +81,9 @@ class SimInput {
                 $rand_bucket = rand(0, 29);
                 // For daily logging, skip any games already written to
                 // sim_input (this won't work for backfills at the moment).
-                if (in_array($gameid, $logged_games)) {
+                if (in_array($gameid, $logged_games) &&
+                    $this->testPlayer === null
+                ) {
                     continue;
                 }
                 $this->simInputData[$gameid] = array(
@@ -93,8 +95,14 @@ class SimInput {
                     'game_date' => $lineup['ds'],
                     'stats_year' => $this->statsYear,
                     'stats_type' => $this->statsType,
-                    'pitching_h' => null,
-                    'pitching_a' => null,
+                    'pitching_h' =>
+                        json_encode(
+                            $this->getPitcherInfo($lineup, 'home')
+                        ),
+                    'pitching_a' =>
+                        json_encode(
+                            $this->getPitcherInfo($lineup, 'away')
+                        ),
                     'batting_h' =>
                         json_encode(
                             $this->fillLineups(
@@ -140,6 +148,16 @@ class SimInput {
         }
         $data = exe_sql(DATABASE, $sql);
         return safe_index_by($data, 'player_id');
+    }
+
+    private function getPitcherInfo($lineup, $home_away) {
+        $name = idx($lineup, sprintf('%s_pitcher_name', $home_away));
+        $id = idx($lineup, sprintf('%s_pitcher_id', $home_away));
+        return array(
+            'name' => $name,
+            'id' => $id,
+            'era' => null
+        );
     }
 
     private function fillLineups($lineup, $stats, $joe_average) {
