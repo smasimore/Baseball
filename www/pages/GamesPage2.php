@@ -78,6 +78,11 @@ class GamesPage2 extends Page {
     private function getGamesSection() {
         $games = array();
         foreach ($this->gamesData as $gameid => $data) {
+            // Game not in bets table yet.
+            if (idx($this->betsData, $gameid) === null) {
+                continue;
+            }
+
             $games[] = (new Div($this->getGameSection($gameid, $data)))
                 ->setClass('game_section')
                 ->getHTML();
