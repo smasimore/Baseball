@@ -113,7 +113,7 @@ class GamesPage2 extends Page {
             $bets_game['away_score'],
             $bets_game['home_score']
         );
-        $score_class = $bets_game['status'] === 'Final'
+        $score_class = strpos($bets_game['status'], 'Final') !== false
             ? 'game_header_final'
             : 'game_header';
 
