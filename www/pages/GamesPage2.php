@@ -55,13 +55,13 @@ class GamesPage2 extends Page {
         return array(
             array(
                 'Pitcher',
-                '--HOME PIT NAME--',
-                '--AWAY PIT NAME--'
+                StringUtils::formatName($game_data['pitching_h']['name']),
+                StringUtils::formatName($game_data['pitching_a']['name'])
             ),
             array(
                 'Pitcher ERA',
-                '--HOME PIT ERA--',
-                '--AWAY PIT ERA--'
+                $game_data['pitching_h']['era'],
+                $game_data['pitching_a']['era']
             )
         );
     }

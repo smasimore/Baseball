@@ -18,6 +18,7 @@ include_once __DIR__ .'/../ui/Enum.php';
 include_once __DIR__ .'/../ui/Colors.php';
 include_once __DIR__ .'/../ui/Div.php';
 include_once __DIR__ .'/../ui/Font.php';
+include_once __DIR__ .'/../../Models/Utils/StringUtils.php';
 
 class Page {
 
