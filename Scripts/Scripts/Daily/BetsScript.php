@@ -1,0 +1,191 @@
+<?php
+// Copyright 2013-Present, Saber Tooth Ventures, LLC
+
+include_once('/Users/constants.php');
+include_once(HOME_PATH.'Scripts/Include/DailyInclude.php');
+
+class BetsScript extends ScriptWithWrite {
+
+    private $pctWinThreshold = 0;
+    private $baseBet = 100;
+    private $newBetsInsert;
+
+    protected function gen($ds) {
+        $sim_output_dt = (new SimOutputDataType())
+            ->setGameDate($ds)
+            ->gen();
+        $sim_output_data = $sim_output_dt->getData();
+
+        $odds_data = (new LiveOddsDataType())
+            ->setGameDate($ds)
+            ->gen()
+            ->getData();
+        // Note: Indexing by gameid will give us the most current odds of the
+        // day given its foreach loop structure, this is intended behavior.
+        $odds_data = index_by($odds_data, 'gameid');
+
+        $scores_data = (new LiveScoresDataType())
+            ->setGameDate($ds)
+            ->gen()
+            ->getData();
+
+        try {
+            $bets = (new BetsDataType())
+                ->setGameDate($ds)
+                ->gen()
+                ->getData();
+        } catch (Exception $e) {
+            // No bets.
+        }
+
+        // Reset in the event we are backfilling and running multiple dates.
+        $this->newBetsInsert = array();
+
+        foreach ($sim_output_data as $gameid => $game) {
+            // Skip PPD games...they won't be in the scores table.
+            if (!array_key_exists($gameid, $scores_data)) {
+                continue;
+            }
+            $home = $game['home'];
+            $away = $game['away'];
+            $home_sim_pct = $game['home_win_pct'];
+            $away_sim_pct = 1 - $home_sim_pct;
+            $home_vegas_odds = $odds_data[$gameid]['home_odds'];
+            $away_vegas_odds = $odds_data[$gameid]['away_odds'];
+            $home_vegas_pct =
+                OddsUtils::convertOddsToPct($home_vegas_odds);
+            $away_vegas_pct =
+                OddsUtils::convertOddsToPct($away_vegas_odds);
+
+
+            // TODO(cert) Currently if the cron job doesn't run, etc.
+            // and a game starts before we add it to the table this will
+            // skip it. Not hi-pri right now since this shouldn't really
+            // happen.
+
+            // Add odds to $newOddsInsert if the game hasn't already started.
+            // If we are backfilling we can include started games.
+            if ($this->backfill === false &&
+                $this->test === false &&
+                $scores_data[$gameid]['status_code'] !==
+                    GameStatus::NOT_STARTED
+            ) {
+                continue;
+            }
+            // If a game is in locked bets but there is no bet team we'll
+            // want to see if we should bet if the game hasn't started.
+            if ($this->test === false && $bets &&
+                array_key_exists($gameid, $bets)
+            ) {
+                if (ArrayUtils::idx($bets[$gameid], 'bet_team')
+                    !== null
+                ) {
+                    continue;
+                }
+            }
+            $this->newBetsInsert[$gameid] = array_merge(
+                $sim_output_dt->getSimParams(),
+                array(
+                    'gameid' => $gameid,
+                    'home' => $home,
+                    'away' => $away,
+                    'home_sim' => $home_sim_pct,
+                    'away_sim' => $away_sim_pct,
+                    'home_vegas' => $home_vegas_pct,
+                    'away_vegas' => $away_vegas_pct,
+                    'home_vegas_odds' => $home_vegas_odds,
+                    'away_vegas_odds' => $away_vegas_odds,
+                    'game_time' => $odds_data[$gameid]['game_time'],
+                    'odds_time' => $odds_data[$gameid]['ts'],
+                    'status' => $scores_data[$gameid]['status'],
+                    'ds' => $ds
+                )
+            );
+
+            $bet = $this->calculateBet();
+            if ($this->getShouldBet($home_vegas, $home_sim)) {
+                $this->newBetsInsert[$gameid]['bet_team'] = $home;
+                $this->newBetsInsert[$gameid]['bet'] = $bet;
+            } else if ($this->getShouldBet($away_vegas, $away_sim)) {
+                $this->newBetsInsert[$gameid]['bet_team'] = $away;
+                $this->newBetsInsert[$gameid]['bet'] = $bet;
+            } else {
+                $this->newBetsInsert[$gameid]['bet_team'] = null;
+                $this->newBetsInsert[$gameid]['bet'] = 0;
+            }
+        }
+        $this->prepareWrite();
+    }
+
+    protected function genPostWriteOperations() {
+        $this->sendBetEmails();
+    }
+
+    private function sendBetEmails() {
+        foreach ($this->newBetsInsert as $gameid => $bet) {
+            $bet_team = $bet['bet_team'];
+            if ($bet_team === null) {
+                continue;
+            }
+            $bet_team_home_away = $bet_team === $bet['home'] ? 'home' : 'away';
+            $sim_pct = $bet[sprintf('%s_sim', $bet_team_home_away)];
+            $vegas_pct = $bet[sprintf('%s_vegas', $bet_team_home_away)];
+            $advantage = $sim_pct - $vegas_pct;
+            $vegas_odds = $bet[sprintf('%s_vegas_odds', $bet_team_home_away)];
+            $bet_suggestion = sprintf(
+                'Bet on %s (%f) %f Advantage - Vegas Odds: %d',
+                $bet_team,
+                $sim_pct,
+                $advantage,
+                $vegas_odds
+            );
+            echo "$bet_suggestion \n";
+            send_email($bet_suggestion);
+        }
+    }
+
+    private function prepareWrite() {
+        // Delete rows with previous no bets.
+        // TODO(cert) Move to parent and write better delete function.
+        $no_bets = array_keys($this->newBetsInsert);
+        $no_bets = implode("','", $no_bets);
+        $sql = sprintf(
+            "DELETE
+            FROM %s
+            WHERE gameid in('%s')",
+            Tables::BETS,
+            $no_bets
+        );
+        exe_sql(
+            DATABASE,
+            $sql,
+            'delete'
+        );
+        $this->setWriteTable(Tables::BETS);
+        $this->setWriteData($this->newBetsInsert);
+    }
+
+    private function getShouldBet($vegas_pct, $sim_pct) {
+        $is_advantage = $sim_pct > $vegas_pct;
+        $is_above_threshold = $sim_pct >= $this->pctWinThreshold;
+        return $is_advantage && $is_above_threshold;
+    }
+
+    //TODO(cert) Can make this robust later.
+    private function calculateBet() {
+        return $this->baseBet;
+    }
+
+    public function setPctWinThreshold($thresh) {
+        if ($thresh > 1) {
+            throw new Exception(
+                'Win Threshold Must Be < 1 - Use Decimals'
+            );
+        }
+        $this->pctWinThreshold = $thresh;
+    }
+
+    public function setBaseBet($bet) {
+        $this->baseBet = $bet;
+    }
+}

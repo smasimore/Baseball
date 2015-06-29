@@ -15,7 +15,7 @@ include_once(HOME_PATH.'Models/DataTypes/BetsDataType.php');
 include_once(HOME_PATH.'Models/DataTypes/SimOutputDataType.php');
 include_once(HOME_PATH.'Models/DataTypes/LiveOddsDataType.php');
 include_once(HOME_PATH.'Models/DataTypes/LiveScoresDataType.php');
-include_once(HOME_PATH.'Scripts/Scripts/Daily/DailyScriptWithWrite.php');
+include_once(HOME_PATH.'Scripts/Scripts/Daily/ScriptWithWrite.php');
 include_once(HOME_PATH.'Scripts/Include/Enum.php');
 include_once(HOME_PATH.'Scripts/Include/sweetfunctions.php');
 include_once(HOME_PATH.'Models/Constants/Tables.php');
@@ -24,5 +24,6 @@ include_once(HOME_PATH.'Scripts/Include/Teams.php');
 include_once(HOME_PATH.'Scripts/Include/DateTimeUtils.php');
 include_once(HOME_PATH.'Models/Utils/ExceptionUtils.php');
 include_once(HOME_PATH.'Models/Utils/OddsUtils.php');
+include_once(HOME_PATH.'Models/Utils/ArrayUtils.php');
 
 ?>

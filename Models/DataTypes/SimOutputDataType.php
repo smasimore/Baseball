@@ -22,4 +22,8 @@ final class SimOutputDataType extends DataType {
             SQLWhereParams::EQUAL => $this->getSimParams()
         );
     }
+
+    final protected function formatData() {
+       $this->data = index_by($this->data, 'gameid');
+    }
 }

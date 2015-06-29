@@ -38,7 +38,7 @@ final class LiveScoresDataType extends DataType {
     }
 
     final protected function formatData() {
-        $parsed_data = index_by($this->data, 'gameid');
+        $indexed_data = index_by($this->data, 'gameid');
         $parsed_data = array();
         foreach ($indexed_data as $gameid => $game) {
             $status = $game['status'];
