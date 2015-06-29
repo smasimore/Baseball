@@ -2,6 +2,7 @@
 include_once 'Page.php';
 include_once __DIR__ .'/../../Models/DataTypes/SimInputDataType.php';
 include_once __DIR__ .'/../../Models/DataTypes/BetsDataType.php';
+include_once __DIR__ .'/../../Models/Utils/ROIUtils.php';
 
 class GamesPage2 extends Page {
 
@@ -14,7 +15,6 @@ class GamesPage2 extends Page {
     public function __construct($logged_in, $date) {
         parent::__construct($logged_in, true);
         $this->date = $date;
-        $this->setHeader($this->date);
 
         try {
             $this->fetchData();
@@ -24,6 +24,7 @@ class GamesPage2 extends Page {
             return;
         }
 
+        $this->setHeader($this->date, $this->createROIHeader());
         $this->setupGameData();
         $this->display();
     }
@@ -49,6 +50,16 @@ class GamesPage2 extends Page {
                 'team_stats' => $team_stats
             );
         }
+    }
+
+    private function createROIHeader() {
+        $roi = ROIUtils::calculateROI($this->betsData);
+        return $roi === null
+            ? 'No Games Completed Yet'
+            : sprintf(
+                'Daily ROI is %s',
+                number_format(($roi * 100), 2) . '%'
+            );
     }
 
     private function getTeamStats($game_data) {
