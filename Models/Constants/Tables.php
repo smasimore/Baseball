@@ -6,6 +6,7 @@ class Tables {
     const SIM_OUTPUT = 'sim_output';
     const LIVE_SCORES = 'live_scores';
     const BETS = 'bets';
+    const ERRORS = 'errors';
 
     // Odds Tables
     const HISTORICAL_ODDS = 'historical_odds';

@@ -38,7 +38,11 @@ foreach ($players as $player) {
 		// Just pick the first team in this case.
 		$team = split_string($team, '/', BEFORE, EXCL);
 	}
-	$team = Teams::getStandardTeamAbbr($team);
+	try {
+		$team = Teams::getStandardTeamAbbr($team);
+	} catch (Exception $e) {
+		ExceptionUtils::logDisplayEmailException($e, 'd');
+	}
 	$unixname = return_between($player, "id/" . $espn_id . "/", "\"", EXCL);
 	$first_name = split_string($unixname, '-', BEFORE, EXCL);
 	$first_name = format_for_mysql($first_name);

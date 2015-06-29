@@ -53,11 +53,7 @@ class RetrosheetPlayerMapping {
         try {
             $player_id = self::getIDFromFirstLastStrict($first, $last, $team);
         } catch (Exception $e) {
-            $error = $e->getMessage();
-            $trace = $e->getTraceAsString();
-            echo $error . "\n";
-            echo $trace . "\n";
-            send_email($error, $trace, 'd');
+            ExceptionUtils::logDisplayEmailException($e, 'd');
         }
         return $player_id;
     }

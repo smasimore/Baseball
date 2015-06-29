@@ -451,7 +451,7 @@ function multi_insert($database, $table, $data_array, $colheads = null) {
                 //);
 			} else {
 				$insert_data = $row[$col];
-                $insert_row[] = "'$insert_data'";
+				$insert_row[] = "'$insert_data'";
             }
         }
 		$sql[] = '('.implode(',', $insert_row).')';
