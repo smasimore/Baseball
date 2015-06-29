@@ -31,7 +31,7 @@ $colheads = array(
 $insert_data = array();
 
 date_default_timezone_set('America/Los_Angeles');
-if (!$backfill) {
+if ($backfill !== true) {
 	$month = date("n", time());
 	$day = date("j", time());
 	$ds = date("Y-m-d", time());
@@ -213,14 +213,14 @@ list($lineups, $game_info) = pullLineups($month, $day, $ds);
 $pitchers = array();
 if ($ds === date('Y-m-d')) {
 	$sql = sprintf(
-		"SELECT home_pitcher_id
+		"SELECT home_pitcher_name
 		FROM %s
 		WHERE ds = '%s'",
 		'lineups',
 		$ds
 	);
 	$data = exe_sql(DATABASE, $sql);
-	$pitchers = safe_array_column($data, 'home_pitcher_id');
+	$pitchers = array_column($data, 'home_pitcher_name');
 }
 foreach ($game_info as $date => $games) {
 		$month = formatDayMonth(split_string($date, '/', BEFORE, EXCL));
@@ -229,7 +229,7 @@ foreach ($game_info as $date => $games) {
 		$ds = "$year-$month-$day";
 		foreach ($games as $i => $game) {
 			// Skip games that are already logged.
-        	$home_pit_id = $game['home_pitcher_id'];
+        	$home_pit_id = $game['home_pitcher_name'];
 			if (in_array($home_pit_id, $pitchers)) {
             	continue;
         	}
