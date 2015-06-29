@@ -29,6 +29,7 @@ class BetsScript extends ScriptWithWrite {
             ->gen()
             ->getData();
 
+        $bets = null;
         try {
             $bets = (new BetsDataType())
                 ->setGameDate($ds)
@@ -98,15 +99,18 @@ class BetsScript extends ScriptWithWrite {
                     'game_time' => $odds_data[$gameid]['game_time'],
                     'odds_time' => $odds_data[$gameid]['ts'],
                     'status' => $scores_data[$gameid]['status'],
-                    'ds' => $ds
+                    'ds' => $ds,
+                    // Re-add use_reliever and cast as int so we can insert
+                    // into mysql.
+                    'use_reliever' => (int)$sim_output_dt->getUseReliever()
                 )
             );
 
             $bet = $this->calculateBet();
-            if ($this->getShouldBet($home_vegas, $home_sim)) {
+            if ($this->getShouldBet($home_vegas_pct, $home_sim_pct)) {
                 $this->newBetsInsert[$gameid]['bet_team'] = $home;
                 $this->newBetsInsert[$gameid]['bet'] = $bet;
-            } else if ($this->getShouldBet($away_vegas, $away_sim)) {
+            } else if ($this->getShouldBet($away_vegas_pct, $away_sim_pct)) {
                 $this->newBetsInsert[$gameid]['bet_team'] = $away;
                 $this->newBetsInsert[$gameid]['bet'] = $bet;
             } else {
@@ -133,14 +137,14 @@ class BetsScript extends ScriptWithWrite {
             $advantage = $sim_pct - $vegas_pct;
             $vegas_odds = $bet[sprintf('%s_vegas_odds', $bet_team_home_away)];
             $bet_suggestion = sprintf(
-                'Bet on %s (%f) %f Advantage - Vegas Odds: %d',
+                'Bet on %s (%.2f) %.2f Advantage - Vegas Odds: %d',
                 $bet_team,
-                $sim_pct,
-                $advantage,
+                number_format(($sim_pct * 100), 2),
+                number_format(($advantage * 100), 2),
                 $vegas_odds
             );
             echo "$bet_suggestion \n";
-            send_email($bet_suggestion);
+            send_email($bet_suggestion, "");
         }
     }
 

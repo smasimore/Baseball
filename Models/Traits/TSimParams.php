@@ -15,7 +15,7 @@ trait TSimParams {
     private $analysisRuns = 5000;
     private $useReliever = false;
 
-    final protected function getSimParams() {
+    final public function getSimParams() {
         if ($this->gameDate === null) {
             throw new Exception('Game date must be set.');
         }
