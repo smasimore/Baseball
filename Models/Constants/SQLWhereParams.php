@@ -8,7 +8,7 @@ class SQLWhereParams {
     const GREATER_THAN = 2;
     const LESS_THAN = 3;
 
-    public function getOperator($param_type) {
+    public static function getOperator($param_type) {
         switch ($param_type) {
             case self::EQUAL:
                 return '=';
@@ -21,7 +21,7 @@ class SQLWhereParams {
         }
     }
 
-    public function isGreaterThanLessThan($param_type) {
+    public static function isGreaterThanLessThan($param_type) {
         if ($param_type === self::GREATER_THAN ||
             $param_type === self::LESS_THAN
         ) {
