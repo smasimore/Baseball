@@ -3,6 +3,7 @@
 
 include_once 'DataType.php';
 include_once __DIR__ . '/../Traits/TSimParams.php';
+include_once __DIR__ . '/../Constants/SQLWhereParams.php';
 
 final class SimOutputDataType extends DataType {
 
@@ -17,6 +18,8 @@ final class SimOutputDataType extends DataType {
     }
 
     protected function getParams() {
-        return $this->getSimParams();
+        return array(
+            SQLWhereParams::EQUAL => $this->getSimParams()
+        );
     }
 }

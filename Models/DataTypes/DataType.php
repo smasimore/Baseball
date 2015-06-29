@@ -3,7 +3,10 @@
 
 include_once '/Users/constants.php';
 include_once __DIR__ . '/../../Scripts/Include/mysql.php';
+include_once __DIR__ . '/../Utils/ArrayUtils.php';
 include_once __DIR__ . '/../Constants/Tables.php';
+include_once __DIR__ . '/../Constants/SQLWhereParams.php';
+
 
 abstract class DataType {
 
@@ -18,16 +21,14 @@ abstract class DataType {
     abstract protected function getTable();
 
     /*
-     * @return array<string, mixed> params for where statement
+     * @return array<array<string, mixed>> params for where statement
+     * Arrays can be:
+     * (1) SQLWhereParams::EQUAL
+     * (2) NOT_EQUAL
+     * (3) GREATER_THAN
+     * (4) LESS_THAN
      */
     abstract protected function getParams();
-
-    /*
-     * @return array<string, mixed> params for !== where statement
-     */
-    protected function getNotParams() {
-        return array();
-    }
 
     /*
      * @return string - name of mysql db
@@ -84,39 +85,43 @@ abstract class DataType {
     }
 
     private function getWhereStmt() {
-        $params = $this->getParams();
-        $not_params = $this->getNotParams();
-
-        if (!$params && !$not_params) {
+        $params_arr = $this->getParams();
+        if (!$params_arr) {
             return null;
         }
-
         $where_stmt = ' WHERE ';
-        if ($params) {
-            $where_stmt .= $this->getWhereParams($params);
+        foreach ($params_arr as $param_type => $params) {
+            if (!$params) {
+                return null;
+            }
+            $where_stmt .= $where_stmt !== ' WHERE ' ? ' AND ' : '';
+            $where_stmt .= $this->getWhereParams($params, $param_type);
         }
-
-        if ($not_params) {
-            $where_stmt .= $params ? ' AND ' : '';
-            $where_stmt .= $this->getWhereParams($not_params, true);
-        }
-
         return $where_stmt;
     }
 
-    private function getWhereParams($params, $is_not_params = false) {
+    private function getWhereParams(
+        $params,
+        $param_type
+    ) {
         $where_params = '';
         foreach ($params as $key => $value) {
-            $operator = $is_not_params ? '<>' : '=';
+            $operator = SQLWhereParams::getOperator($param_type);
             switch (gettype($value)) {
                 case 'string':
                     $value = "'$value'";
                     break;
                 case 'NULL':
+                    if (SQLWhereParams::isGreaterThanLessThan($param_type)) {
+                        throw new Exception('Cannot Have >/< null');
+                    }
                     $value = 'null';
                     $operator = $operator === '=' ? 'is' : 'is not';
                     break;
                 case 'boolean':
+                    if (SQLWhereParams::isGreaterThanLessThan($param_type)) {
+                        throw new Exception('Cannot Have >/< false');
+                    }
                     $value = (int)$value;
                     break;
             }

@@ -2,6 +2,7 @@
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
 include_once 'DataType.php';
+include_once __DIR__ . '/../Constants/SQLWhereParams.php';
 
 class DataTypeTest extends PHPUnit_Framework_TestCase {
 
@@ -25,37 +26,69 @@ class DataTypeTest extends PHPUnit_Framework_TestCase {
         return array(
             array(
                 array(
-                    'test' => 'best',
-                    'west' => null,
-                    'quest' => 5
+                    SQLWhereParams::EQUAL => array(
+                        'test' => 'best',
+                        'west' => null,
+                        'quest' => 5
+                    )
                 ),
-                array(),
                 "SELECT * FROM test WHERE test = 'best' AND west is null ".
                 "AND quest = 5"
             ),
             array(
-                array(),
                 array(
-                    'nest' => 5,
-                    'chest' => null,
-                    'guest' => 'pest'
+                    SQLWhereParams::NOT_EQUAL => array(
+                        'nest' => 5,
+                        'chest' => null,
+                        'guest' => 'pest'
+                    )
                 ),
                 "SELECT * FROM test WHERE nest <> 5 AND chest is not null ".
                 "AND guest <> 'pest'"
             ),
             array(
                 array(
-                    'rest' => 1
+                    SQLWhereParams::GREATER_THAN => array('nest' => 5),
+                    SQLWhereParams::LESS_THAN => array('quest' => 4)
                 ),
+                "SELECT * FROM test WHERE nest > 5 AND quest < 4"
+            ),
+            array(
                 array(
-                    'vest' => 5
+                    SQLWhereParams::EQUAL => array('rest' => 1),
+                    SQLWhereParams::NOT_EQUAL =>array('vest' => 5),
+                    SQLWhereParams::GREATER_THAN =>array('best' => 4),
+                    SQLWhereParams::LESS_THAN =>array('quest' => 2)
                 ),
-                "SELECT * FROM test WHERE rest = 1 AND vest <> 5"
+                "SELECT * FROM test WHERE rest = 1 AND vest <> 5 ".
+                "AND best > 4 AND quest < 2"
             ),
             array(
                 array(),
-                array(),
                 "SELECT * FROM test"
+            ),
+            array(
+                array(
+                    SQLWhereParams::EQUAL => array('rest' => null)
+                ),
+                "SELECT * FROM test WHERE rest is null"
+            )
+        );
+    }
+
+    public function providerNullGreaterLessThan() {
+        return array(
+            array(
+                array(
+                    SQLWhereParams::GREATER_THAN => array('best' => null)
+                ),
+                "Exception Should Throw Before This Hits"
+            ),
+            array(
+                array(
+                    SQLWhereParams::LESS_THAN => array('nest' => false)
+                ),
+                "Exception Should Throw Before This Hits"
             )
         );
     }
@@ -69,7 +102,7 @@ class DataTypeTest extends PHPUnit_Framework_TestCase {
             TRUE,
             TRUE,
             TRUE,
-            array('getNotParams', 'setColumns')
+            array('setColumns')
         );
         $this->mockDataTypeClass->method('getTable')->willReturn('test');
 
@@ -79,12 +112,26 @@ class DataTypeTest extends PHPUnit_Framework_TestCase {
     }
 
     /**
-     * @dataProvider providerWhereParams
+     * @dataProvider providerNullGreaterLessThan
+     * @expectedException Exception
      */
-    public function testFormatForWhere($params, $not_params, $expected) {
+    public function testGreaterThanNullException(
+        $params
+    ) {
         $dt = $this->mockDataTypeClass;
         $dt->method('getParams')->willReturn($params);
-        $dt->method('getNotParams')->willReturn($not_params);
+        $this->getSQLMethod->invoke($dt);
+    }
+
+    /**
+     * @dataProvider providerWhereParams
+     */
+    public function testFormatForWhere(
+        $params,
+        $expected
+    ) {
+        $dt = $this->mockDataTypeClass;
+        $dt->method('getParams')->willReturn($params);
         $this->assertEquals($expected, $this->getSQLMethod->invoke($dt));
     }
 

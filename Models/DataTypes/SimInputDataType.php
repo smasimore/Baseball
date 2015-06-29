@@ -4,6 +4,7 @@
 include_once 'DataType.php';
 include_once __DIR__ . '/../Constants/StatsYears.php';
 include_once __DIR__ . '/../Constants/StatsTypes.php';
+include_once __DIR__ . '/../Constants/SQLWhereParams.php';
 include_once __DIR__ . '/../Traits/TSimParams.php';
 
 final class SimInputDataType extends DataType {
@@ -30,10 +31,12 @@ final class SimInputDataType extends DataType {
         }
 
         return array(
-            'game_date' => $this->gameDate,
-            'season' => $this->getSeason(),
-            'stats_year' => $this->statsYear,
-            'stats_type' => $this->statsType
+            SQLWhereParams::EQUAL => array(
+                'game_date' => $this->gameDate,
+                'season' => $this->getSeason(),
+                'stats_year' => $this->statsYear,
+                'stats_type' => $this->statsType
+            )
         );
     }
 

@@ -2,6 +2,7 @@
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
 include_once 'DataType.php';
+include_once __DIR__ . '/../Constants/SQLWhereParams.php';
 
 final class LiveOddsDataType extends DataType {
 
@@ -27,8 +28,10 @@ final class LiveOddsDataType extends DataType {
             throw new Exception('Game date must be set.');
         }
         return array(
-            'game_date' => $this->gameDate,
-            'ds' => $this->gameDate
+            SQLWhereParams::EQUAL => array(
+                'game_date' => $this->gameDate,
+                'ds' => $this->gameDate
+            )
         );
     }
 
