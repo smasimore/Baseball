@@ -31,7 +31,7 @@ class ROIUtils {
         foreach ($bet_data as $game) {
             if ((int)$game['payout'] > 0) {
                 $wins++;
-            } else {
+            } else if ((int)$game['payout'] < 0) {
                 $losses++;
             }
         }

@@ -107,14 +107,19 @@ class GamesPage2 extends Page {
             $home_score = $game['home_score'];
             $bet_team = $game['bet_team'];
 
-            $bet_team_pct_win = $bet_team === $away_team
-                ? $game['away_sim']
-                : $game['home_sim'];
-            $bet_team_odds = $bet_team === $away_team
-                ? $game['away_vegas_odds']
-                : $game['home_vegas_odds'];
-            $bet_advantage = $bet_team_pct_win -
-                OddsUtils::convertOddsToPct($bet_team_odds);
+            $bet_team_pct_win = null;
+            $bet_team_odds = null;
+            $bet_advantage = null;
+            if ($bet_team) {
+                $bet_team_pct_win = $bet_team === $away_team
+                    ? $game['away_sim']
+                    : $game['home_sim'];
+                $bet_team_odds = $bet_team === $away_team
+                    ? $game['away_vegas_odds']
+                    : $game['home_vegas_odds'];
+                $bet_advantage = $bet_team_pct_win -
+                    OddsUtils::convertOddsToPct($bet_team_odds);
+            }
 
             // Format color of score.
             $score = "$away_score - $home_score";
