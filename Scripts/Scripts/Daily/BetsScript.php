@@ -6,6 +6,8 @@ include_once(HOME_PATH.'Scripts/Include/DailyInclude.php');
 
 class BetsScript extends ScriptWithWrite {
 
+    use TScriptWithInsert;
+
     private $pctWinThreshold = 0;
     private $baseBet = 100;
     private $newBetsInsert;

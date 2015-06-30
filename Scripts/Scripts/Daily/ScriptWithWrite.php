@@ -11,6 +11,7 @@ abstract class ScriptWithWrite {
     protected $backfill = false;
 
     abstract protected function gen($ds);
+    abstract protected function write();
 
     public function run() {
         $this->startDate = $this->startDate ?: date('Y-m-d');
@@ -19,21 +20,12 @@ abstract class ScriptWithWrite {
             $ds <= $this->endDate;
             $ds = DateTimeUtils::addDay($ds)
         ) {
+            $this->writeData = array();
             $this->gen($ds);
+            $this->validateShouldWrite();
             $this->write();
             $this->genPostWriteOperations();
         }
-    }
-
-    private function write() {
-        $this->validateShouldWrite();
-        multi_insert(
-            DATABASE,
-            $this->writeTable,
-            $this->writeData
-        );
-        // Unset vars in case script is backfilling.
-        unset($this->writeTable, $this->writeData);
     }
 
     // If testing, end script before a write occurs and print the specified

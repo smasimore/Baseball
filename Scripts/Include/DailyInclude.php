@@ -20,6 +20,8 @@ include_once(HOME_PATH.'Scripts/Include/Enum.php');
 include_once(HOME_PATH.'Scripts/Include/sweetfunctions.php');
 include_once(HOME_PATH.'Models/Constants/Tables.php');
 include_once(HOME_PATH.'Models/Constants/GameStatus.php');
+include_once(HOME_PATH.'Models/Traits/TScriptWithInsert.php');
+include_once(HOME_PATH.'Models/Traits/TScriptWithUpdate.php');
 include_once(HOME_PATH.'Scripts/Include/Teams.php');
 include_once(HOME_PATH.'Scripts/Include/DateTimeUtils.php');
 include_once(HOME_PATH.'Models/Utils/ExceptionUtils.php');
