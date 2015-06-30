@@ -1,6 +1,8 @@
 <?php
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
+include_once __DIR__ . '/Enum.php';
+
 if (!defined('HOME_PATH')) {
     include('/Users/constants.php');
 }

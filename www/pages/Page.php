@@ -14,7 +14,6 @@ include_once __DIR__ .'/../ui/Table.php';
 include_once __DIR__ .'/../ui/Slider.php';
 include_once __DIR__ .'/../ui/UOList.php';
 include_once __DIR__ .'/../ui/Selector.php';
-include_once __DIR__ .'/../ui/Enum.php';
 include_once __DIR__ .'/../ui/Colors.php';
 include_once __DIR__ .'/../ui/Div.php';
 include_once __DIR__ .'/../ui/Font.php';

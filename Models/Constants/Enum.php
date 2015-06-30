@@ -32,6 +32,16 @@ abstract class Enum {
         $values = array_values(self::getConstants());
         return in_array($value, $values, $strict = true);
     }
+
+    public static function assertIsValidValue($value) {
+        if (!self::isValidValue($value)) {
+            throw new Exception(
+                '%s is not valid value in %s.',
+                $value,
+                get_called_class()
+            );
+        }
+    }
 }
 
 ?>

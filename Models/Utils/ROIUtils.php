@@ -20,6 +20,24 @@ class ROIUtils {
             ? $roi_arr['payout'] / $roi_arr['bet']
             : null;
     }
+
+    public static function calculateRecord($bet_data) {
+        if (!$bet_data) {
+            return null;
+        }
+
+        $wins = 0;
+        $losses = 0;
+        foreach ($bet_data as $game) {
+            if ((int)$game['payout'] > 0) {
+                $wins++;
+            } else {
+                $losses++;
+            }
+        }
+
+        return array($wins, $losses);
+    }
 }
 
 ?>

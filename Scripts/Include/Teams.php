@@ -3,7 +3,6 @@
 
 if (!defined('HOME_PATH')) {
     include('/Users/constants.php');
-    include(HOME_PATH.'Scripts/Include/Enum.php');
 }
 
 class Teams {

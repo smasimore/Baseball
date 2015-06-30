@@ -16,7 +16,6 @@ include_once(HOME_PATH.'Models/DataTypes/SimOutputDataType.php');
 include_once(HOME_PATH.'Models/DataTypes/LiveOddsDataType.php');
 include_once(HOME_PATH.'Models/DataTypes/LiveScoresDataType.php');
 include_once(HOME_PATH.'Scripts/Scripts/Daily/ScriptWithWrite.php');
-include_once(HOME_PATH.'Scripts/Include/Enum.php');
 include_once(HOME_PATH.'Scripts/Include/sweetfunctions.php');
 include_once(HOME_PATH.'Models/Constants/Tables.php');
 include_once(HOME_PATH.'Models/Constants/GameStatus.php');
