@@ -3,7 +3,7 @@
 
 include('/Users/constants.php');
 include(HOME_PATH.'Scripts/Include/ESPNParseUtils.php');
-include(HOME_PATH.'Scripts/Include/DateTimeUtils.php');
+include(HOME_PATH.'Models/Utils/DateTimeUtils.php');
 include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
 
 $countup = 0;
