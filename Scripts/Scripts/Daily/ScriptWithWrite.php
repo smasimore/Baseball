@@ -5,13 +5,13 @@ abstract class ScriptWithWrite {
 
     private $startDate = null;
     private $endDate = null;
-    private $writeTable = null;
-    private $writeData = null;
     protected $test = false;
     protected $backfill = false;
 
     abstract protected function gen($ds);
     abstract protected function write();
+    abstract protected function getWriteData();
+    abstract protected function getWriteTable();
 
     public function run() {
         $this->startDate = $this->startDate ?: date('Y-m-d');
@@ -31,16 +31,18 @@ abstract class ScriptWithWrite {
     // If testing, end script before a write occurs and print the specified
     // array to console.
     private function validateShouldWrite() {
-        if (!$this->writeTable) {
+        $write_table = $this->getWriteTable();
+        $write_data = $this->getWriteData();
+        if (!$write_table) {
             throw new Exception('Must set writeTable');
-        } else if (!$this->writeData) {
+        } else if (!$write_data) {
             throw new Exception(sprintf(
                 'No Data Provided For Insert Into %s',
-                $this->writeTable
+                $write_table
             ));
         } else if ($this->test) {
             // Shorten data for larger arrays.
-            $sample = array_slice($this->writeData, 0, 5);
+            $sample = array_slice($write_data, 0, 5);
             print_r($sample);
             exit('Completed Test Run');
         }
@@ -48,14 +50,6 @@ abstract class ScriptWithWrite {
 
     protected function genPostWriteOperations() {
         return null;
-    }
-
-    protected function setWriteTable($table) {
-        $this->writeTable = $table;
-    }
-
-    protected function setWriteData($data) {
-        $this->writeData = $data;
     }
 
     public function setStartDate($ds) {

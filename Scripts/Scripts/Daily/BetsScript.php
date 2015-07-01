@@ -26,10 +26,16 @@ class BetsScript extends ScriptWithWrite {
         // day given its foreach loop structure, this is intended behavior.
         $odds_data = index_by($odds_data, 'gameid');
 
-        $scores_data = (new LiveScoresDataType())
-            ->setGameDate($ds)
-            ->gen()
-            ->getData();
+        // For morning games sometimes ESPN doesn't have scores listed yet.
+        $scores_data = null;
+        try {
+            $scores_data = (new LiveScoresDataType())
+                ->setGameDate($ds)
+                ->gen()
+                ->getData();
+        } catch (Exception $e) {
+            // No scores yet.
+        }
 
         $bets = null;
         try {
@@ -70,6 +76,7 @@ class BetsScript extends ScriptWithWrite {
             // If we are backfilling we can include started games.
             if ($this->backfill === false &&
                 $this->test === false &&
+                $scores_data !== null &&
                 $scores_data[$gameid]['status_code'] !==
                     GameStatus::NOT_STARTED
             ) {
@@ -120,7 +127,7 @@ class BetsScript extends ScriptWithWrite {
                 $this->newBetsInsert[$gameid]['bet'] = 0;
             }
         }
-        $this->prepareWrite();
+        $this->deleteNoBets();
     }
 
     protected function genPostWriteOperations() {
@@ -150,7 +157,15 @@ class BetsScript extends ScriptWithWrite {
         }
     }
 
-    private function prepareWrite() {
+    protected function getWriteTable() {
+        return Tables::BETS;
+    }
+
+    protected function getWriteData() {
+        return $this->newBetsInsert;
+    }
+
+    private function deleteNoBets() {
         // Delete rows with previous no bets.
         // TODO(cert) Move to parent and write better delete function.
         $no_bets = array_keys($this->newBetsInsert);
@@ -167,8 +182,6 @@ class BetsScript extends ScriptWithWrite {
             $sql,
             'delete'
         );
-        $this->setWriteTable(Tables::BETS);
-        $this->setWriteData($this->newBetsInsert);
     }
 
     private function getShouldBet($vegas_pct, $sim_pct) {

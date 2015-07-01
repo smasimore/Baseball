@@ -55,13 +55,17 @@ class UpdateBetsScript extends ScriptWithWrite {
                 }
                 $this->scoresInsert[$gameid]['winner'] = $winner;
                 $this->scoresInsert[$gameid]['payout'] = $payout;
-
-                // TODO(danielc) Not used right now but will be
-                // once I build out the update function.
-                $this->setWriteTable(Tables::BETS);
-                $this->setWriteData($this->scoresInsert);
             }
         }
+    }
+
+    protected function getWriteTable() {
+        return Tables::BETS;
+    }
+
+    // Note: This isn't used yet but will be when I update mysql.
+    protected function getWriteData() {
+        return $this->scoresInsert;
     }
 
     protected function genPostWriteOperations() {

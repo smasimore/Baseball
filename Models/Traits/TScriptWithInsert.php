@@ -3,11 +3,14 @@
 
 trait TScriptWithInsert {
 
+    // Require extends isn't a thing outside of hack but adding it as a note.
+    // require extends ScriptWithWrite;
+
     protected function write() {
         multi_insert(
             DATABASE,
-            $this->writeTable,
-            $this->writeData
+            $this->getWriteTable(),
+            $this->getWriteData()
         );
     }
 }
