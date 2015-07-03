@@ -52,7 +52,9 @@ class BetsScript extends ScriptWithWrite {
 
         foreach ($sim_output_data as $gameid => $game) {
             // Skip PPD games...they won't be in the scores table.
-            if (!array_key_exists($gameid, $scores_data)) {
+            if ($scores_data !== null &&
+                !array_key_exists($gameid, $scores_data)
+            ) {
                 continue;
             }
             $home = $game['home'];
