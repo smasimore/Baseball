@@ -8,6 +8,7 @@ include_once __DIR__ .'/../../Models/Utils/OddsUtils.php';
 class GamesPage2 extends Page {
 
     const THREE_HRS_IN_SECS = 10800;
+    const NOT_STARTED = 'Not Started';
 
     private $date;
     private $gamesData;
@@ -109,31 +110,34 @@ class GamesPage2 extends Page {
             $home_team = $game['home'];
             $bet_team = $game['bet_team'];
             $bet_away_team = $bet_team === $away_team;
+            $away_score = $game['away_score'];
+            $home_score = $game['home_score'];
 
             // Format scores.
-            $away_score = $game['away_score'] !== null
-                ? sprintf(' (%d)', $game['away_score'])
-                : '';
-            $home_score = $game['home_score'] !== null
-                ? sprintf(' (%d)', $game['home_score'])
-                : '';
+            $away_score_formatted = $game['status'] === self::NOT_STARTED
+                ? ''
+                : sprintf(' (%d)', $away_score);
+            $home_score_formatted = $game['status'] === self::NOT_STARTED
+                ? ''
+                : sprintf(' (%d)', $home_score);
 
             // Format game matchup column.
             $matchup = sprintf(
                 '%s%s @ %s%s%s',
                 $bet_team && $bet_away_team ? "*$away_team*" : $away_team,
-                $away_score,
+                $away_score_formatted,
                 $bet_team && !$bet_away_team ? "*$home_team*" : $home_team,
-                $home_score,
+                $home_score_formatted,
                 $game['status'] ? ' - ' . $game['status'] : ''
             );
-            if (($away_score > $home_score && $bet_away_team) ||
-                ($home_score > $away_score && !$bet_away_team)) {
+            if (($away_score > $home_score && $bet_team && $bet_away_team) ||
+                ($home_score > $away_score && $bet_team && !$bet_away_team)) {
                 $matchup = (new Font($matchup))
                     ->setColor(Colors::GREEN)
                     ->getHTML();
-            } else if (($away_score < $home_score && $bet_team === $away_team)
-                || ($home_score < $away_score && $bet_team === $home_team)) {
+            } else if (
+                ($away_score < $home_score && $bet_team && $bet_away_team) ||
+                ($home_score < $away_score && $bet_team && !$bet_away_team)) {
                 $matchup = (new Font($matchup))
                     ->setColor(Colors::RED)
                     ->getHTML();
@@ -157,10 +161,10 @@ class GamesPage2 extends Page {
             $summary_data[] = array(
                 'Game' => $matchup,
                 'Start Time (PST)' => $game_time,
+                'Bet Odds' => $bet_team_odds,
                 'Bet Pct Win' => round($bet_team_pct_win * 100) . '%',
                 'Bet Advantage' => round($bet_advantage * 100, 1) . '%',
                 'Bet' => $game['bet'],
-                'Bet Odds' => $bet_team_odds,
                 'Payout' => $game['payout']
             );
         }
