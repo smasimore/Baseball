@@ -52,7 +52,7 @@ input:-webkit-autofill {
 }
 
 .input_title {
-    font-family: helvetica;
+    font-family: "Helvetica";
 }
 
 @media (min-device-width:320px) {
@@ -110,21 +110,21 @@ table {
   height: 100%;
   margin-bottom: 10px;
   border-spacing: 0px;
-  border: 1px solid #535353;
-  border-left: 2px solid #535353;
-  border-right: 2px solid #535353;
+  border: 1px solid #d3d3d3;
   background-color: transparent; /* background-color added bc
                                     div was overlapping */
   text-align: center; 
+  font-family: "Helvetica";
+  font-weight: 100;
   table-layout: fixed;
 }
 
 table th {
     padding:10px 10px 10px 10px;
-    border-top:1px solid #ccc;
-    border-bottom:1px solid #ccc;
     background: #e4e4e4;
     text-align: center; 
+    font-family: "Helvetica";
+    font-weight: 100;
 }  
 
 table th:hover {
@@ -223,7 +223,7 @@ border : solid 0px #ffffff;
     border-radius : 2px 1px 1px 1px;
     moz-border-radius : 2px 1px 1px 1px;
     background-color: #0155C3;
-    font-family: helvetica;
+    font-family: "Helvetica";
     font-size: 12pt;
     cursor:pointer;
     text-align: center;
@@ -243,7 +243,8 @@ border : solid 0px #ffffff;
     background-color: #2B96E8;
     float:left;
     overflow: hidden;
-    font-family: helvetica;
+    font-family: "Helvetica";
+    font-weight: 100;
 }
 
 @media (min-device-width:320px) {
@@ -286,7 +287,8 @@ border : solid 0px #ffffff;
     padding:15px 20px;
     background-color: #FFBABA;
     color: red;
-    font-family: helvetica;
+    font-family: "Helvetica";
+    font-weight: 100;
     font-size: 12pt;
 }
 
@@ -325,7 +327,8 @@ border : solid 0px #ffffff;
 }
 
 .game_header {
-    font-family: "Verdana";
+    font-family: "Helvetica";
+    font-weight: 100;
     color: white;
     padding-left: 20px;
     display: inline-block;
@@ -333,7 +336,8 @@ border : solid 0px #ffffff;
 }
 
 .game_header_final {
-    font-family: "Verdana";
+    font-family: "Helvetica";
+    font-weight: 100;
     color: yellow;
     padding-left: 20px;
     display: inline-block;

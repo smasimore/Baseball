@@ -3,7 +3,7 @@
 
 class ArrayUtils {
 
-    public function head($array) {
+    public static function head($array) {
         if (!is_array($array)) {
             throw new Exception(
                 'Cannot Use ArrayUtils::head on non-arrays'
@@ -14,7 +14,7 @@ class ArrayUtils {
         }
     }
 
-    public function idx($array, $key, $default = null) {
+    public static function idx($array, $key, $default = null) {
         if (isset($array[$key])) {
             return $array[$key];
         }
@@ -42,6 +42,23 @@ class ArrayUtils {
         }
 
         return $ret_array;
+    }
+
+    public static function sortAssociativeArray(
+        $array,
+        $key,
+        $keep_keys = true
+    ) {
+        $func = function($a, $b) use ($key) {
+            return $a[$key] > $b[$key];
+        };
+        if ($keep_keys) {
+            uasort($array, $func);
+        } else {
+            usort($array, $func);
+        }
+
+        return $array;
     }
 }
 

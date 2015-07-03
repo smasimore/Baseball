@@ -44,6 +44,10 @@ class GamesPage2 extends Page {
             ->setGameDate($this->date)
             ->gen()
             ->getData();
+        $this->betsData = ArrayUtils::sortAssociativeArray(
+            $this->betsData,
+            'game_time'
+        );
     }
 
     private function setupGameData() {
@@ -98,51 +102,65 @@ class GamesPage2 extends Page {
             // Convert to PST and format.
             $game_time = date(
                 'g:i a',
-                strtotime($game['game_time']) - self::THREE_HRS_IN_SECS
+                $game['game_time'] - self::THREE_HRS_IN_SECS
             );
 
             $away_team = $game['away'];
             $home_team = $game['home'];
-            $away_score = $game['away_score'];
-            $home_score = $game['home_score'];
             $bet_team = $game['bet_team'];
+            $bet_away_team = $bet_team === $away_team;
 
+            // Format scores.
+            $away_score = $game['away_score'] !== null
+                ? sprintf(' (%d)', $game['away_score'])
+                : '';
+            $home_score = $game['home_score'] !== null
+                ? sprintf(' (%d)', $game['home_score'])
+                : '';
+
+            // Format game matchup column.
+            $matchup = sprintf(
+                '%s%s @ %s%s%s',
+                $bet_team && $bet_away_team ? "*$away_team*" : $away_team,
+                $away_score,
+                $bet_team && !$bet_away_team ? "*$home_team*" : $home_team,
+                $home_score,
+                $game['status'] ? ' - ' . $game['status'] : ''
+            );
+            if (($away_score > $home_score && $bet_away_team) ||
+                ($home_score > $away_score && !$bet_away_team)) {
+                $matchup = (new Font($matchup))
+                    ->setColor(Colors::GREEN)
+                    ->getHTML();
+            } else if (($away_score < $home_score && $bet_team === $away_team)
+                || ($home_score < $away_score && $bet_team === $home_team)) {
+                $matchup = (new Font($matchup))
+                    ->setColor(Colors::RED)
+                    ->getHTML();
+            }
+
+            // Get bet columns.
             $bet_team_pct_win = null;
             $bet_team_odds = null;
             $bet_advantage = null;
             if ($bet_team) {
-                $bet_team_pct_win = $bet_team === $away_team
+                $bet_team_pct_win = $bet_away_team
                     ? $game['away_sim']
                     : $game['home_sim'];
-                $bet_team_odds = $bet_team === $away_team
+                $bet_team_odds = $bet_away_team
                     ? $game['away_vegas_odds']
                     : $game['home_vegas_odds'];
                 $bet_advantage = $bet_team_pct_win -
                     OddsUtils::convertOddsToPct($bet_team_odds);
             }
 
-            // Format color of score.
-            $score = "$away_score - $home_score";
-            if (($away_score > $home_score && $bet_team === $away_team) ||
-                 ($home_score > $away_score && $bet_team === $home_team)) {
-                $score = (new Font($score))->setColor(Colors::GREEN)->getHTML();
-            } else if (($away_score < $home_score && $bet_team === $away_team)
-                        || ($home_score < $away_score &&
-                            $bet_team === $home_team)) {
-                $score = (new Font($score))->setColor(Colors::RED)->getHTML();
-            }
-
             $summary_data[] = array(
-                'ID' => $game['gameid'],
-                'Time (PST)' => $game_time,
-                'Teams' => "$away_team @ $home_team",
-                'Bet Team' => $bet_team,
+                'Game' => $matchup,
+                'Start Time (PST)' => $game_time,
                 'Bet Pct Win' => round($bet_team_pct_win * 100) . '%',
                 'Bet Advantage' => round($bet_advantage * 100, 1) . '%',
                 'Bet' => $game['bet'],
                 'Bet Odds' => $bet_team_odds,
-                'Score' => $score,
-                'Status' => $game['status'],
                 'Payout' => $game['payout']
             );
         }
@@ -152,13 +170,12 @@ class GamesPage2 extends Page {
 
     private function getGamesSection() {
         $games = array();
-        foreach ($this->gamesData as $gameid => $data) {
-            // Game not in bets table yet.
-            if (idx($this->betsData, $gameid) === null) {
-                continue;
-            }
-
-            $games[] = (new Div($this->getGameSection($gameid, $data)))
+        foreach ($this->betsData as $gameid => $game) {
+            $games_section = $this->getGameSection(
+                $gameid,
+                $this->gamesData[$gameid]
+            );
+            $games[] = (new Div($games_section))
                 ->setClass('game_section')
                 ->getHTML();
         }

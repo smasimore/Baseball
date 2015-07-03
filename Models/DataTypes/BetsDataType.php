@@ -20,6 +20,15 @@ final class BetsDataType extends DataType {
     }
 
     protected function formatData() {
+        // Use unix time.
+        $this->data = array_map(
+            function($row) {
+                $row['game_time'] = strtotime($row['game_time']);
+                return $row;
+            },
+            $this->data
+        );
+
         $this->data = index_by($this->data, 'gameid');
     }
 }
