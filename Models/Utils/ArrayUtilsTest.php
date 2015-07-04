@@ -48,6 +48,21 @@ class ArrayUtilsTest extends PHPUnit_Framework_TestCase {
         );
     }
 
+    public function providerIsArrayOfArrays() {
+        return array(
+            array(
+                array('la' => 1),
+                false
+            ),
+            array(
+                array(
+                    array('la' => 2)
+                ),
+                true
+            )
+        );
+    }
+
     public function providerSortAssociativeArray() {
         $array = array(
             array(
@@ -142,6 +157,16 @@ class ArrayUtilsTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals(
             ArrayUtils::removeColumns($array, $cols),
             $return
+        );
+    }
+
+    /**
+     * @dataProvider providerIsArrayOfArrays
+     */
+    public function testIsArrayOfArrays($array, $return) {
+        $this->assertEquals(
+            $return,
+            ArrayUtils::IsArrayOfArrays($array)
         );
     }
 

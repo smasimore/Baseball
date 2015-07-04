@@ -14,6 +14,12 @@ class ArrayUtils {
         }
     }
 
+    public static function isArrayOfArrays($array) {
+        foreach ($array as $sub_array) {
+            return is_array($sub_array);
+        }
+    }
+
     public static function idx($array, $key, $default = null) {
         if (isset($array[$key])) {
             return $array[$key];
