@@ -2,6 +2,7 @@
 include_once 'Page.php';
 include_once __DIR__ .'/../../Models/DataTypes/SimInputDataType.php';
 include_once __DIR__ .'/../../Models/DataTypes/BetsDataType.php';
+include_once __DIR__ .'/../../Models/DataTypes/LiveOddsDataType.php';
 include_once __DIR__ .'/../../Models/Utils/ROIUtils.php';
 include_once __DIR__ .'/../../Models/Utils/OddsUtils.php';
 
@@ -15,6 +16,7 @@ class GamesPage2 extends Page {
 
     private $simInputDT;
     private $betsData;
+    private $liveOddsDT;
 
     public function __construct($logged_in, $date) {
         parent::__construct($logged_in, true);
@@ -49,6 +51,11 @@ class GamesPage2 extends Page {
             $this->betsData,
             'game_time'
         );
+
+        // Fetch odds to get starting and most recent odds.
+        $this->liveOddsDT = (new LiveOddsDataType())
+            ->setGameDate($this->date)
+            ->gen();
     }
 
     private function setupGameData() {
@@ -66,10 +73,11 @@ class GamesPage2 extends Page {
         return $roi === null
             ? 'No Games Completed Yet'
             : sprintf(
-                'Daily ROI is %s (%d - %d)',
+                "Today's ROI: %s Record: (%d - %d) Net Gain: $%d",
                 number_format(($roi * 100), 2) . '%',
                 $wins,
-                $losses
+                $losses,
+                array_sum(array_column($this->betsData, 'payout'))
             );
     }
 
@@ -147,6 +155,7 @@ class GamesPage2 extends Page {
             $bet_team_pct_win = null;
             $bet_team_odds = null;
             $bet_advantage = null;
+            $bet_odds_movement = null;
             if ($bet_team) {
                 $bet_team_pct_win = $bet_away_team
                     ? $game['away_sim']
@@ -156,16 +165,48 @@ class GamesPage2 extends Page {
                     : $game['home_vegas_odds'];
                 $bet_advantage = $bet_team_pct_win -
                     OddsUtils::convertOddsToPct($bet_team_odds);
+                $bet_odds_movement = sprintf(
+                    '%d  --->  %d',
+                    $this->liveOddsDT->getStartingOdds(
+                        $game['gameid'],
+                        $bet_away_team
+                    ),
+                    $this->liveOddsDT->getMostRecentOdds(
+                        $game['gameid'],
+                        $bet_away_team
+                    )
+                );
             }
+
+            $odds = $bet_team_odds === null
+                ? null
+                : sprintf(
+                    '%d (+%d%%)',
+                    $bet_team_odds,
+                    round($bet_advantage * 100, 1)
+                );
+
+            $predicted = $bet_team_pct_win  === null
+                ? null
+                : sprintf(
+                    '%d (%d%%)',
+                    OddsUtils::convertPctToOdds($bet_team_pct_win),
+                    round($bet_team_pct_win * 100)
+                );
+
+            $bet_and_payout = sprintf(
+                '$%d / $%s',
+                $game['bet'],
+                $game['payout'] !== null ? $game['payout'] : ' --'
+            );
 
             $summary_data[] = array(
                 'Game' => $matchup,
                 'Start Time (PST)' => $game_time,
-                'Bet Odds' => $bet_team_odds,
-                'Bet Pct Win' => round($bet_team_pct_win * 100) . '%',
-                'Bet Advantage' => round($bet_advantage * 100, 1) . '%',
-                'Bet' => $game['bet'],
-                'Payout' => $game['payout']
+                'Odds (Advantage)' => $odds,
+                'Odds Movement' => $bet_odds_movement,
+                'Predicted Odds' => $predicted,
+                'Bet / Payout' => $bet_and_payout
             );
         }
 

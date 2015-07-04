@@ -39,4 +39,29 @@ final class LiveOddsDataType extends DataType {
         $this->gameDate = $ds;
         return $this;
     }
+
+    final public function getStartingOdds($game_id, $away_team = true) {
+        // Odds ordered by time.
+        $team = $away_team ? 'away' : 'home';
+        foreach ($this->data as $game_odds) {
+            if ($game_odds['gameid'] === $game_id) {
+                return $game_odds[sprintf('%s_odds', $team)];
+            }
+        }
+
+        return null;
+    }
+
+    final public function getMostRecentOdds($game_id, $away_team = true) {
+        // Odds ordered by time.
+        $team = $away_team ? 'away' : 'home';
+        $odds = null;
+        foreach ($this->data as $game_odds) {
+            if ($game_odds['gameid'] === $game_id) {
+                $odds = $game_odds[sprintf('%s_odds', $team)];
+            }
+        }
+
+        return $odds;
+    }
 }
