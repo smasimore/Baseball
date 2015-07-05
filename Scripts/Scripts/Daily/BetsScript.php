@@ -9,6 +9,7 @@ class BetsScript extends ScriptWithWrite {
     use TScriptWithInsert;
 
     private $pctWinThreshold = 0;
+    private $pctAdvantageThreshold = .05;
     private $baseBet = 100;
     private $newBetsInsert;
 
@@ -136,6 +137,14 @@ class BetsScript extends ScriptWithWrite {
         $this->sendBetEmails();
     }
 
+    protected function getWriteTable() {
+        return Tables::BETS;
+    }
+
+    protected function getWriteData() {
+        return $this->newBetsInsert;
+    }
+
     private function sendBetEmails() {
         foreach ($this->newBetsInsert as $gameid => $bet) {
             $bet_team = $bet['bet_team'];
@@ -159,14 +168,6 @@ class BetsScript extends ScriptWithWrite {
         }
     }
 
-    protected function getWriteTable() {
-        return Tables::BETS;
-    }
-
-    protected function getWriteData() {
-        return $this->newBetsInsert;
-    }
-
     private function deleteNoBets() {
         // Delete rows with previous no bets.
         // TODO(cert) Move to parent and write better delete function.
@@ -188,8 +189,14 @@ class BetsScript extends ScriptWithWrite {
 
     private function getShouldBet($vegas_pct, $sim_pct) {
         $is_advantage = $sim_pct > $vegas_pct;
-        $is_above_threshold = $sim_pct >= $this->pctWinThreshold;
-        return $is_advantage && $is_above_threshold;
+        $is_above_win_threshold = $sim_pct >= $this->pctWinThreshold;
+        $is_above_advantage_threshold = $sim_pct - $vegas_pct >=
+            $this->pctAdvantageThreshold;
+
+        return
+            $is_advantage &&
+            $is_above_win_threshold &&
+            $is_above_advantage_threshold;
     }
 
     //TODO(cert) Can make this robust later.
@@ -197,16 +204,28 @@ class BetsScript extends ScriptWithWrite {
         return $this->baseBet;
     }
 
-    public function setPctWinThreshold($thresh) {
+    private function validateThreshold($thresh) {
         if ($thresh > 1) {
             throw new Exception(
                 'Win Threshold Must Be < 1 - Use Decimals'
             );
         }
+    }
+
+    public function setPctWinThreshold($thresh) {
+        $this->validateThreshold($thresh);
         $this->pctWinThreshold = $thresh;
+        return $this;
+    }
+
+    public function setPctAdvantageThreshold($thresh) {
+        $this->validateThreshold($thresh);
+        $this->pctAdvantageThreshold = $thresh;
+        return $this;
     }
 
     public function setBaseBet($bet) {
         $this->baseBet = $bet;
+        return $this;
     }
 }
