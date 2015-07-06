@@ -18,44 +18,46 @@ class GamesPage2 extends Page {
     private $betsData;
     private $liveOddsDT;
 
-    public function __construct($logged_in, $date) {
-        parent::__construct($logged_in, true);
-        $this->date = $date;
-
+    final protected function gen() {
         try {
-            $this->fetchData();
+            $this->simInputData = (new SimInputDataType())
+                ->setGameDate($this->date)
+                ->gen()
+                ->getData();
+            $weights = array(StatsCategories::B_HOME_AWAY => 1.0);
+            $this->betsData = (new BetsDataType())
+                ->setColumns($this->getBetsColumns())
+                ->setWeights($weights)
+                ->setGameDate($this->date)
+                ->gen()
+                ->getData();
+            $this->betsData = ArrayUtils::sortAssociativeArray(
+                $this->betsData,
+                'game_time'
+            );
+
+            // Fetch odds to get starting and most recent odds.
+            $this->liveOddsDT = (new LiveOddsDataType())
+                ->setGameDate($this->date)
+                ->gen();
         } catch (Exception $e) {
             $this->errors[] = $e->getMessage();
-            $this->displayErrors();
             return;
         }
 
-        $this->setHeader($this->date, $this->getROIHeader());
         $this->setupGameData();
-        $this->display();
     }
 
-    private function fetchData() {
-        $this->simInputData = (new SimInputDataType())
-            ->setGameDate($this->date)
-            ->gen()
-            ->getData();
-        $weights = array(StatsCategories::B_HOME_AWAY => 1.0);
-        $this->betsData = (new BetsDataType())
-            ->setColumns($this->getBetsColumns())
-            ->setWeights($weights)
-            ->setGameDate($this->date)
-            ->gen()
-            ->getData();
-        $this->betsData = ArrayUtils::sortAssociativeArray(
-            $this->betsData,
-            'game_time'
-        );
+    final protected function getHeaderParams() {
+        return array($this->date, $this->getROIHeader());
+    }
 
-        // Fetch odds to get starting and most recent odds.
-        $this->liveOddsDT = (new LiveOddsDataType())
-            ->setGameDate($this->date)
-            ->gen();
+    final protected function renderPage() {
+        $summary_data = $this->getSummaryTableData();
+        (new Table($summary_data, 'summary_table'))->display();
+
+        // Games section.
+        $this->getGamesSection()->display();
     }
 
     private function setupGameData() {
@@ -94,15 +96,6 @@ class GamesPage2 extends Page {
                 $game_data['pitching_a']['era']
             )
         );
-    }
-
-    private function display() {
-        $summary_data = $this->getSummaryTableData();
-        (new Table($summary_data, 'summary_table'))->display();
-
-        // Games section.
-        $this->getGamesSection()->display();
-
     }
 
     private function getSummaryTableData() {
@@ -283,6 +276,11 @@ class GamesPage2 extends Page {
             'bet',
             'payout'
         );
+    }
+
+    public function setDate($date) {
+        $this->date = $date;
+        return $this;
     }
 }
 ?>

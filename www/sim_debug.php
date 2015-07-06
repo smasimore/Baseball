@@ -14,7 +14,7 @@ sec_session_start();
     </head>
     <body class="page">
         <?php
-            $page = new SimDebugPage(login_check($mysqli));
+            $page = (new SimDebugPage(login_check($mysqli)))->render();
             $game_data = $page->getGameData();
         ?>
         <script type="text/JavaScript">

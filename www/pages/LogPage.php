@@ -6,14 +6,7 @@ class LogPage extends Page {
 
     private $name;
 
-    public function __construct($logged_in, $user) {
-        parent::__construct($logged_in, true);
-        $this->name = $user;
-        $this->setHeader(' ');
-        $this->display();
-    }
-
-    public function display() {
+    final protected function renderPage() {
         if (!$this->name) {
            $logs = new UOList(
                 array(
@@ -84,6 +77,11 @@ class LogPage extends Page {
         $html .= $html_details;
 
         echo $html;
+    }
+
+    public function setName($name) {
+        $this->name = $name;
+        return $this;
     }
 }
 ?>

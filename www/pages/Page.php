@@ -19,14 +19,14 @@ include_once __DIR__ .'/../ui/Div.php';
 include_once __DIR__ .'/../ui/Font.php';
 include_once __DIR__ .'/../../Models/Utils/StringUtils.php';
 
-class Page {
+abstract class Page {
 
     protected $errors = array();
+    protected $loggedIn;
 
-    private $loggedIn;
     private $header = null;
 
-    protected function __construct($logged_in, $custom_header = false) {
+    public function __construct($logged_in) {
         $this->loggedIn = $logged_in;
 
         if (!$this->loggedIn && $_SERVER['REQUEST_URI'] != '/' &&
@@ -34,13 +34,38 @@ class Page {
             header('Location: /index.php', true);
             die();
         }
-
-        if (!$custom_header) {
-            $this->displayHeader();
-        }
     }
 
-    final protected function setHeader($header, $sub_header = null) {
+    /**
+     * Put html rendering here.
+     */
+    abstract protected function renderPage();
+
+    /**
+     * Fetch any data you need here.
+     */
+    protected function gen() { }
+
+    /**
+     * Return title and subtitle.
+     */
+    protected function getHeaderParams() {
+        return array(' ', null);
+    }
+
+    public function render() {
+        $this->gen();
+
+        list($title, $subtitle) = $this->getHeaderParams();
+        $this->setHeader($title, $subtitle);
+
+        $this->displayErrors();
+        $this->renderPage();
+
+        return $this;
+    }
+
+    private function setHeader($header, $sub_header = null) {
         $this->header = (new PageHeader())
             ->setLoggedIn($this->loggedIn)
             ->setTitle($header)
@@ -59,6 +84,10 @@ class Page {
     }
 
     final protected function displayErrors() {
+        if (!$this->errors) {
+            return;
+        }
+
         $errors_list = new UOList($this->errors, null, 'error_box medium_w');
         $errors_list->display();
     }

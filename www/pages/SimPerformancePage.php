@@ -29,37 +29,7 @@ class SimPerformancePage extends Page {
     private $histActual = array();
     private $histNumGames = array();
 
-    public function __construct($logged_in, $params) {
-        parent::__construct($logged_in, true);
-        $this->setHeader(' ');
-
-        $this->groupSwitchPerc = idx($params, 'group_switch_perc', 100);
-        $this->firstSeason = idx($params, 'first_season', 1990);
-        $this->lastSeason = idx($params, 'last_season', 2013);
-        $this->firstBucket = idx($params, 'first_bucket', 0);
-        $this->lastBucket = idx($params, 'last_bucket', 9);
-
-        $this->weights = array(
-            0 => idx($params, 'weights_0', 'b_total_100'),
-            1 => idx($params, 'weights_1', 'b_total_100')
-        );
-        $this->statsYear = array(
-            0 => idx($params, 'stats_year_0', 'career'),
-            1 => idx($params, 'stats_year_1', 'career')
-        );
-        $this->statsType = array(
-            0 => idx($params, 'stats_type_0', 'basic'),
-            1 => idx($params, 'stats_type_1', 'basic')
-        );
-
-        $this->fetchData();
-        $this->calculateHist();
-        $this->calculatePerfScores();
-        $this->display();
-    }
-
-
-    private function fetchData() {
+    final protected function gen() {
         $param_query =
             "SELECT DISTINCT
                 weights,
@@ -147,6 +117,45 @@ class SimPerformancePage extends Page {
             $results_0,
             $results_1
         );
+
+        $this->calculateHist();
+        $this->calculatePerfScores();
+    }
+
+    final protected function renderPage() {
+        $sim_param_list = $this->getSimParamList();
+        $group_param_list_a = $this->getGroupParamList(0);
+        $group_param_list_b = $this->getGroupParamList(1);
+        $submit_button = "<input class='button' type='submit' value='Submit'>";
+
+        $form =
+            "<form class='sim_perf' action='sim_perf.php'>
+                <div class='blue_list'>
+                    $sim_param_list
+                    $group_param_list_a
+                    $group_param_list_b
+                    <div'>$submit_button</div>
+                </div>
+            </form>";
+
+        $histograms = array($this->getHistogram('overall'));
+        foreach (array_keys($this->perfScores) as $type) {
+            // Overriding so we don't show overall twice. Manually rendering
+            // so it's at the top.
+            if ($type !== 'overall') {
+                $histograms[] = $this->getHistogram($type);
+            }
+        }
+
+        $hist_list = new UOList(
+            $histograms,
+            null,
+            'histogram_list_item bottom_border'
+        );
+
+        echo $form;
+        print_r($this->perfScores);
+        $hist_list->display();
     }
 
     private function formatSQLGameData($data) {
@@ -235,10 +244,6 @@ class SimPerformancePage extends Page {
         }
     }
 
-    public function getHistData() {
-        return array($this->histActual, $this->histNumGames);
-    }
-
     private function calculatePerfScore($hist, $type) {
         $total_num_games = 0;
         $sum_diff_from_expected = 0;
@@ -271,47 +276,6 @@ class SimPerformancePage extends Page {
         }
 
         return round($sum_diff_from_expected / $total_num_games, 2);
-    }
-
-
-    public function display() {
-        $this->displayErrors();
-
-        $sim_param_list = $this->getSimParamList();
-        $group_param_list_a = $this->getGroupParamList(0);
-        $group_param_list_b = $this->getGroupParamList(1);
-        $submit_button = "<input class='button' type='submit' value='Submit'>";
-
-        $form =
-            "<form class='sim_perf' action='sim_perf.php'>
-                <div class='blue_list'>
-                    $sim_param_list
-                    $group_param_list_a
-                    $group_param_list_b
-                    <div'>$submit_button</div>
-                </div>
-            </form>";
-
-
-        echo $form;
-
-        print_r($this->perfScores);
-
-        $histograms = array($this->getHistogram('overall'));
-        foreach (array_keys($this->perfScores) as $type) {
-            // Overriding so we don't show overall twice. Manually rendering
-            // so it's at the top.
-            if ($type !== 'overall') {
-                $histograms[] = $this->getHistogram($type);
-            }
-        }
-
-        $hist_list = new UOList(
-            $histograms,
-            null,
-            'histogram_list_item bottom_border'
-        );
-        $hist_list->display();
     }
 
     private function getSimParamList() {
@@ -419,6 +383,33 @@ class SimPerformancePage extends Page {
                 id=$type
                 class='histogram_canvas'>
             </div>";
+    }
+
+    public function setParams($params) {
+        $this->groupSwitchPerc = idx($params, 'group_switch_perc', 100);
+        $this->firstSeason = idx($params, 'first_season', 1990);
+        $this->lastSeason = idx($params, 'last_season', 2013);
+        $this->firstBucket = idx($params, 'first_bucket', 0);
+        $this->lastBucket = idx($params, 'last_bucket', 9);
+
+        $this->weights = array(
+            0 => idx($params, 'weights_0', 'b_total_100'),
+            1 => idx($params, 'weights_1', 'b_total_100')
+        );
+        $this->statsYear = array(
+            0 => idx($params, 'stats_year_0', 'career'),
+            1 => idx($params, 'stats_year_1', 'career')
+        );
+        $this->statsType = array(
+            0 => idx($params, 'stats_type_0', 'basic'),
+            1 => idx($params, 'stats_type_1', 'basic')
+        );
+
+        return $this;
+    }
+
+    public function getHistData() {
+        return array($this->histActual, $this->histNumGames);
     }
 }
 ?>

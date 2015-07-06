@@ -15,7 +15,9 @@ sec_session_start();
     </head>
     <body class="page">
         <?php
-            new LoginPage(login_check($mysqli), isset($_GET['error']));
+            (new LoginPage(login_check($mysqli)))
+                ->setLoginError(isset($_GET['error']))
+                ->render();
         ?> 
     </body>
 </html>

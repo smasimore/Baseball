@@ -4,26 +4,9 @@ include_once __DIR__ . '/../ui/Table.php';
 
 class LoginPage extends Page {
 
-    private $error;
-    private $loggedIn;
-
-    public function __construct($logged_in, $error) {
-        parent::__construct($logged_in, true);
-        $this->loggedIn = $logged_in;
-        $this->error = $error;
-        $this->setHeader(' ');
-        $this->display();
-    }
-
-    public function display() {
+    final protected function renderPage() {
         // TODO(smas) Refactor this into form and text objects.
         if ($this->loggedIn == false) {
-            if ($this->error) {
-                echo
-                    "<div class='error_box error_device'>
-                        Try again sucka!
-                    </div>";
-            }
             echo
                 "<form
                     id='form'
@@ -58,6 +41,13 @@ class LoginPage extends Page {
                     </div>
                 </form>";
         }
+    }
+
+    public function setLoginError($error) {
+        if ($error) {
+            $this->errors[] = 'Try again sucka!';
+        }
+        return $this;
     }
 }
 ?>

@@ -18,7 +18,9 @@ sec_session_start();
     </head>
     <body class="page">
         <?php
-            $page = new SimPerformancePage(login_check($mysqli), $_GET);
+            $page = (new SimPerformancePage(login_check($mysqli)))
+                ->setParams($_GET)
+                ->render();
             list($hist_actual, $hist_games) = $page->getHistData();
         ?>
         <script type="text/JavaScript">

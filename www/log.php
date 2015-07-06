@@ -18,7 +18,9 @@ sec_session_start();
     </head>
         <body class="page">
         <?php
-            $page = new LogPage(login_check($mysqli), idx($_GET, 'name'));
+            (new LogPage(login_check($mysqli)))
+                ->setName(idx($_GET, 'name'))
+                ->render();
         ?>
     </body>
 </html>

@@ -20,7 +20,10 @@ sec_session_start();
             if ($date) {
                 $date = preg_replace('/[^\d-]+/', '', $date);
             }
-            $page = new GamesPage2(login_check($mysqli), $date);
+
+            (new GamesPage2(login_check($mysqli)))
+                ->setDate($date)
+                ->render();
         ?>
     </body>
 </html>
