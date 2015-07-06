@@ -125,6 +125,34 @@ class SimDebugPage extends Page {
         return $formatted_stats;
     }
 
+    public function display() {
+        $list = new UOList($this->eventsHTML, null, 'bottom_border');
+        $list_html = $list->getHTML();
+
+        $date_label = $this->simGameDate ? 'SIM GAME DATE ' : null;
+        $mutator_label = $this->weightsMutator ? 'WEIGHTS MUTATOR ' : null;
+
+        $this->setHeader(
+            'Sabertooth Ventures',
+            array(
+                "GAMEID $this->gameID
+                SEASON $this->season
+                STATS YEAR $this->statsYear
+                STATS TYPE $this->statsType
+                WEIGHTS $this->weights
+                ANALYSIS RUNS $this->analysisRuns
+                $date_label $this->simGameDate
+                $mutator_label $this->weightsMutator"
+            )
+        );
+
+        echo
+            "<div style='text-align:center;'>
+                $list_html
+            </div>";
+
+    }
+
     private function getEventHTML($id, $footer) {
         return "<canvas id='$id' width='300' height='300'></canvas>$footer";
     }

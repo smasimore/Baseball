@@ -249,13 +249,13 @@ border : solid 0px #ffffff;
 
 @media (min-device-width:320px) {
     .header_device {
-        height: 75px;
+        height: 100%;
     }
 }
 
 @media (min-device-width:960px) {
     .header_device {
-        height: 50px;
+        height: 100%;
     }
 }
 

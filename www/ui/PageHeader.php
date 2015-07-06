@@ -6,7 +6,7 @@ include_once __DIR__ . '/UIElement.php';
 class PageHeader extends UIElement {
 
     private $title;
-    private $subtitle;
+    private $subtitleArr;
     private $loggedIn;
 
     public function setLoggedIn($logged_in) {
@@ -19,22 +19,19 @@ class PageHeader extends UIElement {
         return $this;
     }
 
-    public function setSubtitle($subtitle) {
-        $this->subtitle = $subtitle;
+    public function setSubtitleArr($subtitle_arr) {
+        $this->subtitleArr = $subtitle_arr;
         return $this;
-    } 
+    }
 
     protected function setHTML() {
         $html_title =
             "<p class='title'>
                 $this->title
             </p>";
-        $html_subtitle =
-            "<p class='subtitle'>
-                $this->subtitle
-            </p>";
+        $html_subtitle = $this->getSubtitleHTMLArr();
         $header_text = new UOList(
-            array($html_title, $html_subtitle),
+            array_merge(array($html_title), $html_subtitle),
             'alignleft'
         );
         $header_text = $header_text->getHTML();
@@ -56,6 +53,20 @@ class PageHeader extends UIElement {
                     $nav
                 </div>
             </div>";
+    }
+
+    private function getSubtitleHTMLArr() {
+        if (!$this->subtitleArr) {
+            return array();
+        }
+        $html_arr = array();
+        foreach ($this->subtitleArr as $subtitle) {
+            $html_arr[] =
+                "<p class='subtitle'>
+                    $subtitle
+                </p>";
+        }
+        return $html_arr;
     }
 
     private function getNav() {

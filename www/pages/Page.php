@@ -65,11 +65,11 @@ abstract class Page {
         return $this;
     }
 
-    private function setHeader($header, $sub_header = null) {
+    private function setHeader($header, $sub_header_arr = null) {
         $this->header = (new PageHeader())
             ->setLoggedIn($this->loggedIn)
             ->setTitle($header)
-            ->setSubtitle($sub_header);
+            ->setSubtitleArr($sub_header_arr);
         $this->displayHeader();
     }
 

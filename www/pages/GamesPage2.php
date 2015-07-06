@@ -45,6 +45,7 @@ class GamesPage2 extends Page {
             return;
         }
 
+        $this->setHeader($this->date, array($this->getROIHeader()));
         $this->setupGameData();
     }
 
