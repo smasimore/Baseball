@@ -45,12 +45,11 @@ class GamesPage2 extends Page {
             return;
         }
 
-        $this->setHeader($this->date, array($this->getROIHeader()));
         $this->setupGameData();
     }
 
     final protected function getHeaderParams() {
-        return array($this->date, $this->getROIHeader());
+        return array($this->date, array($this->getROIHeader()));
     }
 
     final protected function renderPage() {
