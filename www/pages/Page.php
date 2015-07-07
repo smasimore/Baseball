@@ -60,6 +60,11 @@ abstract class Page {
         $this->setHeader($title, $subtitle);
 
         $this->displayErrors();
+
+        if ($this->errors) {
+            return;
+        }
+
         $this->renderPage();
 
         return $this;
