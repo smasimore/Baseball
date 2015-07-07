@@ -25,10 +25,9 @@ class PageHeader extends UIElement {
     }
 
     protected function setHTML() {
-        $html_title =
-            "<p class='title'>
-                $this->title
-            </p>";
+        $html_title = $this->title !== null
+            ? "<p class='title'> $this->title </p>"
+            : "<p class='hidden'> Hidden Title </p>";
         $html_subtitle = $this->getSubtitleHTMLArr();
         $header_text = new UOList(
             array_merge(array($html_title), $html_subtitle),
@@ -56,8 +55,8 @@ class PageHeader extends UIElement {
     }
 
     private function getSubtitleHTMLArr() {
-        if (!$this->subtitleArr) {
-            return array();
+        if ($this->subtitleArr === null) {
+            return array("<p class='hidden'> Hidden Subtitle </p>");
         }
         $html_arr = array();
         foreach ($this->subtitleArr as $subtitle) {

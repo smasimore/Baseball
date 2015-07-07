@@ -271,6 +271,12 @@ border : solid 0px #ffffff;
     font-size: 12pt;
 }
 
+.page_header .hidden {
+    margin: 0px;
+    color: #2B96E8;
+    font-size: 12pt;
+}
+
 .page_header .logout {
     color: #0155C3;
     padding: 5px;

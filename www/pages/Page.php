@@ -50,7 +50,7 @@ abstract class Page {
      * Return title and subtitle.
      */
     protected function getHeaderParams() {
-        return array(' ', null);
+        return array(null, null);
     }
 
     public function render() {
