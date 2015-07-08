@@ -53,15 +53,22 @@ abstract class Page {
         return array(null, null);
     }
 
+    /* Override this if you want to display the page even if there are
+     * errors. E.g. for LoginPage.
+     */
+    protected function renderPageIfErrors() {
+        return false;
+    }
+
     public function render() {
         $this->gen();
 
         list($title, $subtitle) = $this->getHeaderParams();
         $this->setHeader($title, $subtitle);
 
-        $this->displayErrors();
+        $this->renderErrors();
 
-        if ($this->errors) {
+        if ($this->errors && !$this->renderPageIfErrors()) {
             return;
         }
 
@@ -75,10 +82,10 @@ abstract class Page {
             ->setLoggedIn($this->loggedIn)
             ->setTitle($header)
             ->setSubtitleArr($sub_header_arr);
-        $this->displayHeader();
+        $this->renderHeader();
     }
 
-    private function displayHeader() {
+    private function renderHeader() {
         if (!$this->header) {
             $this->header = (new PageHeader())->setLoggedIn($this->loggedIn);
         }
@@ -88,7 +95,7 @@ abstract class Page {
         echo "<div style='clear:both;'></div>";
     }
 
-    final protected function displayErrors() {
+    private function renderErrors() {
         if (!$this->errors) {
             return;
         }

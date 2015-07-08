@@ -4,6 +4,10 @@ include_once __DIR__ . '/../ui/Table.php';
 
 class LoginPage extends Page {
 
+    final protected function renderPageIfErrors() {
+        return true;
+    }
+
     final protected function renderPage() {
         // TODO(smas) Refactor this into form and text objects.
         if ($this->loggedIn == false) {
