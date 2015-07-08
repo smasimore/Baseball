@@ -69,6 +69,10 @@ trait TSimParams {
         return (int)$date->format('Y');
     }
 
+    final public function getUseReliever() {
+        return $this->useReliever;
+    }
+
     final public function setGameDate($game_date, $end_game_date = null) {
         $this->gameDate = $game_date;
         $this->endGameDate = $end_game_date;
