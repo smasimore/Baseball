@@ -144,34 +144,31 @@ class GamesPage2 extends Page {
                     ->getHTML();
             }
 
-            // Get bet columns.
-            $bet_team_pct_win = null;
-            $bet_team_odds = null;
-            $bet_advantage = null;
-            $bet_odds_movement = null;
-            if ($bet_team) {
-                $bet_team_pct_win = $bet_away_team
-                    ? $game['away_sim']
-                    : $game['home_sim'];
-                $bet_team_odds = $bet_away_team
-                    ? $game['away_vegas_odds']
-                    : $game['home_vegas_odds'];
-                $bet_advantage = $bet_team_pct_win -
-                    OddsUtils::convertOddsToPct($bet_team_odds);
-                $bet_odds_movement = sprintf(
-                    '%d  --->  %d',
-                    $this->liveOddsDT->getStartingOdds(
-                        $game['gameid'],
-                        $bet_away_team
-                    ),
-                    $this->liveOddsDT->getMostRecentOdds(
-                        $game['gameid'],
-                        $bet_away_team
-                    )
-                );
-            }
+            // Bet columns - default to home odds if no bet team.
+            $bet_team_pct_win = $bet_away_team
+                ? $game['away_sim']
+                : $game['home_sim'];
+            $bet_team_odds = $bet_away_team
+                ? $game['away_vegas_odds']
+                : $game['home_vegas_odds'];
+            $bet_advantage = $bet_team_pct_win -
+                OddsUtils::convertOddsToPct($bet_team_odds);
 
-            $odds = $bet_team_odds === null
+            $most_recent_odds = $this->liveOddsDT->getMostRecentOdds(
+                $game['gameid'],
+                $bet_away_team
+            );
+            $bet_odds_movement = sprintf(
+                '%d  --->  %d (%d%%)',
+                $this->liveOddsDT->getStartingOdds(
+                    $game['gameid'],
+                    $bet_away_team
+                ),
+                $most_recent_odds,
+                round(OddsUtils::convertOddsToPct($most_recent_odds) * 100)
+            );
+
+            $odds = $bet_team === null
                 ? null
                 : sprintf(
                     '%d (+%d%%)',
