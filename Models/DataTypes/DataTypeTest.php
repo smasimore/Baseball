@@ -48,20 +48,20 @@ class DataTypeTest extends PHPUnit_Framework_TestCase {
             ),
             array(
                 array(
-                    SQLWhereParams::GREATER_THAN => array('nest' => 5),
-                    SQLWhereParams::LESS_THAN => array('quest' => 4)
+                    SQLWhereParams::GREATER_OR_EQUAL => array('nest' => 5),
+                    SQLWhereParams::LESS_OR_EQUAL => array('quest' => 4)
                 ),
-                "SELECT * FROM test WHERE nest > 5 AND quest < 4"
+                "SELECT * FROM test WHERE nest >= 5 AND quest <= 4"
             ),
             array(
                 array(
                     SQLWhereParams::EQUAL => array('rest' => 1),
                     SQLWhereParams::NOT_EQUAL =>array('vest' => 5),
-                    SQLWhereParams::GREATER_THAN =>array('best' => 4),
-                    SQLWhereParams::LESS_THAN =>array('quest' => 2)
+                    SQLWhereParams::GREATER_OR_EQUAL =>array('best' => 4),
+                    SQLWhereParams::LESS_OR_EQUAL =>array('quest' => 2)
                 ),
                 "SELECT * FROM test WHERE rest = 1 AND vest <> 5 ".
-                "AND best > 4 AND quest < 2"
+                "AND best >= 4 AND quest <= 2"
             ),
             array(
                 array(),
@@ -80,13 +80,13 @@ class DataTypeTest extends PHPUnit_Framework_TestCase {
         return array(
             array(
                 array(
-                    SQLWhereParams::GREATER_THAN => array('best' => null)
+                    SQLWhereParams::GREATER_OR_EQUAL => array('best' => null)
                 ),
                 "Exception Should Throw Before This Hits"
             ),
             array(
                 array(
-                    SQLWhereParams::LESS_THAN => array('nest' => false)
+                    SQLWhereParams::LESS_OR_EQUAL => array('nest' => false)
                 ),
                 "Exception Should Throw Before This Hits"
             )

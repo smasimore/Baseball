@@ -97,7 +97,7 @@ class BetsScript extends ScriptWithWrite {
                 }
             }
             $this->newBetsInsert[$gameid] = array_merge(
-                $sim_output_dt->getSimParams(),
+                idx($sim_output_dt->getSimParams(), SQLWhereParams::EQUAL),
                 array(
                     'gameid' => $gameid,
                     'home' => $home,

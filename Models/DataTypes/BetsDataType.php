@@ -14,9 +14,7 @@ final class BetsDataType extends DataType {
     }
 
     final protected function getParams() {
-        return array(
-            SQLWhereParams::EQUAL => $this->getSimParams()
-        );
+        return $this->getSimParams();
     }
 
     protected function formatData() {

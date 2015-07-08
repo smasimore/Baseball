@@ -18,9 +18,7 @@ final class SimOutputDataType extends DataType {
     }
 
     protected function getParams() {
-        return array(
-            SQLWhereParams::EQUAL => $this->getSimParams()
-        );
+        return $this->getSimParams();
     }
 
     final protected function formatData() {

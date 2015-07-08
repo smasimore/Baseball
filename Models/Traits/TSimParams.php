@@ -8,6 +8,7 @@ include_once __DIR__ . '/../Constants/StatsCategories.php';
 trait TSimParams {
 
     private $gameDate;
+    private $endGameDate;
     private $weights = 'b_home_away_100';
     private $statsYear = StatsYears::CAREER;
     private $statsType = StatsTypes::BASIC;
@@ -15,58 +16,63 @@ trait TSimParams {
     private $analysisRuns = 5000;
     private $useReliever = false;
 
+    /**
+     * Return params keyed by SQLWhereParam type.
+     */
     final public function getSimParams() {
         if ($this->gameDate === null) {
             throw new Exception('Game date must be set.');
         }
 
+        if ($this->endGameDate !== null) {
+            return $this->getSimParamsDateRange();
+        }
+
         return array(
-            'game_date' => $this->gameDate,
-            'season' => $this->getSeason(),
-            'weights' => $this->weights,
-            'stats_year' => $this->statsYear,
-            'stats_type' => $this->statsType,
-            'weights_mutator' => $this->weightsMutator,
-            'analysis_runs' => $this->analysisRuns,
-            'use_reliever' => $this->useReliever
+            SQLWhereParams::EQUAL => array(
+                'game_date' => $this->gameDate,
+                'season' => $this->getSeason(),
+                'weights' => $this->weights,
+                'stats_year' => $this->statsYear,
+                'stats_type' => $this->statsType,
+                'weights_mutator' => $this->weightsMutator,
+                'analysis_runs' => $this->analysisRuns,
+                'use_reliever' => $this->useReliever
+            )
         );
     }
 
-    private function getSeason() {
-        $date = DateTime::createFromFormat('Y-m-d', $this->gameDate);
+    private function getSimParamsDateRange() {
+        return array(
+            SQLWhereParams::EQUAL => array(
+                'weights' => $this->weights,
+                'stats_year' => $this->statsYear,
+                'stats_type' => $this->statsType,
+                'weights_mutator' => $this->weightsMutator,
+                'analysis_runs' => $this->analysisRuns,
+                'use_reliever' => $this->useReliever
+            ),
+            SQLWhereParams::GREATER_OR_EQUAL => array(
+                'game_date' => $this->gameDate,
+                'season' => $this->getSeason($this->gameDate)
+            ),
+            SQLWhereParams::LESS_OR_EQUAL => array(
+                'game_date' => $this->endGameDate,
+                'season' => $this->getSeason($this->endGameDate)
+            )
+        );
+    }
+
+    private function getSeason($date = null) {
+        $date = $date ?: $this->gameDate;
+        $date = DateTime::createFromFormat('Y-m-d', $date);
         return (int)$date->format('Y');
     }
 
-    final public function getStatsYear() {
-        return $this->statsYear;
-    }
-
-    final public function getStatsType() {
-        return $this->statsType;
-    }
-
-    final public function getWeights() {
-        return $this->weights;
-    }
-
-    final public function getWeightsMutator() {
-        return $this->weightsMutator;
-    }
-
-    final public function getUseReliever() {
-        return $this->useReliever;
-    }
-
-    final public function getAnalysisRuns() {
-        return $this->analysisRuns;
-    }
-
-    final public function getGameDate() {
-        return $this->gameDate();
-    }
-
-    final public function setGameDate($game_date) {
+    final public function setGameDate($game_date, $end_game_date = null) {
         $this->gameDate = $game_date;
+        $this->endGameDate = $end_game_date;
+
         return $this;
     }
 
