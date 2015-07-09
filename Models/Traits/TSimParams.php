@@ -74,6 +74,9 @@ trait TSimParams {
     }
 
     final public function setGameDate($game_date, $end_game_date = null) {
+        if (!DateTime::createFromFormat('Y-m-d', $game_date)) {
+            throw new Exception('Date must be in Y-m-d format.');
+        }
         $this->gameDate = $game_date;
         $this->endGameDate = $end_game_date;
 

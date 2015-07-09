@@ -19,31 +19,26 @@ class GamesPage2 extends Page {
     private $liveOddsDT;
 
     final protected function gen() {
-        try {
-            $this->simInputData = (new SimInputDataType())
-                ->setGameDate($this->date)
-                ->gen()
-                ->getData();
-            $weights = array(StatsCategories::B_HOME_AWAY => 1.0);
-            $this->betsData = (new BetsDataType())
-                ->setColumns($this->getBetsColumns())
-                ->setWeights($weights)
-                ->setGameDate($this->date)
-                ->gen()
-                ->getData();
-            $this->betsData = ArrayUtils::sortAssociativeArray(
-                $this->betsData,
-                'game_time'
-            );
+        $this->simInputData = (new SimInputDataType())
+            ->setGameDate($this->date)
+            ->gen()
+            ->getData();
+        $weights = array(StatsCategories::B_HOME_AWAY => 1.0);
+        $this->betsData = (new BetsDataType())
+            ->setColumns($this->getBetsColumns())
+            ->setWeights($weights)
+            ->setGameDate($this->date)
+            ->gen()
+            ->getData();
+        $this->betsData = ArrayUtils::sortAssociativeArray(
+            $this->betsData,
+            'game_time'
+        );
 
-            // Fetch odds to get starting and most recent odds.
-            $this->liveOddsDT = (new LiveOddsDataType())
-                ->setGameDate($this->date)
-                ->gen();
-        } catch (Exception $e) {
-            $this->errors[] = $e->getMessage();
-            return;
-        }
+        // Fetch odds to get starting and most recent odds.
+        $this->liveOddsDT = (new LiveOddsDataType())
+            ->setGameDate($this->date)
+            ->gen();
 
         $this->setupGameData();
     }

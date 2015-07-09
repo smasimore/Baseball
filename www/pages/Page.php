@@ -61,7 +61,11 @@ abstract class Page {
     }
 
     public function render() {
-        $this->gen();
+        try {
+            $this->gen();
+        } catch (Exception $e) {
+            $this->errors[] = $e->getMessage();
+        }
 
         list($title, $subtitle) = $this->getHeaderParams();
         $this->setHeader($title, $subtitle);
