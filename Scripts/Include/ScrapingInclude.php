@@ -14,7 +14,8 @@ ini_set('mysqli.reconnect', '1');
 if (!defined('HOME_PATH')) {
     include('/Users/constants.php');
 }
-include(HOME_PATH.'Scripts/Include/Enum.php');
+include(HOME_PATH.'Models/Constants/Enum.php');
+include(HOME_PATH.'Models/Utils/GlobalUtils.php');
 include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
 include(HOME_PATH.'Scripts/Include/Teams.php');
 include(HOME_PATH.'Scripts/Include/ESPNParseUtils.php');

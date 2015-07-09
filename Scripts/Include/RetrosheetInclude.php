@@ -11,12 +11,13 @@ ini_set('memory_limit', '-1');
 ini_set('max_execution_time', -1);
 ini_set('mysqli.connect_timeout', -1);
 ini_set('mysqli.reconnect', '1');
-if (!defined('HOME_PATH')) {
-    include_once('/Users/constants.php');
-}
+
+include_once('/Users/constants.php');
+include_once(HOME_PATH.'Models/Constants/Enum.php');
 include_once(HOME_PATH.'Models/Utils/ExceptionUtils.php');
 include_once(HOME_PATH.'Scripts/Include/RetrosheetParseUtils.php');
 include_once(HOME_PATH.'Scripts/Include/RetrosheetConstants.php');
+include_once(HOME_PATH.'Models/Utils/GlobalUtils.php');
 include_once(HOME_PATH.'Scripts/Include/sweetfunctions.php');
 
 ?>

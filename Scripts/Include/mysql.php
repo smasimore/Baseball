@@ -2,6 +2,7 @@
 if (!defined('DATABASE')) {
     include_once('/Users/constants.php');
 }
+include(HOME_PATH.'Models/Utils/GlobalUtils.php');
 
 /*
 ########################################################################
