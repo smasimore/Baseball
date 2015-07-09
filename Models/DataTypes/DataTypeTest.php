@@ -81,14 +81,67 @@ class DataTypeTest extends PHPUnit_Framework_TestCase {
             array(
                 array(
                     SQLWhereParams::GREATER_OR_EQUAL => array('best' => null)
-                ),
-                "Exception Should Throw Before This Hits"
+                )
             ),
             array(
                 array(
                     SQLWhereParams::LESS_OR_EQUAL => array('nest' => false)
+                )
+            )
+        );
+    }
+
+    public function providerFilterException() {
+        return array(
+            array(
+                array('dan' => array('name' => 'dan', 'color' => 'blue')),
+                null
+            )
+        );
+    }
+
+    public function providerFilter() {
+        return array(
+            array(
+                array(
+                    'dan' => array('name' => 'dan', 'color' => 'blue'),
+                    'sarah' => array('name' => 'sarah', 'color' => 'red'),
+                    'test' => array('name' => 'dan', 'color' => 'orange')
                 ),
-                "Exception Should Throw Before This Hits"
+                true,
+                array('name' => 'dan'),
+                array(
+                    'dan' => array('name' => 'dan', 'color' => 'blue'),
+                    'test' => array('name' => 'dan', 'color' => 'orange')
+                )
+            ),
+            array(
+                array(
+                    array('name' => 'dan', 'color' => null, 'num' => 1),
+                    array('name' => 'dan', 'color' => 'blue'),
+                    array('name' => 'dan', 'color' => null, 'num' => 2)
+                ),
+                false,
+                array('color' => null),
+                array(
+                    array('name' => 'dan', 'color' => null, 'num' => 1),
+                    array('name' => 'dan', 'color' => null, 'num' => 2)
+                )
+            ),
+            array(
+                array(array('name' => 'dan', 'color' => null)),
+                false,
+                array('color' => 'blue'),
+                array()
+            ),
+            array(
+                array(
+                    array('name' => 'dan', 'color' => null),
+                    array('name' => 'dan', 'color' => 'blue'),
+                ),
+                false,
+                array('name' => 'dan', 'color' => null),
+                array(array('name' => 'dan', 'color' => null)),
             )
         );
     }
@@ -102,13 +155,33 @@ class DataTypeTest extends PHPUnit_Framework_TestCase {
             TRUE,
             TRUE,
             TRUE,
-            array('setColumns')
+            array('setColumns', 'getData')
         );
         $this->mockDataTypeClass->method('getTable')->willReturn('test');
 
         // Create ReflectionMethod to test private function.
         $this->getSQLMethod = new ReflectionMethod('DataType', 'getSQL');
         $this->getSQLMethod->setAccessible(true);
+    }
+
+    /**
+     * @dataProvider providerFilter
+     */
+    public function testFilterData($data, $keep_keys, $filter, $expected) {
+        $dt = $this->mockDataTypeClass;
+        $dt->method('getData')->willReturn($data);
+        $filtered_data = $dt->getFilteredData($filter, $keep_keys);
+        $this->assertEquals($expected, $filtered_data);
+    }
+
+    /**
+     * @dataProvider providerFilterException
+     * @expectedException Exception
+     */
+    public function testFilterDataException($data, $filter) {
+        $dt = $this->mockDataTypeClass;
+        $dt->method('getData')->willReturn($data);
+        $dt->getFilteredData($filter);
     }
 
     /**

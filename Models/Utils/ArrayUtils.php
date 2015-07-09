@@ -20,13 +20,6 @@ class ArrayUtils {
         }
     }
 
-    public static function idx($array, $key, $default = null) {
-        if (isset($array[$key])) {
-            return $array[$key];
-        }
-        return $default;
-    }
-
     public static function removeColumns($array, $col_names) {
         if (!is_array($col_names)) {
             throw new Exception('Second param needs to be an array of arrays.');

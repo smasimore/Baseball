@@ -3,7 +3,7 @@
 
 include_once '/Users/constants.php';
 include_once __DIR__ . '/../../Scripts/Include/mysql.php';
-include_once __DIR__ . '/../Utils/ArrayUtils.php';
+include_once __DIR__ . '/../Utils/GlobalUtils.php';
 include_once __DIR__ . '/../Constants/Tables.php';
 include_once __DIR__ . '/../Constants/SQLWhereParams.php';
 
@@ -47,6 +47,30 @@ abstract class DataType {
         return $this;
     }
 
+    final public function getFilteredData($filter_pairs, $keep_keys = false) {
+        if (!count($filter_pairs)) {
+            throw new Exception('Must Filter By Array With 1+ $key => $values');
+        }
+        $filtered_arr = array();
+        foreach ($this->getData() as $data_key => $data) {
+            $meets_filter_conditions = true;
+            foreach ($filter_pairs as $filter_key => $filter_value) {
+                if (idx($data, $filter_key) !== $filter_value) {
+                    $meets_filter_conditions = false;
+                    break;
+                }
+            }
+            if ($meets_filter_conditions) {
+                if ($keep_keys) {
+                    $filtered_arr[$data_key] = $data;
+                } else {
+                    $filtered_arr[] = $data;
+                }
+            }
+        }
+        return $filtered_arr;
+    }
+
     final public function gen() {
         $query = $this->getSQL();
         $this->data = exe_sql($this->getDatabase(), $query);
@@ -60,7 +84,7 @@ abstract class DataType {
         return $this;
     }
 
-    final public function getData() {
+    public function getData() {
         return $this->data;
     }
 

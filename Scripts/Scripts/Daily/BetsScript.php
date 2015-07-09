@@ -90,7 +90,7 @@ class BetsScript extends ScriptWithWrite {
             if ($this->test === false && $bets &&
                 array_key_exists($gameid, $bets)
             ) {
-                if (ArrayUtils::idx($bets[$gameid], 'bet_team')
+                if (idx($bets[$gameid], 'bet_team')
                     !== null
                 ) {
                     continue;
