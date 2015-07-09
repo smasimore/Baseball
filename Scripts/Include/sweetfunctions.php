@@ -735,13 +735,6 @@ function convertPctToOdds($pct) {
     return $odds;
 }
 
-function idx($array, $key, $default = null) {
-    if (isset($array[$key])) {
-        return $array[$key];
-    }
-    return $default;
-}
-
 function convertOddsToPct($odds) {
     if ($odds < 0) {
         $pct = (-1)*$odds / ((-1)*$odds + 100);

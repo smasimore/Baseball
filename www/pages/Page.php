@@ -18,6 +18,8 @@ include_once __DIR__ .'/../ui/Colors.php';
 include_once __DIR__ .'/../ui/Div.php';
 include_once __DIR__ .'/../ui/Font.php';
 include_once __DIR__ .'/../../Models/Utils/StringUtils.php';
+include_once __DIR__ .'/../../Models/Utils/GlobalUtils.php';
+include_once __DIR__ .'/../../Models/Utils/ArrayUtils.php';
 
 abstract class Page {
 

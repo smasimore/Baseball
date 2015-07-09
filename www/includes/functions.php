@@ -854,11 +854,3 @@ function ds_modify($date, $day_change) {
     $new_date = date('Y-m-d', $dateOneDayAdded);
     return $new_date;
 }
-
-function idx($array, $i, $default = null) {
-    if (isset($array[$i])) {
-        return $array[$i];
-    }
-
-    return $default;
-}

@@ -26,5 +26,6 @@ include_once(HOME_PATH.'Models/Utils/DateTimeUtils.php');
 include_once(HOME_PATH.'Models/Utils/ExceptionUtils.php');
 include_once(HOME_PATH.'Models/Utils/OddsUtils.php');
 include_once(HOME_PATH.'Models/Utils/ArrayUtils.php');
+include_once(HOME_PATH.'Models/Utils/GlobalUtils.php');
 
 ?>
