@@ -1,6 +1,6 @@
 <?php
 
-include('/Users/constants.php');
+include_once('/Users/constants.php');
 
 // USER PARAMS //
 $table = 'sim_output';

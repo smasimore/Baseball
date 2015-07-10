@@ -2,7 +2,7 @@
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
 if (!defined('HOME_PATH')) {
-    include('/Users/constants.php');
+    include_once('/Users/constants.php');
 }
 ini_set('memory_limit', '-1');
 ini_set('max_execution_time', -1);

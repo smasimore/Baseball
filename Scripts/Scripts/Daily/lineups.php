@@ -1,9 +1,9 @@
 <?php
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
-include('/Users/constants.php');
-include(HOME_PATH.'Scripts/Include/Teams.php');
-include(HOME_PATH.'Scripts/Include/RetrosheetPlayerMapping.php');
+include_once('/Users/constants.php');
+include_once(HOME_PATH.'Scripts/Include/Teams.php');
+include_once(HOME_PATH.'Scripts/Include/RetrosheetPlayerMapping.php');
 
 // Change this to backfill - backfill must be true
 $backfill = false;

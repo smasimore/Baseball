@@ -1,6 +1,6 @@
 <?php
-include('/Users/constants.php');
-include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
+include_once('/Users/constants.php');
+include_once(HOME_PATH.'Scripts/Include/sweetfunctions.php');
 
 date_default_timezone_set('America/Los_Angeles');
 $date = date('y-m-d');

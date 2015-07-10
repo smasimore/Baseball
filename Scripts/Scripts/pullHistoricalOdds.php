@@ -6,10 +6,10 @@ ini_set('default_socket_timeout', -1);
 ini_set('max_execution_time', -1);
 ini_set('mysqli.connect_timeout', -1);
 ini_set('mysqli.reconnect', '1');
-include('/Users/constants.php');
-include(HOME_PATH.'Models/Constants/Tables.php');
-include(HOME_PATH.'Scripts/Include/RetrosheetInclude.php');
-include(HOME_PATH.'Models/Utils/OddsUtils.php');
+include_once('/Users/constants.php');
+include_once(HOME_PATH.'Models/Constants/Tables.php');
+include_once(HOME_PATH.'Scripts/Include/RetrosheetInclude.php');
+include_once(HOME_PATH.'Models/Utils/OddsUtils.php');
 
 const GAMEDATE = 0;
 const OPPONENT = 1;

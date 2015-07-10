@@ -1,7 +1,7 @@
 <?php
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
-include(HOME_PATH.'Scripts/Include/RetrosheetInclude.php');
+include_once(HOME_PATH.'Scripts/Include/RetrosheetInclude.php');
 
 function pullPitcherStats($season, $table) {
     $sql =
