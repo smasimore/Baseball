@@ -12,12 +12,12 @@ ini_set('max_execution_time', -1);
 ini_set('mysqli.connect_timeout', -1);
 ini_set('mysqli.reconnect', '1');
 if (!defined('HOME_PATH')) {
-    include('/Users/constants.php');
+    include_once('/Users/constants.php');
 }
-include(HOME_PATH.'Models/Constants/Enum.php');
-include(HOME_PATH.'Models/Utils/GlobalUtils.php');
-include(HOME_PATH.'Scripts/Include/sweetfunctions.php');
-include(HOME_PATH.'Scripts/Include/Teams.php');
-include(HOME_PATH.'Scripts/Include/ESPNParseUtils.php');
+include_once(HOME_PATH.'Models/Constants/Enum.php');
+include_once(HOME_PATH.'Models/Utils/GlobalUtils.php');
+include_once(HOME_PATH.'Scripts/Include/sweetfunctions.php');
+include_once(HOME_PATH.'Scripts/Include/Teams.php');
+include_once(HOME_PATH.'Scripts/Include/ESPNParseUtils.php');
 
 ?>
