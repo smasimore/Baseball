@@ -20,6 +20,9 @@ include_once __DIR__ .'/../ui/Font.php';
 include_once __DIR__ .'/../../Models/Utils/StringUtils.php';
 include_once __DIR__ .'/../../Models/Utils/GlobalUtils.php';
 include_once __DIR__ .'/../../Models/Utils/ArrayUtils.php';
+include_once __DIR__ .'/../../Models/Utils/DateTimeUtils.php';
+include_once __DIR__ .'/../../Models/Utils/ROIUtils.php';
+include_once __DIR__ .'/../../Models/Utils/OddsUtils.php';
 
 abstract class Page {
 

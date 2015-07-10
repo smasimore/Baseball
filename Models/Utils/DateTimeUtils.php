@@ -27,6 +27,14 @@ class DateTimeUtils {
         return array($date, $time);
     }
 
+    public static function getSeasonFromDate($date) {
+        $date = DateTime::createFromFormat('Y-m-d', $date);
+        if (!$date) {
+            throw new Exception('Date must be in Y-m-d format.');
+        }
+        return (int)$date->format('Y');
+    }
+
     private static function dsModify($date, $day_change) {
         // Format of $day_change is '+1 day'
         $dateOneDayAdded = strtotime($date.$day_change);

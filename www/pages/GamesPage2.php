@@ -3,8 +3,6 @@ include_once 'Page.php';
 include_once __DIR__ .'/../../Models/DataTypes/SimInputDataType.php';
 include_once __DIR__ .'/../../Models/DataTypes/BetsDataType.php';
 include_once __DIR__ .'/../../Models/DataTypes/LiveOddsDataType.php';
-include_once __DIR__ .'/../../Models/Utils/ROIUtils.php';
-include_once __DIR__ .'/../../Models/Utils/OddsUtils.php';
 
 class GamesPage2 extends Page {
 
@@ -14,7 +12,8 @@ class GamesPage2 extends Page {
     private $date;
     private $gamesData;
 
-    private $simInputDT;
+    private $simInputData;
+    private $seasonBetsData;
     private $betsData;
     private $liveOddsDT;
 
@@ -24,12 +23,15 @@ class GamesPage2 extends Page {
             ->gen()
             ->getData();
         $weights = array(StatsCategories::B_HOME_AWAY => 1.0);
-        $this->betsData = (new BetsDataType())
-            ->setColumns($this->getBetsColumns())
+        $bets_dt = (new BetsDataType())
             ->setWeights($weights)
-            ->setGameDate($this->date)
-            ->gen()
-            ->getData();
+            ->setSeason(DateTimeUtils::getSeasonFromDate($this->date))
+            ->gen();
+        $this->seasonBetsData = $bets_dt->getData();
+
+        // Get current day's bet data by filtering the cumulative bets DT.
+        $filter = array('game_date' => $this->date);
+        $this->betsData = $bets_dt->getFilteredData($filter, true);
         $this->betsData = ArrayUtils::sortAssociativeArray(
             $this->betsData,
             'game_time'
@@ -44,7 +46,13 @@ class GamesPage2 extends Page {
     }
 
     final protected function getHeaderParams() {
-        return array($this->date, array($this->getROIHeader()));
+        return array(
+            $this->date,
+            array(
+                $this->getROIHeader($this->betsData, "Today's"),
+                $this->getROIHeader($this->seasonBetsData, 'Season')
+            )
+        );
     }
 
     final protected function renderPage() {
@@ -64,17 +72,19 @@ class GamesPage2 extends Page {
         }
     }
 
-    private function getROIHeader() {
-        $roi = ROIUtils::calculateROI($this->betsData);
-        list($wins, $losses) = ROIUtils::calculateRecord($this->betsData);
+    private function getROIHeader($bets_data, $roi_type) {
+        $roi = ROIUtils::calculateROI($bets_data);
+        list($wins, $losses) = ROIUtils::calculateRecord($bets_data);
         return $roi === null
             ? 'No Games Completed Yet'
             : sprintf(
-                "Today's ROI: %s Record: (%d - %d) Net Gain: $%d",
+                "%s ROI: %s Record: (%d - %d) Net %s: $%d",
+                $roi_type,
                 number_format(($roi * 100), 2) . '%',
                 $wins,
                 $losses,
-                array_sum(array_column($this->betsData, 'payout'))
+                $roi > 0 ? 'Gain' : 'Loss',
+                array_sum(array_column($bets_data, 'payout'))
             );
     }
 

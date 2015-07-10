@@ -33,7 +33,7 @@ final class SimInputDataType extends DataType {
         return array(
             SQLWhereParams::EQUAL => array(
                 'game_date' => $this->gameDate,
-                'season' => $this->getSeason(),
+                'season' => DateTimeUtils::getSeasonFromDate($this->gameDate),
                 'stats_year' => $this->statsYear,
                 'stats_type' => $this->statsType
             )
