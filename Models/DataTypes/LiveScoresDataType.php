@@ -30,9 +30,6 @@ final class LiveScoresDataType extends DataType {
         return array(
             SQLWhereParams::EQUAL => array(
                 'game_date' => $this->gameDate
-            ),
-            SQLWhereParams::NOT_EQUAL => array(
-                'status' => 'Postponed'
             )
         );
     }
@@ -53,6 +50,9 @@ final class LiveScoresDataType extends DataType {
                 case strpos($status, 'Final/') !== false:
                     $game['status_code'] = GameStatus::FINISHED;
                     $game['winner'] = $this->getGameWinner($game);
+                    break;
+                case $status === 'Postponed':
+                    $game['status_code'] = GameStatus::POSTPONED;
                     break;
                 default:
                     $game['status_code'] = GameStatus::STARTED;

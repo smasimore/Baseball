@@ -8,6 +8,7 @@ class GameStatus extends Enum {
     const NOT_STARTED = 0;
     const STARTED = 1;
     const FINISHED = 2;
+    const POSTPONED = 3;
 }
 
 ?>

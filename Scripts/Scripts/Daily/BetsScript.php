@@ -52,9 +52,9 @@ class BetsScript extends ScriptWithWrite {
         $this->newBetsInsert = array();
 
         foreach ($sim_output_data as $gameid => $game) {
-            // Skip PPD games...they won't be in the scores table.
+            // Skip PPD games.
             if ($scores_data !== null &&
-                !array_key_exists($gameid, $scores_data)
+                $scores_data[$gameid]['status_code'] === GameStatus::POSTPONED
             ) {
                 continue;
             }
@@ -81,7 +81,9 @@ class BetsScript extends ScriptWithWrite {
                 $this->test === false &&
                 $scores_data !== null &&
                 $scores_data[$gameid]['status_code'] !==
-                    GameStatus::NOT_STARTED
+                    GameStatus::NOT_STARTED &&
+                $scores_data[$gameid]['status_code'] !==
+                    GameStatus::POSTPONED
             ) {
                 continue;
             }
@@ -90,8 +92,9 @@ class BetsScript extends ScriptWithWrite {
             if ($this->test === false && $bets &&
                 array_key_exists($gameid, $bets)
             ) {
-                if (idx($bets[$gameid], 'bet_team')
-                    !== null
+                if (idx($bets[$gameid], 'bet_team') !== null ||
+                    $scores_data[$gameid]['status_code'] ===
+                        GameStatus::POSTPONED
                 ) {
                     continue;
                 }
@@ -119,7 +122,13 @@ class BetsScript extends ScriptWithWrite {
             );
 
             $bet = $this->calculateBet();
-            if ($this->getShouldBet($home_vegas_pct, $home_sim_pct)) {
+            // Don't bet on a PPD game.
+            if ($scores_data[$gameid]['status_code'] ===
+                GameStatus::POSTPONED
+            ) {
+                $this->newBetsInsert[$gameid]['bet_team'] = null;
+                $this->newBetsInsert[$gameid]['bet'] = 0;
+            } else if ($this->getShouldBet($home_vegas_pct, $home_sim_pct)) {
                 $this->newBetsInsert[$gameid]['bet_team'] = $home;
                 $this->newBetsInsert[$gameid]['bet'] = $bet;
             } else if ($this->getShouldBet($away_vegas_pct, $away_sim_pct)) {
