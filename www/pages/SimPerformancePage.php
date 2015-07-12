@@ -1,6 +1,7 @@
 <?php
 include_once 'Page.php';
 include_once __DIR__ . '/../ui/UOList.php';
+include_once __DIR__ . '/../../Models/DataTypes/SimOutputDataType.php';
 
 class SimPerformancePage extends Page {
 
@@ -34,7 +35,6 @@ class SimPerformancePage extends Page {
             "SELECT DISTINCT
                 weights,
                 stats_year,
-                stats_type,
                 season,
                 rand_bucket
             FROM sim_output";
@@ -45,18 +45,14 @@ class SimPerformancePage extends Page {
         $weights_1 = $this->weights[1];
         $stats_year_0 = $this->statsYear[0];
         $stats_year_1 = $this->statsYear[1];
-        $stats_type_0 = $this->statsType[0];
-        $stats_type_1 = $this->statsType[1];
 
         $query_where_0 =
                 "a.weights = '$weights_0' AND
-                a.stats_year = '$stats_year_0' AND
-                a.stats_type = '$stats_type_0'
+                a.stats_year = '$stats_year_0'
                 ORDER BY a.game_date;";
         $query_where_1 =
                 "a.weights = '$weights_1' AND
-                a.stats_year = '$stats_year_1' AND
-                a.stats_type = '$stats_type_1'
+                a.stats_year = '$stats_year_1'
                 ORDER BY a.game_date;";
 
         $query =
@@ -354,13 +350,6 @@ class SimPerformancePage extends Page {
             array_unique(array_column($this->possibleParams, 'stats_year'))
         );
 
-        $stats_type_selector = new Selector(
-            'Stats Type',
-            'stats_type_' . $group,
-            $this->statsType[$group],
-            array_unique(array_column($this->possibleParams, 'stats_type'))
-        );
-
         $param_list = new UOList(
             array(
                 "<font class='list_title'>
@@ -368,7 +357,6 @@ class SimPerformancePage extends Page {
                 </font>",
                 $weights_selector->getHTML(),
                 $stats_year_selector->getHTML(),
-                $stats_type_selector->getHTML()
             ),
             null,
             'list_item'
@@ -399,10 +387,6 @@ class SimPerformancePage extends Page {
         $this->statsYear = array(
             0 => idx($params, 'stats_year_0', 'career'),
             1 => idx($params, 'stats_year_1', 'career')
-        );
-        $this->statsType = array(
-            0 => idx($params, 'stats_type_0', 'basic'),
-            1 => idx($params, 'stats_type_1', 'basic')
         );
 
         return $this;

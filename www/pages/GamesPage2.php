@@ -25,7 +25,7 @@ class GamesPage2 extends Page {
         $weights = array(StatsCategories::B_HOME_AWAY => 1.0);
         $bets_dt = (new BetsDataType())
             ->setWeights($weights)
-            ->setSeason(DateTimeUtils::getSeasonFromDate($this->date))
+            ->setSeasonRange(DateTimeUtils::getSeasonFromDate($this->date))
             ->gen();
         $this->seasonBetsData = $bets_dt->getData();
 

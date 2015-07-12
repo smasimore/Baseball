@@ -16,7 +16,11 @@ final class BetsDataType extends DataType {
         return $this->getSimParams();
     }
 
-    protected function formatData() {
+    final protected function getSkipRandBucket() {
+        return true;
+    }
+
+    final protected function formatData() {
         // Use unix time.
         $this->data = array_map(
             function($row) {

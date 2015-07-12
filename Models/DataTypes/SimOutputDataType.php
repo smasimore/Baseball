@@ -13,7 +13,13 @@ final class SimOutputDataType extends DataType {
     }
 
     protected function getColumns() {
-        return array('gameid', 'home', 'away', 'home_win_pct');
+        return array(
+            'gameid', 
+            'season', 
+            'home', 
+            'away', 
+            'home_win_pct'
+        );
     }
 
     protected function getParams() {

@@ -42,6 +42,13 @@ abstract class DataType {
      */
     protected function formatData() {}
 
+    /*
+     * @return array<string> column names. Null return indicates select all.
+     */
+    protected function getColumns() {
+        return null;
+    }
+
     final public function setColumns($columns) {
         $this->columns = $columns;
         return $this;
@@ -88,17 +95,20 @@ abstract class DataType {
         return $this->data;
     }
 
-    /*
-     * @return array<string> column names. Null return indicates select all.
-     */
-    private function getColumns() {
-        return $this->columns;
-    }
-
     private function getSQL() {
-       $columns = $this->getColumns()
-            ? implode(', ', $this->getColumns())
-            : '*';
+        // Columns will !== null if callsite uses setColumns() to override
+        // columns set by child DataType (using getColumns()).
+        if ($this->columns) {
+            $columns = implode(', ', $this->columns);
+
+        // If getColumns is not null, child DataType is specifying columns.
+        } else if ($this->getColumns()) {
+            $columns = implode(', ', $this->getColumns());
+
+        // If $this->columns and getColumns are null, select all.
+        } else {
+            $columns = '*';
+        }
 
         return sprintf(
             'SELECT %s FROM %s%s',

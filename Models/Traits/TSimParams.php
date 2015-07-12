@@ -9,14 +9,24 @@ include_once __DIR__ . '/../Utils/DateTimeUtils.php';
 trait TSimParams {
 
     private $gameDate;
-    private $startSeason;
-    private $endSeason;
     private $weights = 'b_home_away_100';
     private $statsYear = StatsYears::CAREER;
     private $statsType = StatsTypes::BASIC;
     private $weightsMutator = null;
     private $analysisRuns = 5000;
     private $useReliever = false;
+
+    // Range params.
+    private $startSeason;
+    private $endSeason;
+    private $startRandBucket = 0;
+    private $endRandBucket = 29;
+
+    // TODO(cert): THIS IS A TEMPORARY HACK SINCE BETS TABLE DOES NOT HAVE
+    // RAND_BUCKET COLUMN (IT SHOULD).
+    protected function getSkipRandBucket() {
+        return false;
+    }
 
     /**
      * Return params keyed by SQLWhereParam type.
@@ -47,7 +57,7 @@ trait TSimParams {
     }
 
     private function getSimParamsRange() {
-        return array(
+        $params = array(
             SQLWhereParams::EQUAL => array(
                 'weights' => $this->weights,
                 'stats_year' => $this->statsYear,
@@ -57,12 +67,23 @@ trait TSimParams {
                 'use_reliever' => $this->useReliever
             ),
             SQLWhereParams::GREATER_OR_EQUAL => array(
-                'season' => $this->startSeason
+                'season' => $this->startSeason,
             ),
             SQLWhereParams::LESS_OR_EQUAL => array(
-                'season' => $this->endSeason
+                'season' => $this->endSeason,
             )
         );
+
+        // TODO(cert): THIS IS A TEMPORARY HACK SINCE BETS TABLE DOES NOT HAVE
+        // RAND_BUCKET COLUMN (IT SHOULD). 
+        if (!$this->getSkipRandBucket()) {
+            $params[SQLWhereParams::GREATER_OR_EQUAL]['rand_bucket'] = 
+                $this->startRandBucket;
+            $params[SQLWhereParams::LESS_OR_EQUAL]['rand_bucket'] =
+                $this->endRandBucket;
+        }
+
+        return $params;
     }
 
     final public function getUseReliever() {
@@ -77,14 +98,11 @@ trait TSimParams {
         return $this;
     }
 
-    final public function setSeason($start_season, $end_season = null) {
-        $this->startSeason = $start_season;
-        $this->endSeason = $end_season ?: $start_season;
-        return $this;
-    }
-
     final public function setWeights($weights) {
-        $this->weights = StatsCategories::getReadableWeights($weights);
+        // Weights can be passed in as an array or string.
+        $this->weights = is_array($weights) 
+            ? StatsCategories::getReadableWeights($weights)
+            : $weights;
         return $this;
     }
 
@@ -110,6 +128,18 @@ trait TSimParams {
 
     final public function setUseReliever($use_reliever) {
         $this->useReliever = $use_reliever;
+        return $this;
+    }
+
+    final public function setSeasonRange($start_season, $end_season = null) {
+        $this->startSeason = $start_season;
+        $this->endSeason = $end_season ?: $start_season;
+        return $this;
+    }
+
+    final public function setRandBucketRange($start_bucket, $end_bucket) {
+        $this->startRandBucket = $start_bucket;
+        $this->endRandBucket = $end_bucket;
         return $this;
     }
 }
