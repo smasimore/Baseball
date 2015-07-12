@@ -29,7 +29,7 @@ trait TSimParams {
         }
 
         if ($this->startSeason !== null) {
-            return $this->getSimParamsDateRange();
+            return $this->getSimParamsRange();
         }
 
         return array(
@@ -46,7 +46,7 @@ trait TSimParams {
         );
     }
 
-    private function getSimParamsDateRange() {
+    private function getSimParamsRange() {
         return array(
             SQLWhereParams::EQUAL => array(
                 'weights' => $this->weights,

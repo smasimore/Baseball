@@ -2,7 +2,6 @@
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
 include_once 'DataType.php';
-include_once __DIR__ . '/../Constants/SQLWhereParams.php';
 
 final class LiveScoresDataType extends DataType {
 

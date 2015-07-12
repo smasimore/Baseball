@@ -3,7 +3,6 @@
 
 include_once 'DataType.php';
 include_once __DIR__ . '/../Traits/TSimParams.php';
-include_once __DIR__ . '/../Constants/SQLWhereParams.php';
 
 final class BetsDataType extends DataType {
 
