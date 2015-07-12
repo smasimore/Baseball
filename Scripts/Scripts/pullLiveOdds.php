@@ -168,6 +168,11 @@ foreach ($final_array as $i => $game) {
 	if ($home_odds_same && $away_odds_same) {
 		continue;
 	}
+	// There needs to be a home team to gen a GameID. Skip if
+	// this doesn't exist (i.e. AllStar Game).
+	if ($game['home'] === null) {
+		continue;
+	}
 	$game['gameid'] = ESPNParseUtils::createGameID(
 		$game['home'],
 		$game['game_date'],
