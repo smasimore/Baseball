@@ -1,10 +1,6 @@
 <?php
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
-if (!defined('HOME_PATH')) {
-    include_once('/Users/constants.php');
-}
-
 class Teams {
 
     public static $teamNames = array(

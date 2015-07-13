@@ -1,8 +1,7 @@
 <?php
-if (!defined('DATABASE')) {
-    include_once('/Users/constants.php');
-}
-include_once __DIR__ . '/../../Models/Utils/GlobalUtils.php';
+
+include_once('/Users/constants.php');
+include_once 'GlobalUtils.php';
 
 /*
 ########################################################################

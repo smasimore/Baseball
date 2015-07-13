@@ -1,10 +1,7 @@
 <?php
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
-if (!defined('HOME_PATH')) {
-    include_once('/Users/constants.php');
-}
-include_once(HOME_PATH.'Models/Constants/Enum.php');
+include_once 'Enum.php';
 
 // General class for generic retrosheet constants.
 class RetrosheetConstants {

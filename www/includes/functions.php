@@ -1,6 +1,6 @@
 <?php
 include_once '/Users/constants.php';
-include_once __DIR__ . '/../../Scripts/Include/mysql.php';
+include_once __DIR__ . '/../../Models/Utils/mysqlDEPRECATED.php';
  
 function sec_session_start() {
     $session_name = 'sec_session_id';   // Set a custom session name

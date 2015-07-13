@@ -1,2 +1,0 @@
-hi
-SCRIPT, 1410726201, test, test_table, hi

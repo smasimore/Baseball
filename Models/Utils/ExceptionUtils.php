@@ -1,8 +1,8 @@
 <?php
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
-include_once(HOME_PATH.'Scripts/Include/sweetfunctions.php');
-include_once(HOME_PATH.'Models/Constants/Tables.php');
+include_once 'sweetfunctions.php';
+include_once __DIR__ .'/../Constants/Tables.php';
 
 class ExceptionUtils {
 

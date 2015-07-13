@@ -1,5 +1,5 @@
 <?php
-include_once __DIR__ . '/../../Scripts/Include/mysql.php';
+include_once __DIR__ . '/../../Models/Utils/mysqlDEPRECATED.php';
 
 const LOG_LINES = 10;
 

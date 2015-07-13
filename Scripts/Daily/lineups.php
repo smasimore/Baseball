@@ -1,9 +1,8 @@
 <?php
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
-include_once('/Users/constants.php');
-include_once(HOME_PATH.'Scripts/Include/Teams.php');
-include_once(HOME_PATH.'Scripts/Include/RetrosheetPlayerMapping.php');
+include_once __DIR__ .'/../../Models/Include/DailyInclude.php';
+include_once __DIR__ .'/../../Models/Utils/RetrosheetPlayerMappingUtils.php';
 
 // Change this to backfill - backfill must be true
 $backfill = false;
@@ -113,12 +112,12 @@ function pullLineups($month, $day, $ds) {
 		$away_pitcher_data = $pitchers[0];
 		$home_pitcher_data = $pitchers[1];
 
-		$away_pitcher_data['player_id'] = RetrosheetPlayerMapping::getIDFromFirstLast(
+		$away_pitcher_data['player_id'] = RetrosheetPlayerMappingUtils::getIDFromFirstLast(
 			$away_pitcher_data['first_name'],
 			$away_pitcher_data['last_name'],
 			$away_team
 		);
-		$home_pitcher_data['player_id'] = RetrosheetPlayerMapping::getIDFromFirstLast(
+		$home_pitcher_data['player_id'] = RetrosheetPlayerMappingUtils::getIDFromFirstLast(
 			$home_pitcher_data['first_name'],
 			$home_pitcher_data['last_name'],	
 			$home_team
@@ -181,7 +180,7 @@ function pullLineups($month, $day, $ds) {
 				if ($j == 0) {
 					$lineups[$day][$time][$away_team][$l_num] = array(
 						'player_name' => format_for_mysql($batter),
-						'player_id' => RetrosheetPlayerMapping::getIDFromFirstLast(
+						'player_id' => RetrosheetPlayerMappingUtils::getIDFromFirstLast(
 							split_string(format_for_mysql($batter), '_', BEFORE, EXCL),
 							split_string(format_for_mysql($batter), '_', AFTER, EXCL),
 							$away_team
@@ -192,7 +191,7 @@ function pullLineups($month, $day, $ds) {
 				} else {
 					$lineups[$day][$time][$home_team][$l_num] = array(
 						'player_name' => format_for_mysql($batter),
-						'player_id' => RetrosheetPlayerMapping::getIDFromFirstLast(
+						'player_id' => RetrosheetPlayerMappingUtils::getIDFromFirstLast(
 							split_string(format_for_mysql($batter), '_', BEFORE, EXCL),
 							split_string(format_for_mysql($batter), '_', AFTER, EXCL),
 							$home_team

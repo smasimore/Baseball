@@ -1,13 +1,10 @@
 <?php
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
-if (!defined('HOME_PATH')) {
-    include_once('/Users/constants.php');
-}
-include_once(HOME_PATH.'Scripts/Include/RetrosheetInclude.php');
-include_once(HOME_PATH.'Sitevar/PlayerCorrections.php');
+include_once 'RetrosheetInclude.php';
+include_once __DIR__ .'/../../Sitevar/PlayerCorrections.php';
 
-class RetrosheetPlayerMapping {
+class RetrosheetPlayerMappingUtils {
 
     private static $playerIDMap = array();
     private static $espnIDMap = array();

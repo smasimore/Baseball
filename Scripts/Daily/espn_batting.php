@@ -1,10 +1,8 @@
 <?php
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
-include_once('/Users/constants.php');
-include_once(HOME_PATH.'Scripts/Include/Teams.php');
-include_once(HOME_PATH.'Scripts/Include/RetrosheetInclude.php');
-include_once(HOME_PATH.'Scripts/Include/RetrosheetPlayerMapping.php');
+include_once __DIR__ .'/../../Models/Include/RetrosheetInclude.php';
+include_once __DIR__ .'/../../Models/Utils/RetrosheetPlayerMappingUtils.php';
 
 $splitMap = array(
 	'Total' => 0,
@@ -113,7 +111,7 @@ foreach ($splitMap as $split_name => $split) {
 				continue;
 			}
 			$insert_row = array_combine($colheads_final, $final_row);
-			$insert_row['player_id'] = RetrosheetPlayerMapping::getIDFromESPNID($espn_id);
+			$insert_row['player_id'] = RetrosheetPlayerMappingUtils::getIDFromESPNID($espn_id);
 			$insert_row['espn_id'] = $espn_id;
 			$insert_row['ds'] = date('Y-m-d');
 			$insert_row['season'] = $season;

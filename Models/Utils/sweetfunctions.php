@@ -1,16 +1,14 @@
 <?php
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
-if (!defined('HOME_PATH')) {
-    include_once('/Users/constants.php');
-}
 ini_set('memory_limit', '-1');
 ini_set('max_execution_time', -1);
 ini_set('mysqli.connect_timeout', -1);
 ini_set('mysqli.reconnect', '1');
-include_once(HOME_PATH.'Scripts/Include/http.php');
-include_once(HOME_PATH.'Scripts/Include/parse.php');
-include_once(HOME_PATH.'Scripts/Include/mysql.php');
+include_once 'http.php';
+include_once 'parse.php';
+include_once 'mysqlDEPRECATED.php';
+
 // Leaving this in until I can test whether we need it or not.
 date_default_timezone_set('America/Los_Angeles');
 $date = date('Y-m-d');

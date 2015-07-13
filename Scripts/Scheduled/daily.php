@@ -1,8 +1,7 @@
 <?php
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
-include_once('/Users/constants.php');
-include_once(HOME_PATH . 'Scripts/Include/sweetfunctions.php');
+include_once __DIR__ .'/../../Models/Utils/sweetfunctions.php';
 
 const EMAIL_INTERVAL = 1800; // 5 minutes
 const MAX_FREQUENCY = 30;

@@ -1,12 +1,9 @@
 <?php
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
-include_once('/Users/constants.php');
-include_once(HOME_PATH.'Scripts/Include/Teams.php');
-include_once(HOME_PATH.'Models/Utils/DateTimeUtils.php');
-include_once(HOME_PATH.'Scripts/Include/ESPNParseUtils.php');
-include_once(HOME_PATH.'Scripts/Include/RetrosheetInclude.php');
-include_once(HOME_PATH.'Scripts/Include/RetrosheetPlayerMapping.php');
+include_once '/../../Models/Include/RetrosheetInclude.php';
+include_once '/../../Models/Utils/ESPNParseUtils.php';
+include_once '/../../Models/Utils/RetrosheetPlayerMappingUtils.php';
 
 class SimInput {
 

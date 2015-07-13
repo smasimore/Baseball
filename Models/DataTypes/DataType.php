@@ -1,12 +1,10 @@
 <?php
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
-include_once '/Users/constants.php';
-include_once __DIR__ . '/../../Scripts/Include/mysql.php';
+include_once __DIR__ . '/../Utils/mysqlDEPRECATED.php';
 include_once __DIR__ . '/../Utils/GlobalUtils.php';
 include_once __DIR__ . '/../Constants/Tables.php';
 include_once __DIR__ . '/../Constants/SQLWhereParams.php';
-
 
 abstract class DataType {
 

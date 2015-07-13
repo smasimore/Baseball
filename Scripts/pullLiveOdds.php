@@ -1,10 +1,7 @@
 <?php
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
-if (!defined('DATABASE')) {
-	include_once('/Users/constants.php');
-}
-include_once(HOME_PATH.'Scripts/Include/ScrapingInclude.php');
+include_once __DIR__ .'/../Models/Include/ScrapingInclude.php';
 
 function get_html($url) {
     $ch = curl_init();
