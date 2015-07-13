@@ -7,7 +7,7 @@ const EMAIL_INTERVAL = 1800; // 5 minutes
 const MAX_FREQUENCY = 30;
 
 // global variables
-$path = HOME_PATH . 'Scripts/Scripts/Daily/';
+$path = __DIR__ .'/../Daily/';
 $masterStatus = 'In Progress';
 $frequencyMap = array(
     'Hourly' => 3600,
