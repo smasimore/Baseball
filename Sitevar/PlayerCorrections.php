@@ -19,7 +19,9 @@ class PlayerCorrections {
         'reynavarro' => 'navar01',
         'thomasfield' => 'fielt001',
         'chichi' => 'chi_c01',
-        'natekarns' => 'karnn001'
+        'natekarns' => 'karnn001',
+        'tommypham' => 'phamt01',
+        'robrefsnyder' => 'refsr01'
     );
 
     public static $espnAmbiguousIDMap = array(
