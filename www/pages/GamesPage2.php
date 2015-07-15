@@ -1,15 +1,19 @@
 <?php
+// Copyright 2013-Present, Saber Tooth Ventures, LLC
+
 include_once 'Page.php';
+include_once __DIR__ .'/../../Models/Traits/TPageWithDate.php';
 include_once __DIR__ .'/../../Models/DataTypes/SimInputDataType.php';
 include_once __DIR__ .'/../../Models/DataTypes/BetsDataType.php';
 include_once __DIR__ .'/../../Models/DataTypes/LiveOddsDataType.php';
 
 class GamesPage2 extends Page {
 
+    use TPageWithDate;
+
     const THREE_HRS_IN_SECS = 10800;
     const NOT_STARTED = 'Not Started';
 
-    private $date;
     private $gamesData;
 
     private $simInputData;
@@ -278,11 +282,6 @@ class GamesPage2 extends Page {
             'bet',
             'payout'
         );
-    }
-
-    public function setDate($date) {
-        $this->date = $date;
-        return $this;
     }
 }
 ?>

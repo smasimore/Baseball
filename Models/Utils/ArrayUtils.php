@@ -1,6 +1,8 @@
 <?php
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
+include_once __DIR__ .'/../Constants/SortConstants.php';
+
 class ArrayUtils {
 
     public static function head($array) {
@@ -46,11 +48,23 @@ class ArrayUtils {
     public static function sortAssociativeArray(
         $array,
         $key,
+        $order = SortConstants::ASC,
         $keep_keys = true
     ) {
-        $func = function($a, $b) use ($key) {
-            return $a[$key] > $b[$key];
-        };
+        SortConstants::assertIsValidValue($order);
+        switch ($order) {
+            case SortConstants::ASC:
+                $func = function($a, $b) use ($key) {
+                    return $a[$key] > $b[$key];
+                };
+                break;
+            case SortConstants::DESC:
+               $func = function($a, $b) use ($key) {
+                    return $a[$key] < $b[$key];
+                }; 
+                break;
+        }
+
         if ($keep_keys) {
             uasort($array, $func);
         } else {
@@ -60,5 +74,4 @@ class ArrayUtils {
         return $array;
     }
 }
-
 ?>

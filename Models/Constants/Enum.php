@@ -35,11 +35,11 @@ abstract class Enum {
 
     public static function assertIsValidValue($value) {
         if (!self::isValidValue($value)) {
-            throw new Exception(
+            throw new Exception(sprintf(
                 '%s is not valid value in %s.',
                 $value,
                 get_called_class()
-            );
+            ));
         }
     }
 }

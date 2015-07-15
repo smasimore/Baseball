@@ -82,11 +82,13 @@ class ArrayUtilsTest extends PHPUnit_Framework_TestCase {
             )
         );
 
-        // array, key to sort by, result
+        // array, key to sort by, order (ASC vs. DESC), keep keys, result
         return array(
             array(
                 $array,
                 'one',
+                SortConstants::ASC,
+                false,
                 array(
                     array(
                         'one' => 1,
@@ -108,27 +110,31 @@ class ArrayUtilsTest extends PHPUnit_Framework_TestCase {
             array(
                 $array,
                 'two',
+                SortConstants::DESC,
+                false,
                 array(
                     array(
-                        'one' => 3,
-                        'two' => 1,
-                        'three' => 2
+                        'one' => 2,
+                        'two' => 3,
+                        'three' => 1,
                     ),
                     array(
                         'one' => 1,
                         'two' => 2,
                         'three' => 3,
                     ),
-                    array (
-                        'one' => 2,
-                        'two' => 3,
-                        'three' => 1,
+                    array(
+                        'one' => 3,
+                        'two' => 1,
+                        'three' => 2
                     )
                 )
             ),
             array(
                 $array,
                 'three',
+                SortConstants::ASC,
+                false,
                 array(
                     array(
                         'one' => 2,
@@ -185,11 +191,24 @@ class ArrayUtilsTest extends PHPUnit_Framework_TestCase {
     }
 
     /**
+     * Test exception for non-SortConstants (i.e. 99) in the order param.
+     * @expectedException Exception
+     */
+    public function testSortAssocArrayException() {
+        ArrayUtils::sortAssociativeArray(
+            array('test' => 1),
+            'test',
+            99,
+            true
+        );
+    }
+
+    /**
      * @dataProvider providerSortAssociativeArray
      */
-    public function testSortAssociativeArray($array, $key, $return) {
+    public function testSortAssociativeArray($array, $key, $order, $keys, $return) {
         $this->assertEquals(
-            ArrayUtils::sortAssociativeArray($array, $key, false),
+            ArrayUtils::sortAssociativeArray($array, $key, $order, $keys),
             $return
         );
     }
