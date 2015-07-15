@@ -1,4 +1,8 @@
 <?php
+// Copyright 2013-Present, Saber Tooth Ventures, LLC
+
+include_once __DIR__ . '/../../Models/Utils/DateTimeUtils.php';
+include_once __DIR__ . '/../../Models/Utils/GlobalUtils.php';
 include_once __DIR__ . '/../../Models/Utils/mysqlDEPRECATED.php';
 
 const LOG_LINES = 10;
@@ -48,7 +52,7 @@ function ui_page_header_odds($odds_data = null, $date = null) {
     }
     $investment_data = get_data($db, 'bets_2014');
     if (!$odds_data && !$insert_date) {
-        $date = ds_modify($date, "-1 day");
+        $date = DateTimeUtils::subtractDay($date);
         $odds_data = get_data($db, 'locked_odds_2014', $date);
         $page_title = "Yesterday's Games";
     } else if (!$odds_data && $insert_date) {

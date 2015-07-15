@@ -7,7 +7,7 @@ class DateTimeUtils {
         return self::dsModify($date, '+1 day');
     }
 
-    public static function subtractDate($date) {
+    public static function subtractDay($date) {
         return self::dsModify($date, '-1 day');
     }
 
@@ -31,7 +31,7 @@ class DateTimeUtils {
         return (int)$date->format('Y');
     }
 
-    private static function dsModify($date, $day_change) {
+    public static function dsModify($date, $day_change) {
         // Format of $day_change is '+1 day'
         $dateOneDayAdded = strtotime($date.$day_change);
         return date('Y-m-d', $dateOneDayAdded);

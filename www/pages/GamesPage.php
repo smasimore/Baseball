@@ -22,7 +22,7 @@ class GamesPage extends Page{
 
         $attempts = 0;
         while (!$odds_data || !$game_data) {
-            $this->date = ds_modify($this->date, "-1 day");
+            $this->date = DateTimeUtils::addDay($this->date);
             $odds_data = get_data($db, 'locked_odds_2014', $this->date);
             $game_data = get_data($db, 'sim_output_nomagic_50total_50pitcher_2014', $this->date);
 

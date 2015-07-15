@@ -569,28 +569,6 @@ function safe_index_by($data, $index, $index2 = null, $backup_index = null) {
     return $indexed_array;
 }
 
-function index_by($data, $index, $index_2 = null, $index_3 = null) {
-    if (!$data) {
-        return array();
-    }
-
-    $indexed_table = array();
-    foreach ($data as $row) {
-        $i1 = $row[$index];
-        if ($index_3) {
-            $i3 = $row[$index_3];
-            $i2 = $row[$index_2];
-            $indexed_table[$i1.$i2.$i3] = $row;
-        } else if ($index_2) {
-            $i2 = $row[$index_2];
-            $indexed_table[$i1.$i2] = $row;
-        } else {
-            $indexed_table[$i1] = $row;
-        }
-    }
-    return $indexed_table;
-}
-
 function index_by_nonunique($data, $index) {
     $indexed_table = array();
     foreach ($data as $row) {
@@ -766,13 +744,6 @@ function findSimilarName($name, $date) {
 
 function elvis($var, $default = null) {
     return isset($var) ? $var : $default;
-}
-
-function ds_modify($date, $day_change) {
-    // Format of $day_change is '+1 day'
-    $dateOneDayAdded = strtotime($date.$day_change);
-    $new_date = date('Y-m-d', $dateOneDayAdded);
-    return $new_date;
 }
 
 function median($array) {

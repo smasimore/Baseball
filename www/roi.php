@@ -1,8 +1,11 @@
 <?php
+// Copyright 2013-Present, Saber Tooth Ventures, LLC
+
 include_once 'includes/db_connect.php';
 include_once 'includes/functions.php';
 include_once 'includes/sweetfunctions.php';
 include_once 'includes/ui_elements.php';
+include_once __DIR__ .'/../Models/Utils/DateTimeUtils.php';
 
 $roi = exe_sql('baseball',
 'SELECT sum(bet_amount) as bet_amount,
@@ -16,7 +19,7 @@ $graph_y = null;
 $hacky_zero = null;
 $graph_x_zoom = null;
 $graph_y_zoom = null;
-$seven_days_back = ds_modify($date, '-1 week');
+$seven_days_back = DateTimeUtils::dsModify($date, '-1 week');
 $zoom_start = 0;
 foreach($roi as $day) {
     $ds = $day['ds'];
