@@ -4,6 +4,12 @@
 include_once 'sweetfunctions.php';
 include_once __DIR__ .'/../Constants/Tables.php';
 
+// Set Global Exception Handler functionality.
+set_exception_handler('logException');
+function logException($e) {
+    ExceptionUtils::logDisplayEmailException($e);
+}
+
 class ExceptionUtils {
 
     public static function logDisplayEmailException($e, $email_filter = null) {
