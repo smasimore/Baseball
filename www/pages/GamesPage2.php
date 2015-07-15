@@ -22,10 +22,8 @@ class GamesPage2 extends Page {
     private $liveOddsDT;
 
     final protected function gen() {
-        $this->simInputData = (new SimInputDataType())
-            ->setGameDate($this->date)
-            ->gen()
-            ->getData();
+        // Gen BetsDT before simInputDT since when there are no games set we 
+        // still want the ROI header to render with data.
         $weights = array(StatsCategories::B_HOME_AWAY => 1.0);
         $bets_dt = (new BetsDataType())
             ->setWeights($weights)
@@ -40,6 +38,11 @@ class GamesPage2 extends Page {
             $this->betsData,
             'game_time'
         );
+
+        $this->simInputData = (new SimInputDataType())
+            ->setGameDate($this->date)
+            ->gen()
+            ->getData();
 
         // Fetch odds to get starting and most recent odds.
         $this->liveOddsDT = (new LiveOddsDataType())
