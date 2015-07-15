@@ -45,7 +45,7 @@ class ExceptionUtils {
         $data = array(
             array(
                 'ds' => date('Y-m-d'),
-                'error' => $e->getMessage(),
+                'error' => str_replace("'", '"', $e->getMessage()),
                 'trace' => str_replace("'", '"', $e->getTraceAsString())
             )
         );

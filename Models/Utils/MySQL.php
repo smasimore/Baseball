@@ -52,6 +52,15 @@ class MySQL {
                     ExceptionUtils::logDisplayEmailException($e, 'd');
                 } else {
                     $insert_data = $row[$col];
+                    if (strpos($insert_data, "'") !== false) {
+                        $insert_data = str_replace("'", '"', $insert_data);
+                        $e = new Exception(sprintf(
+                            'Trying to insert a single quote (now converted -> %s) into %s',
+                            $insert_data,
+                            $table
+                        ));
+                        ExceptionUtils::logDisplayEmailException($e, 'd');
+                    }
                     $insert_row[] = "'$insert_data'";
                 }
             }
