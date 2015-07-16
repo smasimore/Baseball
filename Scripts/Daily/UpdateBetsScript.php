@@ -10,14 +10,23 @@ class UpdateBetsScript extends ScriptWithWrite {
     private $scoresInsert;
 
     protected function gen($ds) {
-        $scores_data = (new LiveScoresDataType())
-            ->setGameDate($ds)
-            ->gen()
-            ->getData();
-        $bets = (new BetsDataType())
-            ->setGameDate($ds)
-            ->gen()
-            ->getData();
+        try {
+            $scores_data = (new LiveScoresDataType())
+                ->setGameDate($ds)
+                ->gen()
+                ->getData();
+        } catch (Exception $e) {
+            exit('No Scores Yet');
+        }
+
+        try {
+            $bets = (new BetsDataType())
+                ->setGameDate($ds)
+                ->gen()
+                ->getData();
+        } catch (Exception $e) {
+            exit('No Bets Yet');
+        }
 
         foreach ($scores_data as $gameid => $game) {
             if (!array_key_exists($gameid, $bets)) {
