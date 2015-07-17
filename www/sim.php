@@ -160,7 +160,7 @@ $sims_sql =
     AND b.ds < '$cross_date'
     WHERE a.ds < '$date'";
 $sims = exe_sql('baseball', $sims_sql);
-$sims = index_by($sims, 'home', 'game_date', 'game_time');
+$sims = index_by($sims, array('home', 'game_date', 'game_time'));
 foreach ($sims as $sim) {
     $home = $sim['home'];
     $game_date = $sim['game_date'];
@@ -168,14 +168,14 @@ foreach ($sims as $sim) {
     $game_hour = substr($game_time, 0, 2);
     $sims[$home.$game_date.$game_time]['game_hour'] = $game_hour;
 }
-$sims = index_by($sims, 'home', 'game_date', 'game_hour');
+$sims = index_by($sims, array('home', 'game_date', 'game_hour'));
 
 $odds = exe_sql('baseball',
     "SELECT *
     FROM odds_aggregate_2014
     WHERE casino = '$casino'"
 );
-$odds = index_by($odds, 'home', 'game_date', 'game_time');
+$odds = index_by($odds, array('home', 'game_date', 'game_time'));
 foreach ($odds as $odd) {
     $home = $odd['home'];
     $game_date = $odd['game_date'];
@@ -185,7 +185,7 @@ foreach ($odds as $odd) {
     $odds[$home.$game_date.$game_time]['away_odds_hour'] = json_decode($odds[$home.$game_date.$game_time]['away_odds_hour'], true);
     $odds[$home.$game_date.$game_time]['game_hour'] = $game_hour;
 }
-$odds = index_by($odds, 'home', 'game_date', 'game_hour');
+$odds = index_by($odds, array('home', 'game_date', 'game_hour'));
 
 $home_odds_metric = "$odds_metric"."_home_pct_win$odds_cutoff";
 $away_odds_metric = "$odds_metric"."_away_pct_win$odds_cutoff";
@@ -203,7 +203,7 @@ $scores =exe_sql('baseball',
     FROM live_scores_2014
     WHERE status like '%F%'"
 );
-$scores = index_by($scores, 'home', 'game_date', 'game_time');
+$scores = index_by($scores, array('home', 'game_date', 'game_time'));
 foreach ($scores as $score) {
     $home = $score['home'];
     $game_date = $score['game_date'];
@@ -211,7 +211,7 @@ foreach ($scores as $score) {
     $game_hour = substr($game_time, 0, 2);
     $scores[$home.$game_date.$game_time]['game_hour'] = $game_hour;
 }
-$scores = index_by($scores, 'home', 'game_date', 'game_hour');
+$scores = index_by($scores, array('home', 'game_date', 'game_hour'));
 
 $final_array = array();
 $total_bet = 0;

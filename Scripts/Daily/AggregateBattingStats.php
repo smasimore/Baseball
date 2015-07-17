@@ -138,7 +138,7 @@ class AggregateBattingStats {
                 $sql .= " AND player_id = '$this->testPlayer'";
             }
             $data = exe_sql(DATABASE, $sql);
-            return safe_index_by($data, 'player_id', 'split');
+            return index_by($data, array('player_id', 'split'));
         }
         // The code below should normally not execute unless you've manually
         // opted to backfill Retrosheet data.

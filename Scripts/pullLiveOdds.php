@@ -49,7 +49,7 @@ function getLatestOddsData($date) {
 		AND a.ts = b.ts
 		WHERE ds = '$date'";
 	$data = exe_sql('baseball', $sql);
-	return index_by($data, 'home', 'game_date', 'game_time');
+	return index_by($data, array('home', 'game_date', 'game_time'));
 }
 
 $colheads = array(

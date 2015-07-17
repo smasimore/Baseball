@@ -39,11 +39,22 @@ class GlobalUtilsTest extends PHPUnit_Framework_TestCase {
             'color' => 'green'
         );
         return array(
+            // Test index empty array.
+            array(
+                array(),
+                'name',
+                true,
+                false,
+                array()
+            ),
+            // Test index by string.
             array(
                 array(
                     $array
                 ),
                 'name',
+                true,
+                false,
                 array(
                     'dan' => array(
                         'test' => 5,
@@ -52,17 +63,45 @@ class GlobalUtilsTest extends PHPUnit_Framework_TestCase {
                     )
                 )
             ),
+            // Test index by array of strings.
             array(
                 array(
                     $array
                 ),
                 array('name', 'color'),
+                true,
+                false,
                 array(
-                    'dangreen' => array(
-                        'test' => 5,
-                        'name' => 'dan',
-                        'color' => 'green'
+                    'dangreen' => $array
+                )
+            ),
+            // Test index non-unique.
+            array(
+                array(
+                    $array,
+                    $array
+                ),
+                'name',
+                false,
+                true,
+                array(
+                    'dan' => array(
+                        $array,
+                        $array
                     )
+                )
+            ),
+            // Test index non strict.
+            array(
+                array(
+                    $array,
+                    $array,
+                ),
+                'name',
+                false,
+                false,
+                array(
+                    'dan' => $array
                 )
             )
         );
@@ -70,14 +109,25 @@ class GlobalUtilsTest extends PHPUnit_Framework_TestCase {
 
     public function providerIndexByException() {
         return array(
-            // Test indexing empty array.
-            array(
-                array(),
-                'test'
-            ),
             // Test indexing non array of arrays.
             array(
                 array('test' => 1),
+                'test'
+            ),
+            // Test index doesn't exist (triggers dupe index exception).
+            array(
+                array(
+                    array('test' => 1),
+                    array('test' => 2)
+                ),
+                'name'
+            ),
+            // Test trying to unique index a non-unique array.
+            array(
+                array(
+                    array('test' => 1),
+                    array('test' => 1)
+                ),
                 'test'
             )
         );
@@ -93,8 +143,17 @@ class GlobalUtilsTest extends PHPUnit_Framework_TestCase {
     /**
      * @dataProvider providerIndexByTest
      */
-    public function testIndexBy($data, $index_arr, $expected) {
-        $this->assertEquals($expected, index_by($data, $index_arr));
+    public function testIndexBy(
+        $data,
+        $index_arr,
+        $strict,
+        $non_unique,
+        $expected
+    ) {
+        $this->assertEquals(
+            $expected,
+            index_by($data, $index_arr, $strict, $non_unique)
+        );
     }
 
     /**

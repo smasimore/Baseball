@@ -144,7 +144,7 @@ class SimInput {
             $sql .= " and player_id = '$this->testPlayer'";
         }
         $data = exe_sql(DATABASE, $sql);
-        return safe_index_by($data, 'player_id');
+        return index_by($data, 'player_id');
     }
 
     private function getPitcherInfo($lineup, $home_away) {

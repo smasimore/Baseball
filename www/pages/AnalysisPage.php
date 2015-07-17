@@ -597,7 +597,7 @@ class AnalysisPage extends Page{
 
             $data[$key]['game_hour'] = substr($row['game_time'], 0, 2);
         }
-        return index_by($data, 'home', 'game_date', 'game_hour');
+        return index_by($data, array('home', 'game_date', 'game_hour'));
     }
 
     public function getGraphData($type = 'cash') {

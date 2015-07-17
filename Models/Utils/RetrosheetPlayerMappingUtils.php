@@ -1,7 +1,7 @@
 <?php
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
-include_once 'RetrosheetInclude.php';
+include_once __DIR__ .'/../Include/RetrosheetInclude.php';
 include_once __DIR__ .'/../../Sitevar/PlayerCorrections.php';
 
 class RetrosheetPlayerMappingUtils {
@@ -23,7 +23,7 @@ class RetrosheetPlayerMappingUtils {
     }
 
     public static function getPlayerIDMap($player_arr) {
-        self::$playerIDMap = index_by($player_arr, 'first', 'last');
+        self::$playerIDMap = index_by($player_arr, array('first', 'last'));
         self::checkCurrentPlayersTable();
         return self::$playerIDMap;
     }
@@ -163,7 +163,7 @@ class RetrosheetPlayerMappingUtils {
                 }
             }
         } else {
-            $data = index_by($data, 'first', 'last');
+            $data = index_by($data, array('first', 'last'));
             $ambiguous_names = self::getAmbiguousNames();
             foreach (self::$playerIDMap as $player_index => $player) {
                 // TODO(cert) something here with ambiguous names
@@ -348,7 +348,10 @@ class RetrosheetPlayerMappingUtils {
         }
         $sql .= ')';
         $retro_data = exe_sql(DATABASE, $sql);
-        $remaining_players = index_by(self::getRemainingPlayers(), 'first', 'last');
+        $remaining_players = index_by(
+            self::getRemainingPlayers(),
+            array('first', 'last')
+        );
         foreach ($retro_data as $rs_player) {
             $firstlast = format_for_mysql($rs_player['firstlast']);
             $espn_id = $remaining_players[$firstlast]['espn_id'];
@@ -390,7 +393,7 @@ class RetrosheetPlayerMappingUtils {
             RetrosheetTables::ID
         );
         $data = exe_sql(DATABASE, $sql);
-        return index_by($data, 'first', 'last');
+        return index_by($data, array('first', 'last'), false, true);
     }
 }
 
