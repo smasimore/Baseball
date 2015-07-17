@@ -1,9 +1,9 @@
 <?php
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
-include_once '/../../Models/Include/RetrosheetInclude.php';
-include_once '/../../Models/Utils/ESPNParseUtils.php';
-include_once '/../../Models/Utils/RetrosheetPlayerMappingUtils.php';
+include_once __DIR__ .'/../../Models/Include/RetrosheetInclude.php';
+include_once __DIR__ .'/../../Models/Utils/ESPNParseUtils.php';
+include_once __DIR__ .'/../../Models/Utils/RetrosheetPlayerMappingUtils.php';
 
 class SimInput {
 
