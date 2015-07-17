@@ -80,11 +80,11 @@ abstract class DataType {
         $query = $this->getSQL();
         $this->data = exe_sql($this->getDatabase(), $query);
 
-        $this->formatData();
-
         if (!$this->data) {
             throw new Exception("No data available for $query");
         }
+
+        $this->formatData();
 
         return $this;
     }
