@@ -55,7 +55,7 @@ class ESPNParseUtils {
             $sql .= " AND player_id = '$test_player'";
         }
         $data = exe_sql(DATABASE, $sql);
-        return index_by($data, array('player_id', 'split', 'player_name'));
+        return safe_index_by($data, 'player_id', 'split', 'player_name');
     }
 
     public static function parseOtherOuts($stats) {

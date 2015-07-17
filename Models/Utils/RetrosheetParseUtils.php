@@ -471,7 +471,7 @@ class RetrosheetParseUtils {
             );
         }
         $data = exe_sql(DATABASE, $sql);
-        return index_by($data, array('player_id', 'split'));
+        return safe_index_by($data, 'player_id', 'split');
     }
 }
 
