@@ -24,7 +24,7 @@ class BetsScript extends ScriptWithWrite {
             ->getData();
         // Note: Indexing by gameid will give us the most current odds of the
         // day given its foreach loop structure, this is intended behavior.
-        $odds_data = index_by($odds_data, 'gameid');
+        $odds_data = index_by($odds_data, 'gameid', false);
 
         // For morning games sometimes ESPN doesn't have scores listed yet.
         $scores_data = null;

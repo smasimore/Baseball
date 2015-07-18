@@ -16,7 +16,7 @@ class DateTimeUtils {
         $minute_second = split_string($time, $hour, AFTER, EXCL);
         // If the time is before 8am EST (12pm GMT) it's likely a night game on
         // the GMT day before. So 02 on 4/8 is likely a 4/7 night game.
-        $date = $hour < 12 ? self::subtractDate($date) : $date;
+        $date = $hour < 12 ? self::subtractDay($date) : $date;
         $hour -= 4;
         $hour = $hour < 0 ? 24 + $hour : $hour;
         $time = "$hour$minute_second";
