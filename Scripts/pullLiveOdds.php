@@ -179,11 +179,15 @@ foreach ($final_array as $i => $game) {
 }
 
 $insert_table = 'live_odds';
-multi_insert(
-	DATABASE,
-	$insert_table,
-	$insert_array,
-	$colheads
-);
+if ($insert_array) {
+	multi_insert(
+		DATABASE,
+		$insert_table,
+		$insert_array,
+		$colheads
+	);
+} else {
+	exit('No New Odds');
+}
 
 ?>
