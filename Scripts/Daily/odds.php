@@ -188,7 +188,7 @@ $colheads = array(
 
 $final_odds = array();
 $stats_stg = array();
-$date = ds_modify($date, '-1 Day');
+$date = DateTimeUtils::subtractDay($date);
 $test = false;
 $test_ds = '2015-03-19';
 
