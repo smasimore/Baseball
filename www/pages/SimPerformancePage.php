@@ -30,6 +30,10 @@ class SimPerformancePage extends Page {
     private $histActual = array();
     private $histNumGames = array();
 
+    final protected function renderPageIfErrors() {
+        return true;
+    }
+
     final protected function gen() {
         $param_query =
             "SELECT DISTINCT
