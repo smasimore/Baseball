@@ -15,6 +15,7 @@ final class SimOutputDataType extends DataType {
     protected function getColumns() {
         return array(
             'gameid', 
+            'game_date',
             'season', 
             'home', 
             'away', 

@@ -8,6 +8,12 @@ class DataTypeTest extends PHPUnit_Framework_TestCase {
     private $mockDataTypeClass;
     private $getSQLMethod;
 
+    public function providerGenDistinctColumnValuesException() {
+        return array(
+            array('col_name')
+        );
+    }
+
     public function providerSetColumns() {
         return array(
             array(
@@ -214,5 +220,14 @@ class DataTypeTest extends PHPUnit_Framework_TestCase {
         $dt = $this->mockDataTypeClass;
         $dt->setColumns($columns);
         $this->assertEquals($expected, $this->getSQLMethod->invoke($dt));
+    }
+
+    /**
+     * @dataProvider providerGenDistinctColumnValuesException
+     * @expectedException Exception
+     */
+    public function testGenDistinctColumnValuesException($columns) {
+        $dt = $this->mockDataTypeClass;
+        $dt->genDistinctColumnValues($columns);
     }
 }

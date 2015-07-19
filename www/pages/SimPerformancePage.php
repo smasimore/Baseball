@@ -2,6 +2,7 @@
 include_once 'Page.php';
 include_once __DIR__ . '/../ui/UOList.php';
 include_once __DIR__ . '/../../Models/DataTypes/SimOutputDataType.php';
+include_once __DIR__ . '/../../Models/DataTypes/HistoricalOddsDataType.php';
 
 class SimPerformancePage extends Page {
 
@@ -35,61 +36,36 @@ class SimPerformancePage extends Page {
     }
 
     final protected function gen() {
-        $param_query =
-            "SELECT DISTINCT
-                weights,
-                stats_year,
-                season,
-                rand_bucket
-            FROM sim_output";
-
-        $this->possibleParams = exe_sql(DATABASE, $param_query);
+        $this->genPossibleParams();
 
         $weights_0 = $this->weights[0];
         $weights_1 = $this->weights[1];
         $stats_year_0 = $this->statsYear[0];
         $stats_year_1 = $this->statsYear[1];
 
-        $query_where_0 =
-                "a.weights = '$weights_0' AND
-                a.stats_year = '$stats_year_0'
-                ORDER BY a.game_date;";
-        $query_where_1 =
-                "a.weights = '$weights_1' AND
-                a.stats_year = '$stats_year_1'
-                ORDER BY a.game_date;";
+        $sim_output_data_0 = (new SimOutputDataType())
+            ->setSeasonRange($this->firstSeason, $this->lastSeason)
+            ->setRandBucketRange($this->firstBucket, $this->lastBucket)
+            ->setWeights($weights_0)
+            ->setStatsYear($stats_year_0)
+            ->gen()
+            ->getData();
 
-        $query =
-            "SELECT a.home_win_pct, a.game_date, a.season, b.home_team_winner
-            FROM sim_output a
-            LEFT OUTER JOIN (
-                SELECT
-                    game_id,
-                    CASE
-                        WHEN home_score_ct > away_score_ct THEN 1
-                        WHEN home_score_ct = away_score_ct THEN 2
-                    ELSE 0 END as home_team_winner
-                FROM games
-            ) b ON a.gameid = b.game_id
-            WHERE
-                b.home_team_winner <> 2 AND
-                a.analysis_runs = 5000 AND
-                a.season >= $this->firstSeason AND
-                a.season <= $this->lastSeason AND
-                a.rand_bucket >= $this->firstBucket AND
-                a.rand_bucket <= $this->lastBucket AND ";
+        $sim_output_data_1 = (new SimOutputDataType())
+            ->setSeasonRange($this->firstSeason, $this->lastSeason)
+            ->setRandBucketRange($this->firstBucket, $this->lastBucket)
+            ->setWeights($weights_1)
+            ->setStatsYear($stats_year_1)
+            ->gen()
+            ->getData();
 
-        $results_0 = exe_sql(
-            DATABASE,
-            $query . $query_where_0
-        );
-        $results_1 = exe_sql(
-            DATABASE,
-            $query . $query_where_1
-        );
+        $odds_data = (new HistoricalOddsDataType())
+            ->setSeasonRange($this->firstSeason, $this->lastSeason)
+            ->gen()
+            ->getData();
 
-        $num_games_0 = count($results_0);
-        $num_games_1 = count($results_1);
+        $num_games_0 = count($sim_output_data_0);
+        $num_games_1 = count($sim_output_data_1);
         if (!$num_games_0) {
             $this->errors[] =
                 "<div>
@@ -110,8 +86,8 @@ class SimPerformancePage extends Page {
                 </div>";
         }
 
-        $results_0 = $this->formatSQLGameData($results_0);
-        $results_1 = $this->formatSQLGameData($results_1);
+        $results_0 = $this->formatSQLGameData($sim_output_data_0, $odds_data);
+        $results_1 = $this->formatSQLGameData($sim_output_data_1, $odds_data);
 
         $this->gamesByYear = $this->applySeasonSwitchPerc(
             $results_0,
@@ -158,12 +134,31 @@ class SimPerformancePage extends Page {
         $hist_list->display();
     }
 
-    private function formatSQLGameData($data) {
+    private function genPossibleParams() {
+        $this->possibleParams = (new SimOutputDataType())
+            ->genDistinctColumnValues(array(
+                'season',
+                'weights',
+                'stats_year',
+                'rand_bucket'
+            ));
+
+        // Odds limited by season, so need to get cross season of seasons from
+        // sim_output and historical_odds.
+        $possible_odds_seasons = (new HistoricalOddsDataType())
+            ->genPossibleColumnValues(array('season'));
+        $this->possibleParams['season'] = array_intersect(
+            $this->possibleParams['season'],
+            $possible_odds_seasons['season']
+        );
+    }
+
+    private function formatSQLGameData($sim_data, $odds_data) {
         $f_data = array();
-        foreach ($data as $game) {
+        foreach ($sim_data as $gameid => $game) {
             $f_data[$game['season']][$game['game_date']][] = array(
                 'home_win_pct' => $game['home_win_pct'],
-                'home_team_winner' => $game['home_team_winner']
+                'home_team_winner' => $odds_data[$gameid]['home_team_winner']
             );
         }
 
@@ -286,26 +281,20 @@ class SimPerformancePage extends Page {
             0, 100, 25
         );
 
-        $possible_seasons = array_unique(
-            array_column($this->possibleParams, 'season')
-        );
-        asort($possible_seasons);
         $first_season = new Selector(
             'First Season',
             'first_season',
             $this->firstSeason,
-            $possible_seasons
+            $this->possibleParams['season']
         );
         $last_season = new Selector(
             'Last Season',
             'last_season',
             $this->lastSeason,
-            $possible_seasons
+            $this->possibleParams['season']
         );
 
-        $possible_buckets = array_unique(
-            array_column($this->possibleParams, 'rand_bucket')
-        );
+        $possible_buckets = $this->possibleParams['rand_bucket'];
         asort($possible_buckets);
         $first_bucket = new Selector(
             'First Bucket',
@@ -344,14 +333,14 @@ class SimPerformancePage extends Page {
             'Weights',
             'weights_' . $group,
             $this->weights[$group],
-            array_unique(array_column($this->possibleParams, 'weights'))
+            $this->possibleParams['weights']
         );
 
         $stats_year_selector = new Selector(
             'Stats Year',
             'stats_year_' . $group,
             $this->statsYear[$group],
-            array_unique(array_column($this->possibleParams, 'stats_year'))
+            $this->possibleParams['stats_year']
         );
 
         $param_list = new UOList(
@@ -379,7 +368,7 @@ class SimPerformancePage extends Page {
 
     public function setParams($params) {
         $this->groupSwitchPerc = idx($params, 'group_switch_perc', 100);
-        $this->firstSeason = idx($params, 'first_season', 1990);
+        $this->firstSeason = idx($params, 'first_season', 2013);
         $this->lastSeason = idx($params, 'last_season', 2013);
         $this->firstBucket = idx($params, 'first_bucket', 0);
         $this->lastBucket = idx($params, 'last_bucket', 9);

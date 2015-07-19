@@ -93,6 +93,44 @@ abstract class DataType {
         return $this->data;
     }
 
+    final public function genDistinctColumnValues($columns) {
+        if (!is_array($columns)) {
+            throw new Exception('Must pass in array of columns to gen values');
+        }
+
+        $distinct_data = exe_sql(
+            $this->getDatabase(),
+            sprintf(
+                'SELECT DISTINCT %s FROM %s',
+                implode(', ', $columns),
+                $this->getTable()
+            )
+        );
+
+        $possible_values = array();
+        foreach ($distinct_data as $row) {
+            foreach ($columns as $col) {
+                $value = $row[$col];
+
+                if (!idx($possible_values, $col)) {
+                    $possible_values[$col] = array($value);
+                    continue;
+                }
+
+                if (!in_array($value, $possible_values[$col])) {
+                    $possible_values[$col][] = $value;
+                }
+            }
+        }
+
+        foreach ($possible_values as $col => $values) {
+            asort($values);
+            $possible_values[$col] = $values;
+        }
+
+        return $possible_values;
+    }
+
     private function getSQL() {
         // Columns will !== null if callsite uses setColumns() to override
         // columns set by child DataType (using getColumns()).

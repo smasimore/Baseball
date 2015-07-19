@@ -47,9 +47,13 @@ final class HistoricalOddsDataType extends DataType {
         );
     }
 
-    final public function setSeason($start_season, $end_season = null) {
+    final public function setSeasonRange($start_season, $end_season = null) {
         $this->startSeason = $start_season;
         $this->endSeason = $end_season ?: $start_season;
         return $this;
+    }
+
+    final protected function formatData() {
+       $this->data = index_by($this->data, 'gameid');
     }
 }
