@@ -51,6 +51,10 @@ class ArrayUtilsTest extends PHPUnit_Framework_TestCase {
     public function providerIsArrayOfArrays() {
         return array(
             array(
+                'test',
+                false
+            ),
+            array(
                 array('la' => 1),
                 false
             ),

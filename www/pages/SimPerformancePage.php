@@ -146,7 +146,7 @@ class SimPerformancePage extends Page {
         // Odds limited by season, so need to get cross season of seasons from
         // sim_output and historical_odds.
         $possible_odds_seasons = (new HistoricalOddsDataType())
-            ->genPossibleColumnValues(array('season'));
+            ->genDistinctColumnValues(array('season'));
         $this->possibleParams['season'] = array_intersect(
             $this->possibleParams['season'],
             $possible_odds_seasons['season']
@@ -156,6 +156,11 @@ class SimPerformancePage extends Page {
     private function formatSQLGameData($sim_data, $odds_data) {
         $f_data = array();
         foreach ($sim_data as $gameid => $game) {
+            // A few games in the odds data have an incorrect gameid. Just skip
+            // them.
+            if (!idx($odds_data, $gameid)) {
+                continue;
+            }
             $f_data[$game['season']][$game['game_date']][] = array(
                 'home_win_pct' => $game['home_win_pct'],
                 'home_team_winner' => $odds_data[$gameid]['home_team_winner']

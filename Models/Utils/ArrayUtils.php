@@ -17,6 +17,10 @@ class ArrayUtils {
     }
 
     public static function isArrayOfArrays($array) {
+        if (!is_array($array)) {
+            return false;
+        }
+
         foreach ($array as $sub_array) {
             return is_array($sub_array);
         }
