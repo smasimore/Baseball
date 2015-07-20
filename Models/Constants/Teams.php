@@ -202,6 +202,45 @@ class Teams {
         return $abbr;
     }
 
+    public static function getRetrosheetTeamAbbr($abbr, $season) {
+        $abbr = strtoupper($abbr);
+        switch ($abbr) {
+            case 'CHC':
+                return 'CHN';
+            case 'CHW':
+            case 'CWS':
+                return 'CHA';
+            case 'KC':
+            case 'KAN':
+                return 'KCA';
+            case 'LAA':
+                return 'ANA';
+            case 'LA':
+            case 'LAD':
+                return 'LAN';
+            case 'FLA':
+            case 'MIA':
+                return $season < 2012 ? 'FLO' : 'MIA';
+            case 'NYM':
+                return 'NYN';
+            case 'NYY':
+                return 'NYA';
+            case 'SD':
+                return 'SDN';
+            case 'SF':
+                return 'SFN';
+            case 'STL':
+                return 'SLN';
+            case 'TB':
+            case 'TAM':
+                return 'TBA';
+            case 'WSH':
+                return $season < 2005 ? 'MON' : 'WAS';
+            default:
+                return $abbr;
+        }
+    }
+
     public static function getAllRetrosheetTeamAbbrs($season) {
         $sql = "SELECT DISTINCT TEAM_ID
             FROM teams

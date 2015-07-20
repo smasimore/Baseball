@@ -1,9 +1,7 @@
 <?php
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
-if (!defined('HOME_PATH')) {
-    include_once('/Users/constants.php');
-}
+include_once __DIR__ .'/../Constants/Teams.php';
 
 class RetrosheetParseUtils {
 
@@ -70,6 +68,7 @@ class RetrosheetParseUtils {
                 ? RetrosheetGameTypes::DOUBLE_HEADER_SECOND
                 : RetrosheetGameTypes::DOUBLE_HEADER_FIRST;
         }
+        $home = Teams::getRetrosheetTeamAbbr($home, $season);
         $gameid = $home.$season.$month.$day.$gamenum;
         return $gameid;
     }
