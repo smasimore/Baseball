@@ -1,7 +1,6 @@
 <?php
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
-
 trait TPageWithDate {
 
     protected $date;
