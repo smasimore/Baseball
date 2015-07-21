@@ -100,7 +100,7 @@ class SimPerformancePage2 extends Page {
         $submit_button = "<input class='button' type='submit' value='Submit'>";
 
         $form =
-            "<form class='sim_perf' action='sim_perf.php'>
+            "<form class='sim_perf' action='sim_perf2.php'>
                 <div class='blue_list'>
                     $sim_param_list
                     $group_param_list_a
