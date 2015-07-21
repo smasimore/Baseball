@@ -1,5 +1,5 @@
 <?php
-include_once 'pages/GamesPage2.php';
+include_once 'pages/GamesPage.php';
 
 sec_session_start();
 ?>
@@ -21,7 +21,7 @@ sec_session_start();
                 $date = preg_replace('/[^\d-]+/', '', $date);
             }
 
-            (new GamesPage2(login_check($mysqli)))
+            (new GamesPage(login_check($mysqli)))
                 ->setDate($date)
                 ->render();
         ?>
