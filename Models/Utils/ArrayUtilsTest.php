@@ -216,6 +216,37 @@ class ArrayUtilsTest extends PHPUnit_Framework_TestCase {
             $return
         );
     }
+
+    /**
+     * @expectedException Exception
+     */
+    public function testFlattenArrayOfArraysException() {
+        ArrayUtils::flatten(array('test'));
+    }
+
+    public function providerFlatten() {
+        return array(
+            array(
+                array(
+                    'test0' => array('one', 'two'),
+                    'test1' => array('three', 'four')
+                ),
+                array('one', 'two', 'three', 'four')
+            )
+        );
+    }
+
+    /**
+     * @dataProvider providerFlatten
+     */
+    public function testFlatten($array, $flat_array) {
+        $this->assertEquals(
+            ArrayUtils::flatten($array),
+            $flat_array
+        );
+    }
+
+
 }
 
 ?>

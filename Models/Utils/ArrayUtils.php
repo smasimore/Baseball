@@ -77,5 +77,20 @@ class ArrayUtils {
 
         return $array;
     }
+
+    public static function flatten($multi_array) {
+        if (!self::isArrayOfArrays($multi_array)) {
+            throw new Exception('Must pass in array of arrays.');
+        }
+
+        $flattened_array = array();
+        foreach ($multi_array as $array) {
+            foreach ($array as $value) {
+                $flattened_array[] = $value;
+            }
+        }
+
+        return $flattened_array;
+    }
 }
 ?>

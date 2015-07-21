@@ -16,13 +16,9 @@ final class HistoricalOddsDataType extends DataType {
     final protected function getColumns() {
         return array(
             'gameid',
-            'home_odds',
-            'away_odds',
             'home_pct_win',
             'away_pct_win',
-            'home_team_winner',
-            'season',
-            'game_date'
+            'home_team_winner'
         );
     }
 
