@@ -85,8 +85,20 @@ class SimPerformanceUtils {
         return $return_perf_data;
     }
 
-    public static function calculateSimPerfChartByYear($game_data_by_year) {
-        // TODO(smas): Fill me!
+    public static function calculateSimPerfDataByYear(
+        $game_data_by_year,
+        $bin_size = 5
+    ) {
+        if (!ArrayUtils::isArrayOfArrays($game_data_by_year)) {
+            throw new Exception('Game data must be array of arrays.');
+        }
+
+        $perf_data = array();
+        foreach ($game_data_by_year as $year => $game_data) {
+            $perf_data[$year] = self::calculateSimPerfData($game_data);
+        }
+
+        return $perf_data;
     }
 }
 
