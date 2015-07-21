@@ -1,24 +1,11 @@
 <?php
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
-ini_set('memory_limit', '-1');
-ini_set('default_socket_timeout', -1);
-ini_set('max_execution_time', -1);
-ini_set('mysqli.connect_timeout', -1);
-ini_set('mysqli.reconnect', '1');
-include_once('/Users/constants.php');
-include_once(HOME_PATH.'Scripts/Include/RetrosheetInclude.php');
+include_once __DIR__ .'/../../Models/Include/RetrosheetInclude.php';
 
 $playerSeason = array();
 $playerCareer = array();
 $seasonPlayers = array();
-
-function convertRetroDateToDs($season, $date) {
-    $month = substr($date, 0, 2);
-    $day = substr($date, -2);
-    $ds = "$season-$month-$day";
-    return $ds;
-}
 
 // Set initial values for the cumulative arrays if not already set.
 function initializePlayerArray($game_stat, $split) {
@@ -81,8 +68,14 @@ function getSeasonStartEnd($season) {
         WHERE season = '$season'
         GROUP BY season";
     $season_dates = reset(exe_sql(DATABASE, $season_sql));
-    $season_start = convertRetroDateToDs($season, $season_dates['start']);
-    $season_end = convertRetroDateToDs($season, $season_dates['end']);
+    $season_start = RetrosheetParseUtils::convertRetroDateToDs(
+        $season,
+        $season_dates['start']
+    );
+    $season_end = RetrosheetParseUtils::convertRetroDateToDs(
+        $season,
+        $season_dates['end']
+    );
     return array($season_start, $season_end);
 }
 

@@ -9,6 +9,16 @@ class RetrosheetParseUtils {
         'CLE2000-09-25' => 'MIN'
     );
 
+    public static function convertRetroDateToDs($season, $date) {
+        $month = substr($date, 0, 2);
+        $day = substr($date, -2);
+        return "$season-$month-$day";
+    }
+
+    public static function convertDsToRetroDate($ds) {
+        return return_between($ds, "-", "-", EXCL) . substr($ds, -2);
+    }
+
     public static function updateSeasonVars($season, $season_vars, $table) {
         $prev_season = $season - 1;
         if ($season > $season_vars['start_script']) {
@@ -369,6 +379,28 @@ class RetrosheetParseUtils {
            ) b
         ON a.dummy = b.dummy
         ORDER BY 1-pct";
+    }
+
+    public static function getSeasonStartEnd($season) {
+        $season_sql = sprintf(
+            "SELECT min(substr(game_id,8,4)) as start,
+                max(substr(game_id,8,4)) as end,
+                season
+            FROM events
+            WHERE season = %d
+            GROUP BY season",
+            $season
+        );
+        $season_dates = reset(exe_sql(DATABASE, $season_sql));
+        $season_start = self::convertRetroDateToDs(
+            $season,
+            $season_dates['start']
+        );
+        $season_end = self::convertRetroDateToDs(
+            $season,
+            $season_dates['end']
+        );
+        return array($season_start, $season_end);
     }
 
     public static function getSeasonWhere($stats_year, $season, $ds = 1231) {
