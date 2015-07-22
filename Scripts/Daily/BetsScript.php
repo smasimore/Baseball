@@ -172,7 +172,9 @@ class BetsScript extends ScriptWithWrite {
                 $vegas_odds
             );
             echo "$bet_suggestion \n";
-            send_email($bet_suggestion, "");
+            // TODO(cert) Turn back on e-mails when we have model back in
+            // order.
+            //send_email($bet_suggestion, "");
         }
     }
 
