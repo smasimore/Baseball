@@ -3,6 +3,8 @@ include_once 'Page.php';
 include_once __DIR__ . '/../ui/UOList.php';
 include_once __DIR__ . '/../../Models/DataTypes/SimOutputDataType.php';
 include_once __DIR__ . '/../../Models/DataTypes/HistoricalOddsDataType.php';
+include_once __DIR__ . '/../../Models/Utils/SimPerformanceUtils.php';
+include_once __DIR__ . '/../../Models/Utils/ArrayUtils.php';
 
 class SimPerformancePage extends Page {
 
@@ -23,13 +25,8 @@ class SimPerformancePage extends Page {
     // Vars.
     private $possibleParams = array();
     private $gamesByYear = array();
-    private $histByYear = array();
-    private $hist = array();
-    private $perfScores = array();
-
-    // Passed to js.
-    private $histActual = array();
-    private $histNumGames = array();
+    private $perfData = array();
+    private $perfDataByYear = array();
 
     final protected function renderPageIfErrors() {
         return true;
@@ -94,8 +91,7 @@ class SimPerformancePage extends Page {
             $results_1
         );
 
-        $this->calculateHist();
-        $this->calculatePerfScores();
+        $this->calculatePerfData();
     }
 
     final protected function renderPage() {
@@ -114,24 +110,19 @@ class SimPerformancePage extends Page {
                 </div>
             </form>";
 
-        $histograms = array($this->getHistogram('overall'));
-        foreach (array_keys($this->perfScores) as $type) {
-            // Overriding so we don't show overall twice. Manually rendering
-            // so it's at the top.
-            if ($type !== 'overall') {
-                $histograms[] = $this->getHistogram($type);
-            }
+
+        $charts[] = $this->getChart('overall');
+        foreach (array_keys($this->perfDataByYear) as $year) {
+            $charts[] = $this->getChart($year);
         }
-
-        $hist_list = new UOList(
-            $histograms,
+        $chart_list = new UOList(
+            $charts,
             null,
-            'histogram_list_item bottom_border'
+            'chart_list_item bottom_border'
         );
-
+        
         echo $form;
-        print_r($this->perfScores);
-        $hist_list->display();
+        $chart_list->display();
     }
 
     private function genPossibleParams() {
@@ -161,9 +152,12 @@ class SimPerformancePage extends Page {
             if (!idx($odds_data, $gameid)) {
                 continue;
             }
+
+            $odds = $odds_data[$gameid];
             $f_data[$game['season']][$game['game_date']][] = array(
-                'home_win_pct' => $game['home_win_pct'],
-                'home_team_winner' => $odds_data[$gameid]['home_team_winner']
+                SimPerformanceUtils::VEGAS_PCT => $odds['home_pct_win'],
+                SimPerformanceUtils::SIM_PCT => $game['home_win_pct'] * 100,
+                SimPerformanceUtils::TEAM_WINNER => $odds['home_team_winner']
             );
         }
 
@@ -197,85 +191,15 @@ class SimPerformancePage extends Page {
         return $data;
     }
 
-    private function calculateHist() {
-        foreach ($this->gamesByYear as $year => $games) {
-            // Initialize.
-            $this->histByYear[$year] = array();
-            for ($i = 0; $i < 100; $i += self::HIST_BUCKET_SIZE) {
-                if (!idx($this->hist, $i)) {
-                    $this->hist[$i] = array(
-                        'games' => 0,
-                        'home_team_winner' => 0
-                    );
-                }
-
-                $this->histByYear[$year][$i] = array(
-                    'games' => 0,
-                    'home_team_winner' => 0
-                );
-            }
-
-            // Go through each game and add to hist.
-            foreach ($games as $game) {
-                $home_win_pct = $game['home_win_pct'] * 100;
-                for ($i = 0; $i < 100; $i += self::HIST_BUCKET_SIZE) {
-                    if ($home_win_pct >= $i &&
-                        $home_win_pct < $i + self::HIST_BUCKET_SIZE
-                    ) {
-                        $this->hist[$i]['games'] += 1;
-                        $this->hist[$i]['home_team_winner'] +=
-                            $game['home_team_winner'];
-                        $this->histByYear[$year][$i]['games'] += 1;
-                        $this->histByYear[$year][$i]['home_team_winner'] +=
-                            $game['home_team_winner'];
-                    }
-                }
-            }
-        }
-    }
-
-    private function calculatePerfScores() {
-        $this->perfScores['overall'] = $this->calculatePerfScore(
-            $this->hist,
-            'overall'
+    private function calculatePerfData() {
+        $this->perfData = SimPerformanceUtils::calculateSimPerfData(
+            ArrayUtils::flatten($this->gamesByYear),
+            self::HIST_BUCKET_SIZE
         );
-        foreach ($this->histByYear as $year => $hist) {
-            $this->perfScores[$year] = $this->calculatePerfScore($hist, $year);
-        }
-    }
-
-    private function calculatePerfScore($hist, $type) {
-        $total_num_games = 0;
-        $sum_diff_from_expected = 0;
-        foreach ($hist as $bin_start => $data) {
-            $num_games = $data['games'];
-            $total_num_games += $num_games;
-
-            // For this bin, calculate percent that home actually won.
-            $perc_home_won_actual = $num_games ?
-                $data['home_team_winner'] / $data['games'] * 100 : 0;
-
-            $this->histActual[$type][$bin_start] = $perc_home_won_actual;
-            $this->histNumGames[$type][$bin_start] = $num_games;
-
-            // Calculate what we'd expect percent home to win based on what
-            // bin games are in. E.g. if in 0% -> 5% bin, this should be 2.5%.
-            $perc_home_won_expected = $bin_start + self::HIST_BUCKET_SIZE / 2;
-
-            // Calculate absolute distance between actual and expected.
-            $sum_diff_from_expected += $num_games *
-                abs($perc_home_won_expected - $perc_home_won_actual);
-        }
-
-        if (!$total_num_games) {
-            $this->errors[] =
-                "<div>
-                    Missing Data: $type games = $total_num_games.
-                </div>";
-            return 0;
-        }
-
-        return round($sum_diff_from_expected / $total_num_games, 2);
+        $this->perfDataByYear = SimPerformanceUtils::calculateSimPerfDataByYear(
+            $this->gamesByYear,
+            self::HIST_BUCKET_SIZE
+        );
     }
 
     private function getSimParamList() {
@@ -363,11 +287,11 @@ class SimPerformancePage extends Page {
         return $param_list->getHTML();
     }
 
-    private function getHistogram($type) {
+    private function getChart($type) {
         return
             "<div
                 id=$type
-                class='histogram_canvas'>
+                class='chart_canvas'>
             </div>";
     }
 
@@ -390,8 +314,12 @@ class SimPerformancePage extends Page {
         return $this;
     }
 
-    public function getHistData() {
-        return array($this->histActual, $this->histNumGames);
+    public function getPerfData() {
+        return $this->perfData;
+    }
+
+    public function getPerfDataByYear() {
+        return $this->perfDataByYear;
     }
 }
 ?>

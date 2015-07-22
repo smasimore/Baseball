@@ -500,12 +500,12 @@ border : solid 0px #ffffff;
     }
 }
 
-.histogram_canvas {
+.chart_canvas {
     min-width: 310px;
     height: 400px;
     margin: 0 auto
 }
-.histogram_list_item {
+.chart_list_item {
     border-bottom:1px solid #ccc;
     padding: 100px 0;
 }
