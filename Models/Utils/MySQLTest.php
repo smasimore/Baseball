@@ -34,6 +34,25 @@ class MySQLTest extends PHPUnit_Framework_TestCase {
         );
     }
 
+    public function providerExecute() {
+        return array(
+            array(
+                sprintf(
+                    'SELECT * FROM %s WHERE id = %d',
+                    MySQL::UNIT_TEST_TABLE,
+                    12345
+                ),
+                array(
+                    array(
+                        'id' => 12345,
+                        'ts' => '2015-07-04 07:33:56',
+                        'name' => 'Dan'
+                    )
+                )
+            )
+        );
+    }
+
     /**
      * @expectedException Exception
      */
@@ -65,9 +84,18 @@ class MySQLTest extends PHPUnit_Framework_TestCase {
     /**
      * @dataProvider providerInsert
      */
-    public function testInsert($table, $data, $return) {
+    public function testInsert($table, $data, $expected) {
         $sql = MySQL::insert($table, $data);
-        $this->assertEquals($sql, $return);
+        $this->assertEquals($sql, $expected);
+    }
+
+    /**
+     * @dataProvider providerExecute
+     */
+    public function testExecute($sql, $expected) {
+        $data = MySQL::execute($sql);
+        print_r($data);
+        $this->assertEquals($data, $expected);
     }
 }
 

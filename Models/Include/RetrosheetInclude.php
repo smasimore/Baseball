@@ -13,6 +13,7 @@ ini_set('mysqli.connect_timeout', -1);
 ini_set('mysqli.reconnect', '1');
 
 include_once __DIR__ .'/../Utils/DateTimeUtils.php';
+include_once __DIR__ .'/../Utils/MySQL.php';
 include_once __DIR__ .'/../Utils/ExceptionUtils.php';
 include_once __DIR__ .'/../Utils/ArrayUtils.php';
 include_once __DIR__ .'/../Utils/GlobalUtils.php';

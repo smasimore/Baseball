@@ -1,10 +1,7 @@
 <?php
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
-if (!defined('DATABASE')) {
-    include_once('/Users/constants.php');
-}
-
+include_once('/Users/constants.php');
 include_once 'ExceptionUtils.php';
 include_once 'ArrayUtils.php';
 
@@ -81,17 +78,51 @@ class MySQL {
 
         $result = mysqli_query($mysqli_connect, $final_sql);
 
-        if (mysqli_error($mysqli_connect)) {
+        $error = mysqli_error($mysqli_connect);
+        self::checkMysqliError($error, __METHOD__, $final_sql);
+        mysqli_close($mysqli_connect);
+
+        self::logEvent(__METHOD__, $table, $data);
+    }
+
+    public static function execute($sql, $database = DATABASE) {
+        $mysqli_connect = self::connectToDatabase();
+        mysqli_select_db($mysqli_connect, $database);
+
+        $result = mysqli_query($mysqli_connect, $sql);
+
+        $error = mysqli_error($mysqli_connect);
+        self::checkMysqliError($error, __METHOD__, $sql);
+
+        // Get data from mysqli result object.
+        $result_set = array();
+        for ($i = 0; $i < mysqli_num_rows($result); $i++) {
+            $result_set[$i] = mysqli_fetch_assoc($result);
+        }
+        mysqli_close($mysqli_connect);
+
+        $table = self::getTableNameFromSQL($sql);
+        self::logEvent(__METHOD__, $table, $result_set);
+        return $result_set;
+    }
+
+    private static function checkMysqliError($error, $method, $sql) {
+       if ($error) {
             throw new Exception(sprintf(
-                '%s During Insert Into %s with query "%s"',
+                '%s During %s with Query "%s"',
                 mysqli_error($mysqli_connect),
-                $table,
-                $final_sql
+                $method,
+                $sql
             ));
         }
+    }
 
-        mysqli_close($mysqli_connect);
-        self::logEvent(__METHOD__, $table, $data);
+    private static function getTableNameFromSQL($sql) {
+        $table = return_between($sql, 'FROM ', ' ', EXCL);
+        if (!$table) {
+            $table = return_between($sql, 'from ', ' ', EXCL);
+        }
+        return trim($table);
     }
 
     // Function to try mysqli connect 10 times before failing.
@@ -130,13 +161,13 @@ class MySQL {
         }
     }
 
-    private static function getColheads($table) {
+    private static function getColheads($table, $database = DATABASE) {
         $sql = sprintf(
             "SELECT COLUMN_NAME, IS_NULLABLE, COLUMN_DEFAULT
             FROM INFORMATION_SCHEMA.COLUMNS
             WHERE TABLE_SCHEMA = '%s'
             AND TABLE_NAME = '%s'",
-            DATABASE,
+            $database,
             $table
         );
         $data = exe_sql(DATABASE, $sql);

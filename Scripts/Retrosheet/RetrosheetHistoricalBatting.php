@@ -110,10 +110,7 @@ class RetrosheetHistoricalBatting extends ScriptWithWrite {
             $season,
             $retro_ds
         );
-        return exe_sql(
-            DATABASE,
-            $sql
-        );
+        return MySQL::execute($sql);
     }
 }
 
