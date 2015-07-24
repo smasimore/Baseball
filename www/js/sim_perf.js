@@ -1,27 +1,27 @@
 function drawCharts(data_by_year) {
     for (var id in data_by_year) {
-        drawChart(id, data_by_year[id]);
+        drawChart(id, 'FILL ME', data_by_year[id]);
     }
 }
 
-function drawChart(id, data) {
+function drawChart(id, label, data) {
     var actual_values = [];
     var vegas_values = [];
     var sim_values = [];
     for (var bin in data) {
         actual_values.push({
             type: 'Actual',
-            y: Math.round(data[bin]['actual_win_pct']),
+            y: _roundToHundredth(data[bin]['actual_win_pct']),
             samples: data[bin]['num_games']}
         );
         vegas_values.push({
             type: 'Vegas',
-            y: Math.round(data[bin]['vegas_win_pct']),
+            y: _roundToHundredth(data[bin]['vegas_win_pct']),
             samples: data[bin]['num_games']}
         );
         sim_values.push({
             type: 'Sim',
-            y: Math.round(data[bin]['sim_win_pct']),
+            y: _roundToHundredth(data[bin]['sim_win_pct']),
             samples: data[bin]['num_games']}
         );
     }
@@ -37,7 +37,7 @@ function drawChart(id, data) {
             renderTo: id
         },
         title: {
-            text: id
+            text: label
         },
         xAxis: {
             categories: x_values
@@ -67,7 +67,7 @@ function drawChart(id, data) {
                     enabled: true,
                     formatter: function() {
                         if (this.point.y != 0) {
-                            return this.point.y;
+                            return Math.round(this.point.y);
                         }
                     }
                 }
@@ -91,4 +91,8 @@ function drawChart(id, data) {
             }
         ]
     });
+}
+
+function _roundToHundredth(input) {
+    return Math.round(input*100)/100;
 }

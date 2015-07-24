@@ -25,6 +25,7 @@ sec_session_start();
         <script type="text/JavaScript">
             drawChart(
                 <?php echo json_encode('overall'); ?>,
+                <?php echo json_encode($page->getPerfScoreLabel()); ?>,
                 <?php echo json_encode($page->getPerfData()); ?>
             );
             drawCharts(<?php echo json_encode($page->getPerfDataByYear()); ?>);

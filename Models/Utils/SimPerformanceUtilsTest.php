@@ -242,6 +242,102 @@ class SimPerformanceUtilsTest extends PHPUnit_Framework_TestCase {
         );
     }
 
+    public function providerCalculateSimPerfScores() {
+        return array(
+            array(
+                array(
+                    0 => array(
+                        SimPerformanceUtils::NUM_GAMES => 2,
+                        SimPerformanceUtils::ACTUAL_PCT => 50,
+                        SimPerformanceUtils::VEGAS_PCT => 2.5,
+                        SimPerformanceUtils::SIM_PCT => 7.5
+                    ),
+                    5 => $this->emptyBin,
+                    10 => $this->emptyBin,
+                    15 => $this->emptyBin,
+                    20 => $this->emptyBin,
+                    25 => $this->emptyBin,
+                    30 => $this->emptyBin,
+                    35 => $this->emptyBin,
+                    40 => $this->emptyBin,
+                    45 => $this->emptyBin,
+                    50 => array(
+                        SimPerformanceUtils::NUM_GAMES => 2,
+                        SimPerformanceUtils::ACTUAL_PCT => 0,
+                        SimPerformanceUtils::VEGAS_PCT => 52.5,
+                        SimPerformanceUtils::SIM_PCT => 55
+                    ),
+                    55 => $this->emptyBin,
+                    60 => $this->emptyBin,
+                    65 => $this->emptyBin,
+                    70 => $this->emptyBin,
+                    75 => $this->emptyBin,
+                    80 => $this->emptyBin,
+                    85 => $this->emptyBin,
+                    90 => $this->emptyBin,
+                    95 => $this->emptyBin
+                ),
+                null,
+                null
+            ),
+            array(
+                array(
+                    0 => array(
+                        SimPerformanceUtils::NUM_GAMES => 10,
+                        SimPerformanceUtils::ACTUAL_PCT => 50,
+                        SimPerformanceUtils::VEGAS_PCT => 40,
+                        SimPerformanceUtils::SIM_PCT => 20
+                    ),
+                    5 => $this->emptyBin,
+                    10 => $this->emptyBin,
+                    15 => $this->emptyBin,
+                    20 => $this->emptyBin,
+                    25 => $this->emptyBin,
+                    30 => $this->emptyBin,
+                    35 => $this->emptyBin,
+                    40 => $this->emptyBin,
+                    45 => $this->emptyBin,
+                    50 => array(
+                        SimPerformanceUtils::NUM_GAMES => 10,
+                        SimPerformanceUtils::ACTUAL_PCT => 0,
+                        SimPerformanceUtils::VEGAS_PCT => 30,
+                        SimPerformanceUtils::SIM_PCT => 56
+                    ),
+                    55 => $this->emptyBin,
+                    60 => $this->emptyBin,
+                    65 => $this->emptyBin,
+                    70 => $this->emptyBin,
+                    75 => $this->emptyBin,
+                    80 => $this->emptyBin,
+                    85 => $this->emptyBin,
+                    90 => $this->emptyBin,
+                    95 => $this->emptyBin
+                ),
+                20,
+                43
+            )
+        );
+    }
+
+    /**
+     * @dataProvider providerCalculateSimPerfScores
+     */
+    public function testCalculateSimPerfScores(
+        $perf_data,
+        $exp_vegas_score,
+        $exp_sim_score
+    ) {
+        list($vegas_score, $sim_score) =
+            SimPerformanceUtils::calculateSimPerfScores($perf_data);
+        $this->assertEquals(
+            $vegas_score,
+            $exp_vegas_score
+        );
+        $this->assertEquals(
+            $sim_score,
+            $exp_sim_score
+        );
+    }
 }
 
 ?>

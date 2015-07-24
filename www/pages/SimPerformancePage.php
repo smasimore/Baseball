@@ -28,6 +28,9 @@ class SimPerformancePage extends Page {
     private $perfData = array();
     private $perfDataByYear = array();
 
+    private $perfScoreVegas;
+    private $perfScoreSim;
+
     final protected function renderPageIfErrors() {
         return true;
     }
@@ -200,6 +203,9 @@ class SimPerformancePage extends Page {
             $this->gamesByYear,
             self::HIST_BUCKET_SIZE
         );
+
+        list($this->perfScoreVegas, $this->perfScoreSim) =
+            SimPerformanceUtils::calculateSimPerfScores($this->perfData);
     }
 
     private function getSimParamList() {
@@ -320,6 +326,14 @@ class SimPerformancePage extends Page {
 
     public function getPerfDataByYear() {
         return $this->perfDataByYear;
+    }
+
+    public function getPerfScoreLabel() {
+        return sprintf(
+            'OVERALL - Sim: %g / Vegas: %g',
+            round($this->perfScoreSim, 2),
+            round($this->perfScoreVegas, 2)
+        );
     }
 }
 ?>

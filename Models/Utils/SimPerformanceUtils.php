@@ -19,6 +19,7 @@ class SimPerformanceUtils {
 
     const BIN_MIN = 0;
     const BIN_MAX = 100;
+    const MIN_SAMPLE_SIZE_IN_BIN = 10;
 
     public static function calculateSimPerfData($game_data, $bin_size = 5) {
         if (!ArrayUtils::isArrayOfArrays($game_data)) {
@@ -99,6 +100,39 @@ class SimPerformanceUtils {
         }
 
         return $perf_data;
+    }
+
+    /**
+     * Requires input in format of sim perf data returned by above functions.
+     *
+     * @return array(vegas perf score, sim perf score)
+     */
+    public static function calculateSimPerfScores($perf_data) {
+        $vegas_numerator = 0;
+        $sim_numerator = 0;
+        $total_games = 0;
+        foreach ($perf_data as $data) {
+            $num_games = $data[self::NUM_GAMES];
+            if ($num_games < self::MIN_SAMPLE_SIZE_IN_BIN) {
+                continue;
+            }
+
+            $actual_pct = $data[self::ACTUAL_PCT];
+            $total_games += $num_games;
+            $vegas_numerator += $num_games *
+                abs($data[self::VEGAS_PCT] - $actual_pct);
+            $sim_numerator += $num_games *
+                abs($data[self::SIM_PCT] - $actual_pct);
+        }
+
+        if ($total_games === 0) {
+            return array(null, null);
+        }
+
+        return array(
+            $vegas_numerator / $total_games,
+            $sim_numerator / $total_games
+        );
     }
 }
 
