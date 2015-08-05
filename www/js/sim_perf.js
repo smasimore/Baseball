@@ -1,6 +1,6 @@
-function drawCharts(data_by_year) {
+function drawCharts(data_by_year, labels_by_year) {
     for (var id in data_by_year) {
-        drawChart(id, 'FILL ME', data_by_year[id]);
+        drawChart(id, labels_by_year[id], data_by_year[id]);
     }
 }
 

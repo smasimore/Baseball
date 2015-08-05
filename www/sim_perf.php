@@ -21,14 +21,24 @@ sec_session_start();
             $page = (new SimPerformancePage(login_check($mysqli)))
                 ->setParams($_GET)
                 ->render();
+
+            $perf_data = $page->getPerfData();
+            $perf_data_by_year = $page->getPerfDataByYear();
+            $label = $page->getPerfScoreLabel($perf_data);
+            $labels_by_year = $page->getPerfScoreLabelsByYear(
+                $perf_data_by_year
+            );
         ?>
         <script type="text/JavaScript">
             drawChart(
                 <?php echo json_encode('overall'); ?>,
-                <?php echo json_encode($page->getPerfScoreLabel()); ?>,
-                <?php echo json_encode($page->getPerfData()); ?>
+                <?php echo json_encode($label); ?>,
+                <?php echo json_encode($perf_data); ?>
             );
-            drawCharts(<?php echo json_encode($page->getPerfDataByYear()); ?>);
+            drawCharts(
+                <?php echo json_encode($perf_data_by_year); ?>,
+                <?php echo json_encode($labels_by_year); ?>
+            );
         </script>
     </body>
 </html>
