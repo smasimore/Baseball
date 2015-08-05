@@ -1,6 +1,8 @@
 <?php
 include_once 'Page.php';
 include_once __DIR__ . '/../ui/UOList.php';
+include_once __DIR__ . '/../ui/Input.php';
+include_once __DIR__ . '/../ui/ParamInput.php';
 include_once __DIR__ . '/../../Models/DataTypes/SimOutputDataType.php';
 include_once __DIR__ . '/../../Models/DataTypes/HistoricalOddsDataType.php';
 include_once __DIR__ . '/../../Models/Utils/SimPerformanceUtils.php';
@@ -10,17 +12,30 @@ class SimPerformancePage extends Page {
 
     const HIST_BUCKET_SIZE = 5;
 
-    // Params.
+    // Param names.
+    const P_GROUP_SWITCH_PERC = 'group_switch_perc';
+    const P_FIRST_SEASON = 'first_season';
+    const P_LAST_SEASON = 'last_season';
+    const P_FIRST_BUCKET = 'first_bucket';
+    const P_LAST_BUCKET = 'last_bucket';
+
+    // Bet param names.
+    const P_BET_AMOUNT = 'bet_amount';
+
+    // Param values.
     private $groupSwitchPerc;
     private $firstSeason;
     private $lastSeason;
     private $firstBucket;
     private $lastBucket;
 
-    // Params that vary by group.
+    // Group param values.
     private $weights;
     private $statsYear;
     private $statsType;
+
+    // Bet param values.
+    private $betAmount = 100;
 
     // Vars.
     private $possibleParams = array();
@@ -101,6 +116,7 @@ class SimPerformancePage extends Page {
         $sim_param_list = $this->getSimParamList();
         $group_param_list_a = $this->getGroupParamList(0);
         $group_param_list_b = $this->getGroupParamList(1);
+        $bet_param_list = $this->getBetParamList();
         $submit_button = "<input class='button' type='submit' value='Submit'>";
 
         $form =
@@ -109,6 +125,7 @@ class SimPerformancePage extends Page {
                     $sim_param_list
                     $group_param_list_a
                     $group_param_list_b
+                    $bet_param_list
                     <div'>$submit_button</div>
                 </div>
             </form>";
@@ -208,20 +225,20 @@ class SimPerformancePage extends Page {
     private function getSimParamList() {
         $group_switch_slider = new Slider(
             'Group Switch Perc',
-            'group_switch_perc',
+            self::P_GROUP_SWITCH_PERC,
             $this->groupSwitchPerc,
             0, 100, 25
         );
 
         $first_season = new Selector(
             'First Season',
-            'first_season',
+            self::P_FIRST_SEASON,
             $this->firstSeason,
             $this->possibleParams['season']
         );
         $last_season = new Selector(
             'Last Season',
-            'last_season',
+            self::P_LAST_SEASON,
             $this->lastSeason,
             $this->possibleParams['season']
         );
@@ -230,13 +247,13 @@ class SimPerformancePage extends Page {
         asort($possible_buckets);
         $first_bucket = new Selector(
             'First Bucket',
-            'first_bucket',
+            self::P_FIRST_BUCKET,
             $this->firstBucket,
             $possible_buckets
         );
         $last_bucket = new Selector(
             'Last Bucket',
-            'last_bucket',
+            self::P_LAST_BUCKET,
             $this->lastBucket,
             $possible_buckets
         );
@@ -290,6 +307,29 @@ class SimPerformancePage extends Page {
         return $param_list->getHTML();
     }
 
+    private function getBetParamList() {
+        $bet_amount = (new Input())
+            ->setType(InputTypes::NUMBER)
+            ->setName(self::P_BET_AMOUNT)
+            ->setValue($this->betAmount)
+            ->getHTML();
+
+        $param_list = new UOList(
+            array(
+                "<font class='list_title'>
+                    Bet Params
+                </font>",
+                (new ParamInput($bet_amount))
+                    ->setTitle('Bet Amount')
+                    ->getHTML()
+            ),
+            null,
+            'list_item'
+        );
+
+        return $param_list->getHTML();
+    }
+
     private function getChart($type) {
         return
             "<div
@@ -299,11 +339,11 @@ class SimPerformancePage extends Page {
     }
 
     public function setParams($params) {
-        $this->groupSwitchPerc = idx($params, 'group_switch_perc', 100);
-        $this->firstSeason = idx($params, 'first_season', 2013);
-        $this->lastSeason = idx($params, 'last_season', 2013);
-        $this->firstBucket = idx($params, 'first_bucket', 0);
-        $this->lastBucket = idx($params, 'last_bucket', 9);
+        $this->groupSwitchPerc = idx($params, self::P_GROUP_SWITCH_PERC, 100);
+        $this->firstSeason = idx($params, self::P_FIRST_SEASON, 2013);
+        $this->lastSeason = idx($params, self::P_LAST_SEASON, 2013);
+        $this->firstBucket = idx($params, self::P_FIRST_BUCKET, 0);
+        $this->lastBucket = idx($params, self::P_LAST_BUCKET, 9);
 
         $this->weights = array(
             0 => idx($params, 'weights_0', 'b_total_100'),
@@ -325,11 +365,12 @@ class SimPerformancePage extends Page {
         return $this->perfDataByYear;
     }
 
-    public function getPerfScoreLabel($data) {
+    public function getPerfScoreLabel($data, $label) {
         list($perf_score_vegas, $perf_score_sim) =
             SimPerformanceUtils::calculateSimPerfScores($data);
         return sprintf(
-            'OVERALL - Sim: %g / Vegas: %g',
+            '%s - Sim: %g / Vegas: %g',
+            $label,
             round($perf_score_sim, 2),
             round($perf_score_vegas, 2)
         );
@@ -338,7 +379,7 @@ class SimPerformancePage extends Page {
     public function getPerfScoreLabelsByYear($data_by_year) {
         $labels_by_year = array();
         foreach ($data_by_year as $year => $data) {
-            $labels_by_year[$year] = $this->getPerfScoreLabel($data);
+            $labels_by_year[$year] = $this->getPerfScoreLabel($data, $year);
         }
 
         return $labels_by_year;

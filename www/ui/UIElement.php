@@ -2,7 +2,6 @@
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
 include_once __DIR__ . '/../includes/functions.php';
-include_once __DIR__ . '/UOList.php';
 
 abstract class UIElement {
 

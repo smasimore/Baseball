@@ -24,7 +24,7 @@ sec_session_start();
 
             $perf_data = $page->getPerfData();
             $perf_data_by_year = $page->getPerfDataByYear();
-            $label = $page->getPerfScoreLabel($perf_data);
+            $label = $page->getPerfScoreLabel($perf_data, 'Overall');
             $labels_by_year = $page->getPerfScoreLabelsByYear(
                 $perf_data_by_year
             );
