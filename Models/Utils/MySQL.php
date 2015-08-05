@@ -76,13 +76,67 @@ class MySQL {
             return $final_sql;
         }
 
-        $result = mysqli_query($mysqli_connect, $final_sql);
+        self::executeLogAndClose(
+            $mysqli_connect,
+            $final_sql,
+            __METHOD__,
+            $table,
+            $data
+        );
+    }
 
-        $error = mysqli_error($mysqli_connect);
-        self::checkMysqliError($error, __METHOD__, $final_sql);
-        mysqli_close($mysqli_connect);
+    /*
+     * Function MySQL::update()
+     *
+     * @param string $table     Name of table to update.
+     * @param array $data       Array of $key => $value's to update.
+     * @param array $where      Array of $key => $values to restrict update.
+     *
+     * @return void
+     */
+    public static function update($table, array $data, array $where) {
+        if (!$where) {
+            throw new Exception('Where Array Must Be Set For SQL Updates');
+        }
+        // Connect to mysql unless in unit test.
+        if ($table !== self::UNIT_TEST_TABLE) {
+            $mysqli_connect = self::connectToDatabase();
+            mysqli_select_db($mysqli_connect, $database);
+        }
 
-        self::logEvent(__METHOD__, $table, $data);
+        $update_list = '';
+        foreach ($data as $key => $value) {
+            $value = gettype($value) === 'string' ? "'$value'" : $value;
+            $update_list .= "$key = $value, ";
+        }
+        $update_list = rtrim($update_list, ', ');
+
+        $where_list = '';
+        foreach ($where as $key => $value) {
+            $value = gettype($value) === 'string' ? "'$value'" : $value;
+            $where_list .= "$key = $value AND ";
+        }
+        $where_list = rtrim($where_list, ' AND ');
+
+        $final_sql = sprintf(
+            'UPDATE %s SET %s WHERE %s',
+            $table,
+            $update_list,
+            $where_list
+        );
+
+        // If unit test return query. Otherwise update mysql.
+        if ($table === self::UNIT_TEST_TABLE) {
+            return $final_sql;
+        }
+
+        self::executeLogAndClose(
+            $mysqli_connect,
+            $final_sql,
+            __METHOD__,
+            $table,
+            $data
+        );
     }
 
     public static function execute($sql, $database = DATABASE) {
@@ -106,11 +160,27 @@ class MySQL {
         return $result_set;
     }
 
+    private static function executeLogAndClose(
+        $mysqli_connect,
+        $final_sql,
+        $method,
+        $table,
+        $data
+    ) {
+        mysqli_query($mysqli_connect, $final_sql);
+
+        $error = mysqli_error($mysqli_connect);
+        self::checkMysqliError($error, $method, $final_sql);
+        mysqli_close($mysqli_connect);
+
+        self::logEvent($method, $table, $data);
+    }
+
     private static function checkMysqliError($error, $method, $sql) {
        if ($error) {
             throw new Exception(sprintf(
-                '%s During %s with Query "%s"',
-                mysqli_error($mysqli_connect),
+                'Error %s During %s with Query "%s"',
+                $error,
                 $method,
                 $sql
             ));
@@ -133,7 +203,7 @@ class MySQL {
             $mysqli_connect = self::mysqliConnect();
             $attempts++;
         }
-        if ($attempts === 10) {
+        if ($attempts === 9) {
             throw new Exception(sprintf(
                 'Failed To Connect With Error %s',
                 mysqli_connect_error()
