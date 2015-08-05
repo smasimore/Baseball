@@ -177,7 +177,7 @@ class MySQL {
     }
 
     private static function checkMysqliError($error, $method, $sql) {
-       if ($error) {
+        if ($error) {
             throw new Exception(sprintf(
                 'Error %s During %s with Query "%s"',
                 $error,

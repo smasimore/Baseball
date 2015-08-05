@@ -1,6 +1,7 @@
 <?php
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
+include_once 'MySQL.php';
 include_once 'sweetfunctions.php';
 include_once __DIR__ .'/../Constants/Tables.php';
 
@@ -31,7 +32,7 @@ class ExceptionUtils {
             $e->getMessage(),
             str_replace("'", '"', $e->getTraceAsString())
         );
-        $data = exe_sql(DATABASE, $sql);
+        $data = MySQL::execute($sql);
         if (!$data) {
             send_email(
                 $e->getMessage(),
@@ -49,12 +50,7 @@ class ExceptionUtils {
                 'trace' => str_replace("'", '"', $e->getTraceAsString())
             )
         );
-        multi_insert(
-            DATABASE,
-            Tables::ERRORS,
-            $data,
-            array('ds', 'error', 'trace')
-        );
+        MySQL::insert(Tables::ERRORS, $data);
     }
 
     private static function display($e) {

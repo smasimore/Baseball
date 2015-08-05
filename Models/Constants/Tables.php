@@ -3,7 +3,7 @@
 
 include_once 'Enum.php';
 
-class Tables {
+class Tables extends Enum {
 
     const SIM_OUTPUT = 'sim_output';
     const LIVE_SCORES = 'live_scores';
@@ -14,6 +14,10 @@ class Tables {
     const HISTORICAL_ODDS = 'historical_odds';
     const LIVE_ODDS = 'live_odds';
     const ODDS = 'odds';
+
+    // Retrosheet
+    const RETROSHEET_EVENTS = 'events';
+    const RETROSHEET_BATTING = 'retrosheet_batting';
 }
 
 ?>

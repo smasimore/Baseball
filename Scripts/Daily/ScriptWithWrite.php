@@ -52,6 +52,14 @@ abstract class ScriptWithWrite {
         return null;
     }
 
+    public function getStartDate() {
+        return $this->startDate;
+    }
+
+    public function getEndDate() {
+        return $this->endDate;
+    }
+
     public function setStartDate($ds) {
         $this->startDate = $ds;
     }

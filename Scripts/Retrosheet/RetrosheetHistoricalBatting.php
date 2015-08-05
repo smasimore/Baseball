@@ -9,16 +9,30 @@ class RetrosheetHistoricalBatting extends ScriptWithWrite {
 
     use TScriptWithInsert;
 
-    private $ds;
     private $data;
 
     public function gen($ds) {
-        $this->data = $this->genBattingStatsFromRetrosheet($ds);
-
-        // For the purpose of this script we'll use the day after the games
-        // occured as the insert date.
-        // $this->ds = DateTimeUtils::addDay($ds);
-        // Will use later.
+        // Reset $this->data each new season. Start/end dates should correspond
+        // with seasons. Check to make sure this is not improperly used.
+        $start_season = DateTimeUtils::getSeasonFromDate(
+            $this->getStartDate()
+        );
+        $end_season = DateTimeUtils::getSeasonFromDate(
+            $this->getEndDate()
+        );
+        if ($start_season !== $end_season) {
+            throw new Exception(
+                'Start Date And End Date Should Correspond With ' .
+                'season start/end. Make sure you are using this script ' .
+                'correctly'
+            );
+        }
+        if ($ds === $this->getStartDate()) {
+            $this->data = null;
+        }
+        $daily_stats = $this->genBattingStatsFromRetrosheet($ds);
+        $this->addDailyStatsToSeasonBatting($daily_stats);
+        $this->prepareInsertData($ds);
     }
 
     protected function getWriteData() {
@@ -26,10 +40,69 @@ class RetrosheetHistoricalBatting extends ScriptWithWrite {
     }
 
     protected function getWriteTable() {
-        return 'test';
+        return Tables::RETROSHEET_BATTING;
     }
 
-    // Function to initially scrape daily data from Retrosheet:events.
+    private function prepareInsertData($ds) {
+        // Set LDOS flag if the data represents the last day of season.
+        $is_ldos = $ds === $this->getEndDate();
+
+        // To mirror live scraping, use the day after the games occured
+        // as the insert date.
+        $insert_ds = DateTimeUtils::addDay($ds);
+
+        foreach ($this->data as $key => $player) {
+            $this->data[$key]['ds'] = $insert_ds;
+            $this->data[$key]['is_ldos'] = $is_ldos;
+        }
+    }
+
+    private function addDailyStatsToSeasonBatting($daily_stats) {
+        foreach ($daily_stats as $stats) {
+            $player_key = $this->createPlayerArrayKey($stats);
+            $num_events = $stats['num_events'];
+            $event_name = $stats['event_name'];
+            if (idx($this->data, $player_key) === null) {
+                $this->data[$player_key] = array_merge(
+                    $stats,
+                    array(
+                        Batting::SINGLES => 0,
+                        Batting::DOUBLES => 0,
+                        Batting::TRIPLES => 0,
+                        Batting::HOME_RUNS => 0,
+                        Batting::WALKS => 0,
+                        Batting::STRIKEOUTS => 0,
+                        Batting::FLY_OUTS => 0,
+                        Batting::GROUND_OUTS => 0,
+                        Batting::PLATE_APPEARANCES => 0
+                    )
+                );
+                // Since we array_merge with raw data remove columns we don't
+                // need in final output.
+                unset(
+                    $this->data[$player_key]['num_events'],
+                    $this->data[$player_key]['event_name']
+                );
+            }
+
+            $this->data[$player_key][sprintf('%ss', $event_name)]
+                += $num_events;
+            $this->data[$player_key]['plate_appearances'] += $num_events;
+        }
+    }
+
+    private function createPlayerArrayKey($stats) {
+        return idx($stats, 'player_id', '_') .
+            idx($stats, 'bat_hand_cd', '_') .
+            idx($stats, 'home_away', '_') .
+            idx($stats, 'outs', '_') .
+            idx($stats, 'situation', '_') .
+            idx($stats, 'winning', '_') .
+            idx($stats, 'pit_id', '_') .
+            idx($stats, 'vs_hand', '_');
+    }
+
+    // Function to process daily data from Retrosheet:events.
     private function genBattingStatsFromRetrosheet($ds) {
         $season = DateTimeUtils::getSeasonFromDate($ds);
         $retro_ds = RetrosheetParseUtils::convertDsToRetroDate($ds);
@@ -93,7 +166,7 @@ class RetrosheetHistoricalBatting extends ScriptWithWrite {
                         WHEN (start_bases_cd > 1 AND outs_ct = 2) THEN 'ScoringPos2Out'
                         ELSE 'ScoringPos'
                         END AS situation
-                FROM events
+                FROM %s
                 WHERE season = %d and substr(game_id,8,4) = '%s') a
             GROUP BY
                a.event_name,
@@ -107,6 +180,7 @@ class RetrosheetHistoricalBatting extends ScriptWithWrite {
                a.winning,
                a.pit_id,
                a.pit_hand_cd",
+            Tables::RETROSHEET_EVENTS,
             $season,
             $retro_ds
         );

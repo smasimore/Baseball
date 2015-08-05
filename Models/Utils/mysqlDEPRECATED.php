@@ -459,7 +459,7 @@ function multi_insert($database, $table, $data_array, $colheads = null) {
 
     # Create and execute SQL command
     $final_sql = 
-		"INSERT INTO $table ($colheads_insert) VALUES ".implode(',', $sql);
+	"INSERT INTO $table ($colheads_insert) VALUES ".implode(',', $sql);
     $result = mysqli_query($mysql_connect, $final_sql);
 
     # Report SQL error, if one occured, otherwise return result

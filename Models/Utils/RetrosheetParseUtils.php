@@ -2,6 +2,7 @@
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
 include_once __DIR__ .'/../Constants/Teams.php';
+include_once 'MySQL.php';
 
 class RetrosheetParseUtils {
 
@@ -391,7 +392,8 @@ class RetrosheetParseUtils {
             GROUP BY season",
             $season
         );
-        $season_dates = reset(exe_sql(DATABASE, $season_sql));
+        $season_dates = MySQL::execute($season_sql);
+        $season_dates = reset($season_dates);
         $season_start = self::convertRetroDateToDs(
             $season,
             $season_dates['start']
