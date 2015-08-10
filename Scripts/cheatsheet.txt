@@ -37,7 +37,7 @@ sudo vim /etc/my.cnf
 
 # Unclog Phabricator Queue
 # Can see backlog in http://phabricator.sabertoothventures.com/daemon/
-~/Phabricator/phabricator/bin/phd restart
+~/Baseball/Phabricator/phabricator/bin/phd restart
 
 # Install PCNTL
 # 1) Install autoconf
