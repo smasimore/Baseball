@@ -43,6 +43,14 @@
     width: 100%;
 }
 
+.noborder {
+    border: 0;
+}
+
+.nopadding {
+    padding: 0;
+}
+
 /* LIST */
 ul {
   list-style: none;
@@ -81,26 +89,19 @@ input:-webkit-autofill {
     font-size:10pt;
 }
 
-/* SELECTOR */
-.selector {
+/* LABEL */
+.label {
     width: auto;
     margin: auto;
 }
 
-.selector .table {
+.label .table {
     table-layout:auto;
     margin: 0;
 }
 
-.selector .table .leftcell {
-    text-align: left;
-}
-
-.selector .table .rightcell {
-    text-align: right;
-}
-
-.selector .selector_input {
+/* SELECTOR */
+.selector_input {
     height: auto;
 }
 

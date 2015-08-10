@@ -2,17 +2,16 @@
 
 include_once 'UIElement.php';
 
-// TODO(smas): Update Slider and Selector elements callsites to use this.
-class ParamInput extends UIElement {
+class Label extends UIElement {
 
-    private $title;
+    private $label;
 
     protected function setHTML() {
         $this->html =
-            "<div class=$this->class>
-                <table><tr><td class='leftcell'>
+            "<div class='$this->class label'>
+                <table class='table'><tr><td class='leftcell'>
                     <font class='input_title' color='#2B96E8'>
-                        $this->title
+                        $this->label
                     </font>
                 </td><td class='rightcell'>
                     $this->innerHTML
@@ -20,8 +19,8 @@ class ParamInput extends UIElement {
             </div>";
     }
 
-    public function setTitle($title) {
-        $this->title = $title;
+    public function setLabel($label) {
+        $this->label = $label;
         return $this;
     }
 }

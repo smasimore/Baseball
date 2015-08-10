@@ -2,7 +2,7 @@
 include_once 'Page.php';
 include_once __DIR__ . '/../ui/UOList.php';
 include_once __DIR__ . '/../ui/Input.php';
-include_once __DIR__ . '/../ui/ParamInput.php';
+include_once __DIR__ . '/../ui/Label.php';
 include_once __DIR__ . '/../../Models/DataTypes/SimOutputDataType.php';
 include_once __DIR__ . '/../../Models/DataTypes/HistoricalOddsDataType.php';
 include_once __DIR__ . '/../../Models/Utils/SimPerformanceUtils.php';
@@ -135,14 +135,12 @@ class SimPerformancePage extends Page {
         foreach (array_keys($this->perfDataByYear) as $year) {
             $charts[] = $this->getChart($year);
         }
-        $chart_list = new UOList(
-            $charts,
-            null,
-            'chart_list_item bottom_border'
-        );
+        $chart_list = (new UOList())
+            ->setItems($charts)
+            ->setItemClass('chart_list_item bottom_border');
         
         echo $form;
-        $chart_list->display();
+        $chart_list->render();
     }
 
     private function genPossibleParams() {
@@ -223,88 +221,89 @@ class SimPerformancePage extends Page {
     }
 
     private function getSimParamList() {
-        $group_switch_slider = new Slider(
-            'Group Switch Perc',
-            self::P_GROUP_SWITCH_PERC,
-            $this->groupSwitchPerc,
-            0, 100, 25
-        );
+        $group_switch_slider = (new Slider())
+            ->setName(self::P_GROUP_SWITCH_PERC)
+            ->setValue($this->groupSwitchPerc)
+            ->setMinAndMax(0, 100)
+            ->setTickIncrement(25)
+            ->getHTML();
 
-        $first_season = new Selector(
-            'First Season',
-            self::P_FIRST_SEASON,
-            $this->firstSeason,
-            $this->possibleParams['season']
-        );
-        $last_season = new Selector(
-            'Last Season',
-            self::P_LAST_SEASON,
-            $this->lastSeason,
-            $this->possibleParams['season']
-        );
+        $first_season = (new Selector())
+            ->setName(self::P_FIRST_SEASON)
+            ->setValue($this->firstSeason)
+            ->setOptions($this->possibleParams['season'])
+            ->getHTML();
+        $last_season = (new Selector())
+            ->setName(self::P_LAST_SEASON)
+            ->setValue($this->lastSeason)
+            ->setOptions($this->possibleParams['season'])
+            ->getHTML();
 
         $possible_buckets = $this->possibleParams['rand_bucket'];
         asort($possible_buckets);
-        $first_bucket = new Selector(
-            'First Bucket',
-            self::P_FIRST_BUCKET,
-            $this->firstBucket,
-            $possible_buckets
-        );
-        $last_bucket = new Selector(
-            'Last Bucket',
-            self::P_LAST_BUCKET,
-            $this->lastBucket,
-            $possible_buckets
-        );
+        $first_bucket = (new Selector())
+            ->setName(self::P_FIRST_BUCKET)
+            ->setValue($this->firstBucket)
+            ->setOptions($possible_buckets)
+            ->getHTML();
+        $last_bucket = (new Selector())
+            ->setName(self::P_LAST_BUCKET)
+            ->setValue($this->lastBucket)
+            ->setOptions($possible_buckets)
+            ->getHTML();
 
-        $list = new UOList(
-            array(
+        return (new UOList())
+            ->setItems(array(
                 "<font class='list_title'>
                     Overall Params
                 </font>",
-                $group_switch_slider->getHTML(),
-                $first_season->getHTML(),
-                $last_season->getHTML(),
-                $first_bucket->getHTML(),
-                $last_bucket->getHTML()
-            ),
-            null,
-            'list_item'
-        );
-
-        return $list->getHTML();
-
+                (new Label($group_switch_slider))
+                    ->setLabel('Group Switch Perc')
+                    ->getHTML(),
+                (new Label($first_season))
+                    ->setLabel('First Season')
+                    ->getHTML(),
+                (new Label($last_season))
+                    ->setLabel('Last Season')
+                    ->getHTML(),
+                (new Label($first_bucket))
+                    ->setLabel('First Bucket')
+                    ->getHTML(),
+                (new Label($last_bucket))
+                    ->setLabel('Last Bucket')
+                    ->getHTML(),
+            ))
+            ->setItemClass('list_item')
+            ->getHTML();
     }
 
     private function getGroupParamList($group) {
-        $weights_selector = new Selector(
-            'Weights',
-            'weights_' . $group,
-            $this->weights[$group],
-            $this->possibleParams['weights']
-        );
+        $weights_selector = (new Selector())
+            ->setName(sprintf('weights_%s', $group))
+            ->setValue($this->weights[$group])
+            ->setOptions($this->possibleParams['weights'])
+            ->getHTML();
 
-        $stats_year_selector = new Selector(
-            'Stats Year',
-            'stats_year_' . $group,
-            $this->statsYear[$group],
-            $this->possibleParams['stats_year']
-        );
+        $stats_year_selector = (new Selector())
+            ->setName(sprintf('stats_year_%s', $group))
+            ->setValue($this->statsYear[$group])
+            ->setOptions($this->possibleParams['stats_year'])
+            ->getHTML();
 
-        $param_list = new UOList(
-            array(
+        return (new UOList())
+            ->setItems(array(
                 "<font class='list_title'>
                     Group $group
                 </font>",
-                $weights_selector->getHTML(),
-                $stats_year_selector->getHTML(),
-            ),
-            null,
-            'list_item'
-        );
-
-        return $param_list->getHTML();
+                (new Label($weights_selector))
+                    ->setLabel('Weights')
+                    ->getHTML(),
+                (new Label($stats_year_selector))
+                    ->setLabel('Stats Year')
+                    ->getHTML(),
+            ))
+            ->setItemClass('list_item')
+            ->getHTML();
     }
 
     private function getBetParamList() {
@@ -314,20 +313,17 @@ class SimPerformancePage extends Page {
             ->setValue($this->betAmount)
             ->getHTML();
 
-        $param_list = new UOList(
-            array(
+        return (new UOList())
+            ->setItems(array(
                 "<font class='list_title'>
                     Bet Params
                 </font>",
-                (new ParamInput($bet_amount))
-                    ->setTitle('Bet Amount')
+                (new Label($bet_amount))
+                    ->setLabel('Bet Amount')
                     ->getHTML()
-            ),
-            null,
-            'list_item'
-        );
-
-        return $param_list->getHTML();
+            ))
+            ->setItemClass('list_item')
+            ->getHTML();
     }
 
     private function getChart($type) {
@@ -339,19 +335,38 @@ class SimPerformancePage extends Page {
     }
 
     public function setParams($params) {
-        $this->groupSwitchPerc = idx($params, self::P_GROUP_SWITCH_PERC, 100);
-        $this->firstSeason = idx($params, self::P_FIRST_SEASON, 2013);
-        $this->lastSeason = idx($params, self::P_LAST_SEASON, 2013);
-        $this->firstBucket = idx($params, self::P_FIRST_BUCKET, 0);
-        $this->lastBucket = idx($params, self::P_LAST_BUCKET, 9);
+        // Set default params.
+        if (!$params) {
+            $params = array(
+                self::P_GROUP_SWITCH_PERC => 100,
+                self::P_FIRST_SEASON => 2013,
+                self::P_LAST_SEASON => 2013,
+                self::P_FIRST_BUCKET => 0,
+                self::P_LAST_BUCKET => 9,
+                'weights_0' => 'b_total_100',
+                'weights_1' => 'b_total_100',
+                'stats_year_0' => 'career',
+                'stats_year_1' => 'career'
+            );
+        }
+
+        $this->groupSwitchPerc = (int)$params[self::P_GROUP_SWITCH_PERC];
+        $this->firstSeason = (int)$params[self::P_FIRST_SEASON];
+        $this->lastSeason = (int)$params[self::P_LAST_SEASON];
+        $this->firstBucket = (int)$params[self::P_FIRST_BUCKET];
+        $this->lastBucket = (int)$params[self::P_LAST_BUCKET];
+
+        if ($this->firstSeason > $this->lastSeason) {
+            $this->errors[] = 'First Season should be before Last Season.';
+        }
 
         $this->weights = array(
-            0 => idx($params, 'weights_0', 'b_total_100'),
-            1 => idx($params, 'weights_1', 'b_total_100')
+            0 => $params['weights_0'],
+            1 => $params['weights_1']
         );
         $this->statsYear = array(
-            0 => idx($params, 'stats_year_0', 'career'),
-            1 => idx($params, 'stats_year_1', 'career')
+            0 => $params['stats_year_0'],
+            1 => $params['stats_year_1']
         );
 
         return $this;

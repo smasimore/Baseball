@@ -76,7 +76,9 @@ class SimDebugPage extends Page {
     }
 
     final protected function renderPage() {
-        $list = new UOList($this->eventsHTML, null, 'bottom_border');
+        $list = (new UOList())
+            ->setItems($this->eventsHTML)
+            ->setItemClass('bottom_border');
         $list_html = $list->getHTML();
 
         echo
@@ -106,7 +108,8 @@ class SimDebugPage extends Page {
             $stats_html[] = "<div>$impact_type_formatted: $stat</div>";
         }
 
-        $list = new UOList($stats_html);
+        $list = (new UOList())
+            ->setItems($stats_html);
 
         return $list->getHTML();
     }

@@ -20,7 +20,7 @@ abstract class UIElement {
         return $this->html;
     }
 
-    public function display() {
+    public function render() {
         $this->setHTML();
         echo $this->html;
     }

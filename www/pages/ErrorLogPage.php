@@ -26,7 +26,10 @@ class ErrorLogPage extends Page {
 
     final protected function renderPage() {
         $errors = $this->getAggregateErrors();
-        (new Table($errors, 'aggregate_errors'))->display();
+        (new Table())
+            ->setData($errors)
+            ->setID('aggregate_errors')
+            ->render();
     }
 
     private function getAggregateErrors() {

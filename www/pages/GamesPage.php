@@ -64,10 +64,13 @@ class GamesPage extends Page {
 
     final protected function renderPage() {
         $summary_data = $this->getSummaryTableData();
-        (new Table($summary_data, 'summary_table'))->display();
+        (new Table())
+            ->setData($summary_data)
+            ->setID('summary_table')
+            ->render();
 
         // Games section.
-        $this->getGamesSection()->display();
+        $this->getGamesSection()->render();
     }
 
     private function setupGameData() {
@@ -222,14 +225,17 @@ class GamesPage extends Page {
                 ->getHTML();
         }
 
-        return new UOList($games);
+        return (new UOList())
+            ->setItems($games);
     }
 
     private function getGameSection($gameid, $data) {
-        return (new UOList(array(
-            $this->getGameHeader($gameid),
-            $this->getTeamSection($gameid, $data)
-        )))->getHTML();
+        return (new UOList())
+            ->setItems(array(
+                $this->getGameHeader($gameid),
+                $this->getTeamSection($gameid, $data)
+            ))
+            ->getHTML();
     }
 
     private function getGameHeader($gameid) {
@@ -258,8 +264,10 @@ class GamesPage extends Page {
     }
 
     private function getTeamSection($gameid, $data) {
-        return (new Table($data['team_stats'], "team_data_$gameid"))
-            ->setCustomHeader(array('', 'Home', 'Away'))
+        return (new Table())
+            ->setData($data['team_stats'])
+            ->setID(sprintf('team_data_%s', $gameid))
+            ->setHeader(array('', 'Home', 'Away'))
             ->getHTML();
     }
 

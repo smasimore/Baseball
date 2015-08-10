@@ -14,9 +14,9 @@ include_once __DIR__ .'/../ui/Table.php';
 include_once __DIR__ .'/../ui/Slider.php';
 include_once __DIR__ .'/../ui/UOList.php';
 include_once __DIR__ .'/../ui/Selector.php';
-include_once __DIR__ .'/../ui/Colors.php';
 include_once __DIR__ .'/../ui/Div.php';
 include_once __DIR__ .'/../ui/Font.php';
+include_once __DIR__ .'/../../Models/Constants/Colors.php';
 include_once __DIR__ .'/../../Models/Utils/StringUtils.php';
 include_once __DIR__ .'/../../Models/Utils/GlobalUtils.php';
 include_once __DIR__ .'/../../Models/Utils/ArrayUtils.php';
@@ -98,7 +98,7 @@ abstract class Page {
         if (!$this->header) {
             $this->header = (new PageHeader())->setLoggedIn($this->loggedIn);
         }
-        $this->header->display();
+        $this->header->render();
 
         // Needed to prevent overlap of elements below header.
         echo "<div style='clear:both;'></div>";
@@ -109,8 +109,10 @@ abstract class Page {
             return;
         }
 
-        $errors_list = new UOList($this->errors, null, 'error_box medium_w');
-        $errors_list->display();
+        $errors_list = (new UOList())
+            ->setItems($this->errors)
+            ->setItemClass('error_box medium_w');
+        $errors_list->render();
     }
 }
 

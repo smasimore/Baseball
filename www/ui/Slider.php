@@ -1,71 +1,47 @@
 <?php
+// Copyright 2013-Present, Saber Tooth Ventures, LLC
 
 include_once 'UIElement.php';
+include_once __DIR__ . '/../../Models/Traits/ui/TUIElementWithInput.php';
 
 class Slider extends UIElement {
 
-    private $name;
-    private $value;
+    use TUIElementWithInput;
+
     private $min;
     private $max;
     private $increment;
     private $title;
 
-    public function __construct(
-        $title,
-        $name,
-        $value,
-        $min,
-        $max,
-        $tick_increment,
-        $class = null
-    ) {
-        $this->title = $title;
-        $this->name = $name;
-        $this->value = $value;
-        $this->min = $min;
-        $this->max = $max;
-        $this->increment = $tick_increment;
-        $this->class = $class;
-        $this->setHTML();
-        return $this;
-    }
-
     protected function setHTML() {
         $html =
-            "<div>
-                <table class='slider_table'><tr><td class='slider_title_cell'>
-                    <font class='input_title' color='#2B96E8'>
-                        $this->title
-                    </font>
-                </td><td>
-                    <input
-                        class='slider'
-                        type='range'
-                        name=$this->name
-                        id=$this->name
-                        min=$this->min
-                        max=$this->max
-                        list=".$this->name."_ticks
-                        value=$this->value
-                        onchange='updateInput(".$this->name."_display, this.value);'
-                    />
-                </td><td>
-                    <input
-                        type='text'
-                        id=$this->name"."_display
-                        value=$this->value
-                        class='slider_box'
-                        onchange='
-                            if (this.value < $this->min) {
-                                this.value = $this->min;
-                            }
-                            if (this.value > $this->max) {
-                                this.value = $this->max;
-                            } 
-                            updateInput($this->name, this.value)';'
-                    />
-                </td></tr></table>";
+            "<div><table class='slider_table noborder'><tr>
+                <td class='noborder nopadding'><input
+                    class='slider $this->class'
+                    type='range'
+                    name=$this->name
+                    id=$this->name
+                    min=$this->min
+                    max=$this->max
+                    list=".$this->name."_ticks
+                    value=$this->value
+                    onchange='updateInput(".$this->name."_display, this.value);'
+                /></td>
+                <td class='noborder nopadding'><input
+                    type='text'
+                    id=$this->name"."_display
+                    value=$this->value
+                    class='slider_box'
+                    onchange='
+                        if (this.value < $this->min) {
+                            this.value = $this->min;
+                        }
+                        if (this.value > $this->max) {
+                            this.value = $this->max;
+                        }
+                        updateInput($this->name, this.value)';'
+                /></td>
+            </tr></table>";
 
         if ($this->increment) {
             $html .= "<datalist id=".$this->name."_ticks>";
@@ -80,6 +56,17 @@ class Slider extends UIElement {
         $html .= "</div>";
 
         $this->html = $html;
+    }
+
+    public function setMinAndMax($min, $max) {
+        $this->min = $min;
+        $this->max = $max;
+        return $this;
+    }
+
+    public function setTickIncrement($increment) {
+        $this->increment = $increment;
+        return $this;
     }
 }
 

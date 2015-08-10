@@ -1,4 +1,5 @@
 <?php
+// Copyright 2013-Present, Saber Tooth Ventures, LLC
 
 include_once 'UIElement.php';
 
@@ -6,22 +7,26 @@ class Table extends UIElement {
 
     private $data;
     private $id;
-    private $title;
     private $expanded = true;
     private $header = null;
 
-    public function __construct(
-        $data,
-        $id = 'table',
-        $title = ''
-    ) {
-        $this->data = $data;
-        $this->id = $id;
-        $this->title = $title;
-    }
-
     public function setExpanded($expanded) {
         $this->expanded = $expanded;
+        return $this;
+    }
+
+    public function setData(array $data) {
+        $this->data = $data;
+        return $this;
+    }
+
+    public function setID($id) {
+        $this->id = $id;
+        return $this;
+    }
+
+    public function setHeader(array $header) {
+        $this->header = $header;
         return $this;
     }
 
@@ -33,12 +38,8 @@ class Table extends UIElement {
         }
 
         $header = $this->header ?: array_keys(reset($this->data));
-        $html = 
-            "<div align='center'>
-                <b>$this->title</b>
-            </div>";
-            
-        $html .= "<table id=$this->id>";
+
+        $html = "<table id=$this->id>";
 
         // header
         $html .= "<tr id='header' onclick='expand($this->id);'>";
@@ -67,18 +68,6 @@ class Table extends UIElement {
         }
         $html .= '</table>';
         $this->html = $html;
-    }
-
-    public function setCustomHeader($header) {
-        if (!is_array($header)) {
-            throw new Exception(
-                'Must pass in an array to Table->setCustomHeader()'
-            );
-        }
-
-        $this->header = $header;
-
-        return $this;
     }
 }
 

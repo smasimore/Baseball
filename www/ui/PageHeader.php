@@ -29,10 +29,9 @@ class PageHeader extends UIElement {
             ? "<p class='title'> $this->title </p>"
             : "<p class='hidden'> Hidden Title </p>";
         $html_subtitle = $this->getSubtitleHTMLArr();
-        $header_text = new UOList(
-            array_merge(array($html_title), $html_subtitle),
-            'alignleft'
-        );
+        $header_text = (new UOList())
+            ->setItems(array_merge(array($html_title), $html_subtitle))
+            ->setClass('alignleft');
         $header_text = $header_text->getHTML();
 
         $logout = $this->loggedIn ?
@@ -73,15 +72,16 @@ class PageHeader extends UIElement {
             return null;
         }
 
-        $nav = new UOList(
-            array(
+        $nav = (new UOList())
+            ->setItems(array(
                 "<a class='nav_item' href='games.php'>Games</a>",
-                "<a class='nav_item' href='sim_perf.php'>Sim Perf</a>",
+                "<a class='nav_item' href='sim_perf.php'>Sim Performance</a>",
                 "<a class='nav_item' href='sim_debug.php'>Sim Debug</a>",
+                "<a class='nav_item' href='errors.php'>Errors</a>",
                 "<a class='nav_item' href='log.php'>Log</a>"
-            ),
-            'nav_list'
-        );
+            ))
+            ->setClass('nav_list');
+
         return $nav->getHTML();
     }
 }
