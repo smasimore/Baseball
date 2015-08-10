@@ -1,5 +1,6 @@
 <?php
 include_once 'pages/LoginPage.php';
+include_once 'pages/GamesPage.php';
 
 sec_session_start();
 ?>
@@ -15,9 +16,15 @@ sec_session_start();
     </head>
     <body class="page">
         <?php
-            (new LoginPage(login_check($mysqli)))
-                ->setLoginError(isset($_GET['error']))
-                ->render();
+            $logged_in = login_check($mysqli);
+            if (!$logged_in) {
+                (new LoginPage($logged_in))
+                    ->setLoginError(isset($_GET['error']))
+                    ->render();
+            } else {
+                header('Location: /games.php', true);
+                die();
+            }
         ?> 
     </body>
 </html>
