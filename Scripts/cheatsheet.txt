@@ -11,6 +11,9 @@ sudo /Library/StartupItems/MySQLCOM/MySQLCOM restart
 # ADD MYSQL TABLE
 mysql -u root -p baseball < create_table.sql
 
+# ADD INDEX TO MYSQL TABLE (faster querying on non-partitions)
+CREATE INDEX event_idx ON events (event_id)
+
 # COPY FILE FROM OFF DEVSERVER
 scp testimport2.csv baseball@24.5.82.91:~/Desktop/Baseball
 
