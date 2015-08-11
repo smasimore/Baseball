@@ -7,12 +7,12 @@ $startSeason = 1950;
 $endSeason = 2014;
 
 for ($season = $startSeason; $season < $endSeason; $season++) {
+    echo "STARTING SEASON $season \n";
     list($season_start, $season_end) =
         RetrosheetParseUtils::getSeasonStartEnd($season);
     $script = new RetrosheetHistoricalBatting();
     $script->setStartDate($season_start);
     $script->setEndDate($season_end);
-    $script->setTest();
     $script->run();
 }
 

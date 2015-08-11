@@ -53,7 +53,7 @@ class RetrosheetHistoricalBatting extends ScriptWithWrite {
 
         foreach ($this->data as $key => $player) {
             $this->data[$key]['ds'] = $insert_ds;
-            $this->data[$key]['is_ldos'] = $is_ldos;
+            $this->data[$key]['is_ldos'] = (int)$is_ldos;
         }
     }
 
@@ -62,6 +62,9 @@ class RetrosheetHistoricalBatting extends ScriptWithWrite {
             $player_key = $this->createPlayerArrayKey($stats);
             $num_events = $stats['num_events'];
             $event_name = $stats['event_name'];
+            if ($event_name === 'other') {
+                continue;
+            }
             if (idx($this->data, $player_key) === null) {
                 $this->data[$player_key] = array_merge(
                     $stats,
