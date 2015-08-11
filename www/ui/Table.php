@@ -7,13 +7,9 @@ class Table extends UIElement {
 
     private $data;
     private $id;
-    private $expanded = true;
-    private $header = null;
-
-    public function setExpanded($expanded) {
-        $this->expanded = $expanded;
-        return $this;
-    }
+    private $columns;
+    private $rowClass = 'table_tr';
+    private $cellClass = 'table_td';
 
     public function setData(array $data) {
         $this->data = $data;
@@ -25,48 +21,41 @@ class Table extends UIElement {
         return $this;
     }
 
-    public function setHeader(array $header) {
-        $this->header = $header;
+    public function setColumns($cols) {
+        $this->columns = $cols;
         return $this;
     }
 
-    // To add a color to a row, set a key '_color' for each row and put 
-    // color (e.g. Colors::RED_FADED).
+    public function setRowClass($class) {
+        $this->rowClass = $class;
+        return $this;
+    }
+
+    public function setCellClass($class) {
+        $this->cellClass = $class;
+        return $this;
+    }
+
     protected function setHTML() {
         if (!$this->data) {
             return;
         }
 
-        $header = $this->header ?: array_keys(reset($this->data));
+        $table_class = $this->class ?: 'table';
 
-        $html = "<table id=$this->id>";
-
-        // header
-        $html .= "<tr id='header' onclick='expand($this->id);'>";
-        foreach ($header as $label) {
-            $formatted_label = format_render($label);
-            $html .= "<th>$formatted_label</th>";
-        }
-        $html .= '</tr>';
-
-        $display = ($this->expanded == false) ? "none" : null;
-        foreach ($this->data as $row) {
-            $color = isset($row['_color']) ? $row['_color'] : '';
-            unset($row['_color']);
-            $html .= "<tr style='display:$display;'>";
-            foreach ($row as $cell) {
-                // Format cell if number of array
-                if (is_numeric($cell)) {
-                    $cell = round($cell, 3);
-                }
-                if (is_array($cell)) {
-                    $cell = json_encode($cell);
-                }
-                $html .= "<td style='background:$color;'>$cell</td>";
+        $cell_counter = 0;
+        $html = "<table class='$table_class'><tr class='$this->rowClass'>";
+        foreach ($this->data as $cell) {
+            // Create a new row. Don't do this the first time.
+            if ($cell_counter !== 0 && $cell_counter % $this->columns === 0) {
+                $html .= "</tr><tr>";
             }
-            $html .= '</tr>';
+
+            $html .= "<td class='$this->cellClass'>$cell</td>";
+            $cell_counter++;
         }
-        $html .= '</table>';
+        $html .= '</tr></table>';
+
         $this->html = $html;
     }
 }

@@ -1,8 +1,9 @@
 <?php
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
-include_once 'UIElement.php';
+include_once __DIR__ . '/UIElement.php';
 include_once __DIR__ . '/../../Models/Traits/ui/TUIElementWithInput.php';
+include_once __DIR__ . '/Table.php';
 
 class Slider extends UIElement {
 
@@ -11,12 +12,11 @@ class Slider extends UIElement {
     private $min;
     private $max;
     private $increment;
-    private $title;
 
     protected function setHTML() {
-        $html =
-            "<div><table class='slider_table noborder'><tr>
-                <td class='noborder nopadding'><input
+        $table = (new Table())
+            ->setData(array(
+                "<input
                     class='slider $this->class'
                     type='range'
                     name=$this->name
@@ -26,8 +26,8 @@ class Slider extends UIElement {
                     list=".$this->name."_ticks
                     value=$this->value
                     onchange='updateInput(".$this->name."_display, this.value);'
-                /></td>
-                <td class='noborder nopadding'><input
+                />",
+                "<input
                     type='text'
                     id=$this->name"."_display
                     value=$this->value
@@ -40,8 +40,15 @@ class Slider extends UIElement {
                             this.value = $this->max;
                         }
                         updateInput($this->name, this.value)';'
-                /></td>
-            </tr></table>";
+                />"
+            ))
+            ->setColumns(2)
+            ->setClass('slider_table')
+            ->setRowClass('noborder nopadding')
+            ->setCellClass('noborder nopadding')
+            ->getHTML();
+
+        $html = "<div>$table";
 
         if ($this->increment) {
             $html .= "<datalist id=".$this->name."_ticks>";

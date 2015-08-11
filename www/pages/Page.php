@@ -10,7 +10,7 @@ include_once __DIR__ . '/../includes/db_connect.php';
 include_once __DIR__ . '/../includes/functions.php';
 include_once __DIR__ . '/../includes/ui_elements.php';
 include_once __DIR__ .'/../ui/PageHeader.php';
-include_once __DIR__ .'/../ui/Table.php';
+include_once __DIR__ .'/../ui/DataTable.php';
 include_once __DIR__ .'/../ui/Slider.php';
 include_once __DIR__ .'/../ui/UOList.php';
 include_once __DIR__ .'/../ui/Selector.php';

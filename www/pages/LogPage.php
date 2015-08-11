@@ -9,10 +9,10 @@ class LogPage extends Page {
     final protected function renderPage() {
         if (!$this->name) {
             $logs = (new UOList())
-                ->setItems(array(
-                    "<a href='log.php?name=sarah'>Sarah's Log</a>",
-                    "<a href='log.php?name=dan'>Dan's Log</a>"
-                ));
+            ->setItems(array(
+                "<a href='log.php?name=sarah'>Sarah's Log</a>",
+                "<a href='log.php?name=dan'>Dan's Log</a>"
+            ));
             echo $logs->getHTML();
             return;
         }

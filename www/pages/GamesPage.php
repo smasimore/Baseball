@@ -64,7 +64,7 @@ class GamesPage extends Page {
 
     final protected function renderPage() {
         $summary_data = $this->getSummaryTableData();
-        (new Table())
+        (new DataTable())
             ->setData($summary_data)
             ->setID('summary_table')
             ->render();
@@ -264,7 +264,7 @@ class GamesPage extends Page {
     }
 
     private function getTeamSection($gameid, $data) {
-        return (new Table())
+        return (new DataTable())
             ->setData($data['team_stats'])
             ->setID(sprintf('team_data_%s', $gameid))
             ->setHeader(array('', 'Home', 'Away'))

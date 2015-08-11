@@ -130,7 +130,6 @@ class SimPerformancePage extends Page {
                 </div>
             </form>";
 
-
         $charts[] = $this->getChart('overall');
         foreach (array_keys($this->perfDataByYear) as $year) {
             $charts[] = $this->getChart($year);
