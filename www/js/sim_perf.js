@@ -16,12 +16,12 @@ function drawChart(id, label, data) {
         );
         vegas_values.push({
             type: 'Vegas',
-            y: _roundToHundredth(data[bin]['vegas_win_pct']),
+            y: _roundToHundredth(data[bin]['vegas_home_pct']),
             samples: data[bin]['num_games']}
         );
         sim_values.push({
             type: 'Sim',
-            y: _roundToHundredth(data[bin]['sim_win_pct']),
+            y: _roundToHundredth(data[bin]['sim_home_pct']),
             samples: data[bin]['num_games']}
         );
     }

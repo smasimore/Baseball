@@ -8,8 +8,8 @@ class SimPerformanceUtilsTest extends PHPUnit_Framework_TestCase {
     private $emptyBin = array(
         SimPerformanceUtils::NUM_GAMES => 0,
         SimPerformanceUtils::ACTUAL_PCT => null,
-        SimPerformanceUtils::VEGAS_PCT => null,
-        SimPerformanceUtils::SIM_PCT => null
+        SimPerfKeys::VEGAS_HOME_PCT => null,
+        SimPerfKeys::SIM_HOME_PCT => null
     );
 
     /**
@@ -67,25 +67,27 @@ class SimPerformanceUtilsTest extends PHPUnit_Framework_TestCase {
         return array(
             array(
                 array(
-                    array(
-                        SimPerformanceUtils::VEGAS_PCT => 2.5,
-                        SimPerformanceUtils::SIM_PCT => 5,
-                        SimPerformanceUtils::TEAM_WINNER => 0
-                    ),
-                    array(
-                        SimPerformanceUtils::VEGAS_PCT => 2.5,
-                        SimPerformanceUtils::SIM_PCT => 10,
-                        SimPerformanceUtils::TEAM_WINNER => 1
-                    ),
-                    array(
-                        SimPerformanceUtils::VEGAS_PCT => 52,
-                        SimPerformanceUtils::SIM_PCT => 50,
-                        SimPerformanceUtils::TEAM_WINNER => 0
-                    ),
-                    array(
-                        SimPerformanceUtils::VEGAS_PCT => 53,
-                        SimPerformanceUtils::SIM_PCT => 60,
-                        SimPerformanceUtils::TEAM_WINNER => 0
+                    '2000-06-01' => array(
+                        array(
+                            SimPerfKeys::VEGAS_HOME_PCT => 2.5,
+                            SimPerfKeys::SIM_HOME_PCT => 5,
+                            SimPerfKeys::HOME_TEAM_WINNER => 0
+                        ),
+                        array(
+                            SimPerfKeys::VEGAS_HOME_PCT => 2.5,
+                            SimPerfKeys::SIM_HOME_PCT => 10,
+                            SimPerfKeys::HOME_TEAM_WINNER => 1
+                        ),
+                        array(
+                            SimPerfKeys::VEGAS_HOME_PCT => 52,
+                            SimPerfKeys::SIM_HOME_PCT => 50,
+                            SimPerfKeys::HOME_TEAM_WINNER => 0
+                        ),
+                        array(
+                            SimPerfKeys::VEGAS_HOME_PCT => 53,
+                            SimPerfKeys::SIM_HOME_PCT => 60,
+                            SimPerfKeys::HOME_TEAM_WINNER => 0
+                        ),
                     ),
                 ),
                 5,
@@ -93,8 +95,8 @@ class SimPerformanceUtilsTest extends PHPUnit_Framework_TestCase {
                     0 => array(
                         SimPerformanceUtils::NUM_GAMES => 2,
                         SimPerformanceUtils::ACTUAL_PCT => 50,
-                        SimPerformanceUtils::VEGAS_PCT => 2.5,
-                        SimPerformanceUtils::SIM_PCT => 7.5
+                        SimPerfKeys::VEGAS_HOME_PCT => 2.5,
+                        SimPerfKeys::SIM_HOME_PCT => 7.5
                     ),
                     5 => $this->emptyBin,
                     10 => $this->emptyBin,
@@ -108,8 +110,8 @@ class SimPerformanceUtilsTest extends PHPUnit_Framework_TestCase {
                     50 => array(
                         SimPerformanceUtils::NUM_GAMES => 2,
                         SimPerformanceUtils::ACTUAL_PCT => 0,
-                        SimPerformanceUtils::VEGAS_PCT => 52.5,
-                        SimPerformanceUtils::SIM_PCT => 55
+                        SimPerfKeys::VEGAS_HOME_PCT => 52.5,
+                        SimPerfKeys::SIM_HOME_PCT => 55
                     ),
                     55 => $this->emptyBin,
                     60 => $this->emptyBin,
@@ -140,27 +142,31 @@ class SimPerformanceUtilsTest extends PHPUnit_Framework_TestCase {
             array(
                 array(
                     2000 => array(
-                        array(
-                            SimPerformanceUtils::VEGAS_PCT => 2.5,
-                            SimPerformanceUtils::SIM_PCT => 5,
-                            SimPerformanceUtils::TEAM_WINNER => 0
-                        ),
-                        array(
-                            SimPerformanceUtils::VEGAS_PCT => 2.5,
-                            SimPerformanceUtils::SIM_PCT => 10,
-                            SimPerformanceUtils::TEAM_WINNER => 1
+                        '2000-06-01' => array(
+                            array(
+                                SimPerfKeys::VEGAS_HOME_PCT => 2.5,
+                                SimPerfKeys::SIM_HOME_PCT => 5,
+                                SimPerfKeys::HOME_TEAM_WINNER => 0
+                            ),
+                            array(
+                                SimPerfKeys::VEGAS_HOME_PCT => 2.5,
+                                SimPerfKeys::SIM_HOME_PCT => 10,
+                                SimPerfKeys::HOME_TEAM_WINNER => 1
+                            ),
                         ),
                     ),
                     2001 => array(
-                        array(
-                            SimPerformanceUtils::VEGAS_PCT => 52,
-                            SimPerformanceUtils::SIM_PCT => 50,
-                            SimPerformanceUtils::TEAM_WINNER => 0
-                        ),
-                        array(
-                            SimPerformanceUtils::VEGAS_PCT => 53,
-                            SimPerformanceUtils::SIM_PCT => 60,
-                            SimPerformanceUtils::TEAM_WINNER => 0
+                        '2001-06-01' => array(
+                            array(
+                                SimPerfKeys::VEGAS_HOME_PCT => 52,
+                                SimPerfKeys::SIM_HOME_PCT => 50,
+                                SimPerfKeys::HOME_TEAM_WINNER => 0
+                            ),
+                            array(
+                                SimPerfKeys::VEGAS_HOME_PCT => 53,
+                                SimPerfKeys::SIM_HOME_PCT => 60,
+                                SimPerfKeys::HOME_TEAM_WINNER => 0
+                            ),
                         ),
                     ),
                 ),
@@ -170,8 +176,8 @@ class SimPerformanceUtilsTest extends PHPUnit_Framework_TestCase {
                         0 => array(
                             SimPerformanceUtils::NUM_GAMES => 2,
                             SimPerformanceUtils::ACTUAL_PCT => 50,
-                            SimPerformanceUtils::VEGAS_PCT => 2.5,
-                            SimPerformanceUtils::SIM_PCT => 7.5
+                            SimPerfKeys::VEGAS_HOME_PCT => 2.5,
+                            SimPerfKeys::SIM_HOME_PCT => 7.5
                         ),
                         5 => $this->emptyBin,
                         10 => $this->emptyBin,
@@ -207,8 +213,8 @@ class SimPerformanceUtilsTest extends PHPUnit_Framework_TestCase {
                         50 => array(
                             SimPerformanceUtils::NUM_GAMES => 2,
                             SimPerformanceUtils::ACTUAL_PCT => 0,
-                            SimPerformanceUtils::VEGAS_PCT => 52.5,
-                            SimPerformanceUtils::SIM_PCT => 55
+                            SimPerfKeys::VEGAS_HOME_PCT => 52.5,
+                            SimPerfKeys::SIM_HOME_PCT => 55
                         ),
                         55 => $this->emptyBin,
                         60 => $this->emptyBin,
@@ -219,9 +225,9 @@ class SimPerformanceUtilsTest extends PHPUnit_Framework_TestCase {
                         85 => $this->emptyBin,
                         90 => $this->emptyBin,
                         95 => $this->emptyBin
-                    )
-                )
-            )
+                    ),
+                ),
+            ),
         );
     }
 
@@ -249,8 +255,8 @@ class SimPerformanceUtilsTest extends PHPUnit_Framework_TestCase {
                     0 => array(
                         SimPerformanceUtils::NUM_GAMES => 2,
                         SimPerformanceUtils::ACTUAL_PCT => 50,
-                        SimPerformanceUtils::VEGAS_PCT => 2.5,
-                        SimPerformanceUtils::SIM_PCT => 7.5
+                        SimPerfKeys::VEGAS_HOME_PCT => 2.5,
+                        SimPerfKeys::SIM_HOME_PCT => 7.5
                     ),
                     5 => $this->emptyBin,
                     10 => $this->emptyBin,
@@ -264,8 +270,8 @@ class SimPerformanceUtilsTest extends PHPUnit_Framework_TestCase {
                     50 => array(
                         SimPerformanceUtils::NUM_GAMES => 2,
                         SimPerformanceUtils::ACTUAL_PCT => 0,
-                        SimPerformanceUtils::VEGAS_PCT => 52.5,
-                        SimPerformanceUtils::SIM_PCT => 55
+                        SimPerfKeys::VEGAS_HOME_PCT => 52.5,
+                        SimPerfKeys::SIM_HOME_PCT => 55
                     ),
                     55 => $this->emptyBin,
                     60 => $this->emptyBin,
@@ -285,8 +291,8 @@ class SimPerformanceUtilsTest extends PHPUnit_Framework_TestCase {
                     0 => array(
                         SimPerformanceUtils::NUM_GAMES => 10,
                         SimPerformanceUtils::ACTUAL_PCT => 50,
-                        SimPerformanceUtils::VEGAS_PCT => 40,
-                        SimPerformanceUtils::SIM_PCT => 20
+                        SimPerfKeys::VEGAS_HOME_PCT => 40,
+                        SimPerfKeys::SIM_HOME_PCT => 20
                     ),
                     5 => $this->emptyBin,
                     10 => $this->emptyBin,
@@ -300,8 +306,8 @@ class SimPerformanceUtilsTest extends PHPUnit_Framework_TestCase {
                     50 => array(
                         SimPerformanceUtils::NUM_GAMES => 10,
                         SimPerformanceUtils::ACTUAL_PCT => 0,
-                        SimPerformanceUtils::VEGAS_PCT => 30,
-                        SimPerformanceUtils::SIM_PCT => 56
+                        SimPerfKeys::VEGAS_HOME_PCT => 30,
+                        SimPerfKeys::SIM_HOME_PCT => 56
                     ),
                     55 => $this->emptyBin,
                     60 => $this->emptyBin,

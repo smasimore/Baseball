@@ -7,6 +7,7 @@ include_once __DIR__ . '/../../Models/DataTypes/SimOutputDataType.php';
 include_once __DIR__ . '/../../Models/DataTypes/HistoricalOddsDataType.php';
 include_once __DIR__ . '/../../Models/Utils/SimPerformanceUtils.php';
 include_once __DIR__ . '/../../Models/Utils/ArrayUtils.php';
+include_once __DIR__ .'/../../Models/Constants/SimPerfKeys.php';
 
 class SimPerformancePage extends Page {
 
@@ -39,7 +40,7 @@ class SimPerformancePage extends Page {
 
     // Vars.
     private $possibleParams = array();
-    private $gamesByYear = array();
+    private $gamesBySeasonAndDate = array();
     private $perfData = array();
     private $perfDataByYear = array();
 
@@ -104,7 +105,7 @@ class SimPerformancePage extends Page {
         $results_0 = $this->formatSQLGameData($sim_output_data_0, $odds_data);
         $results_1 = $this->formatSQLGameData($sim_output_data_1, $odds_data);
 
-        $this->gamesByYear = $this->applySeasonSwitchPerc(
+        $this->gamesBySeasonAndDate = $this->applySeasonSwitchPerc(
             $results_0,
             $results_1
         );
@@ -172,9 +173,11 @@ class SimPerformancePage extends Page {
 
             $odds = $odds_data[$gameid];
             $f_data[$game['season']][$game['game_date']][] = array(
-                SimPerformanceUtils::VEGAS_PCT => $odds['home_pct_win'],
-                SimPerformanceUtils::SIM_PCT => $game['home_win_pct'] * 100,
-                SimPerformanceUtils::TEAM_WINNER => $odds['home_team_winner']
+                SimPerfKeys::VEGAS_HOME_PCT => $odds['home_pct_win'],
+                SimPerfKeys::VEGAS_AWAY_PCT => $odds['away_pct_win'],
+                SimPerfKeys::SIM_HOME_PCT => $game['home_win_pct'] * 100,
+                SimPerfKeys::SIM_AWAY_PCT => 100 - $game['home_win_pct'] * 100,
+                SimPerfKeys::HOME_TEAM_WINNER => $odds['home_team_winner']
             );
         }
 
@@ -195,11 +198,11 @@ class SimPerformancePage extends Page {
                     // Use idx because of Incomplete Data error. Error will
                     // display and data shouldn't be trusted.
                     foreach (idx($games_by_date_0, $date, array()) as $game) {
-                        $data[$year][] = $game;
+                        $data[$year][$date][] = $game;
                     }
                 } else {
                     foreach ($games_1 as $game) {
-                        $data[$year][] = $game;
+                        $data[$year][$date][] = $game;
                     }
                 }
             }
@@ -210,11 +213,11 @@ class SimPerformancePage extends Page {
 
     private function calculatePerfData() {
         $this->perfData = SimPerformanceUtils::calculateSimPerfData(
-            ArrayUtils::flatten($this->gamesByYear),
+            ArrayUtils::flatten($this->gamesBySeasonAndDate),
             self::HIST_BUCKET_SIZE
         );
         $this->perfDataByYear = SimPerformanceUtils::calculateSimPerfDataByYear(
-            $this->gamesByYear,
+            $this->gamesBySeasonAndDate,
             self::HIST_BUCKET_SIZE
         );
     }

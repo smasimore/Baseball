@@ -2,13 +2,11 @@
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
 include_once __DIR__ .'/../Utils/ArrayUtils.php';
+include_once __DIR__ .'/../Constants/SimPerfKeys.php';
 
 class SimPerformanceUtils {
 
-    // Input and return keys.
-    const VEGAS_PCT = 'vegas_win_pct';
-    const SIM_PCT = 'sim_win_pct';
-    const TEAM_WINNER = 'team_winner';
+    // Return keys.
     const NUM_GAMES = 'num_games';
     const NUM_GAMES_TEAM_WINNER = 'num_games_team_winner';
     const ACTUAL_PCT = 'actual_win_pct';
@@ -21,6 +19,10 @@ class SimPerformanceUtils {
     const BIN_MAX = 100;
     const MIN_SAMPLE_SIZE_IN_BIN = 10;
 
+    /*
+     * @param array($date => array($gameid => array(...)))
+     * @param int
+     */
     public static function calculateSimPerfData($game_data, $bin_size = 5) {
         if (!ArrayUtils::isArrayOfArrays($game_data)) {
             throw new Exception('Game data must be array of arrays.');
@@ -50,18 +52,21 @@ class SimPerformanceUtils {
             );
         }
 
-        foreach ($game_data as $game) {
-            for ($i = self::BIN_MIN; $i < self::BIN_MAX; $i += $bin_size) {
-                $vegas_pct_win = $game[self::VEGAS_PCT];
-                if ($vegas_pct_win !== null && $vegas_pct_win >= $i &&
-                    $vegas_pct_win < $i + $bin_size) {
-                    $perf_data[$i][self::NUM_GAMES] += 1;
-                    $perf_data[$i][self::NUM_GAMES_TEAM_WINNER] +=
-                        $game[self::TEAM_WINNER];
-                    $perf_data[$i][self::VEGAS_PCT_SUM] +=
-                        $game[self::VEGAS_PCT];
-                    $perf_data[$i][self::SIM_PCT_SUM] += $game[self::SIM_PCT];
-                    break;
+        foreach ($game_data as $date => $games) {
+            foreach ($games as $game) {
+                for ($i = self::BIN_MIN; $i < self::BIN_MAX; $i += $bin_size) {
+                    $vegas_pct_win = $game[SimPerfKeys::VEGAS_HOME_PCT];
+                    if ($vegas_pct_win !== null && $vegas_pct_win >= $i &&
+                        $vegas_pct_win < $i + $bin_size) {
+                        $perf_data[$i][self::NUM_GAMES] += 1;
+                        $perf_data[$i][self::NUM_GAMES_TEAM_WINNER] +=
+                            $game[SimPerfKeys::HOME_TEAM_WINNER];
+                        $perf_data[$i][self::VEGAS_PCT_SUM] +=
+                            $game[SimPerfKeys::VEGAS_HOME_PCT];
+                        $perf_data[$i][self::SIM_PCT_SUM] +=
+                            $game[SimPerfKeys::SIM_HOME_PCT];
+                        break;
+                    }
                 }
             }
         }
@@ -74,10 +79,10 @@ class SimPerformanceUtils {
                 self::ACTUAL_PCT => $num_games !== 0
                     ? $data[self::NUM_GAMES_TEAM_WINNER] / $num_games * 100
                     : null,
-                self::VEGAS_PCT => $num_games !== 0
+                SimPerfKeys::VEGAS_HOME_PCT => $num_games !== 0
                     ? $data[self::VEGAS_PCT_SUM] / $num_games
                     : null,
-                self::SIM_PCT => $num_games !== 0
+                SimPerfKeys::SIM_HOME_PCT => $num_games !== 0
                     ? $data[self::SIM_PCT_SUM] / $num_games
                     : null
             );
@@ -86,6 +91,10 @@ class SimPerformanceUtils {
         return $return_perf_data;
     }
 
+    /*
+     * @param array($season => array($date => array($gameid => array(...))))
+     * @param int
+     */
     public static function calculateSimPerfDataByYear(
         $game_data_by_year,
         $bin_size = 5
@@ -120,9 +129,9 @@ class SimPerformanceUtils {
             $actual_pct = $data[self::ACTUAL_PCT];
             $total_games += $num_games;
             $vegas_numerator += $num_games *
-                abs($data[self::VEGAS_PCT] - $actual_pct);
+                abs($data[SimPerfKeys::VEGAS_HOME_PCT] - $actual_pct);
             $sim_numerator += $num_games *
-                abs($data[self::SIM_PCT] - $actual_pct);
+                abs($data[SimPerfKeys::SIM_HOME_PCT] - $actual_pct);
         }
 
         if ($total_games === 0) {
