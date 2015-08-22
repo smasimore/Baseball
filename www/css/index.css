@@ -51,14 +51,18 @@
     padding: 0;
 }
 
+.topmargin {
+    margin-top: 10px;
+}
+
 /* LIST */
-ul {
+.list_ul {
   list-style: none;
   padding: 5px;
   margin: 0;  
 }
 
-li {
+.list_li {
   list-style-type: none;
 }
 
@@ -118,7 +122,7 @@ input:-webkit-autofill {
         font-size: 10pt;
     }
 }
-/* DATATABLE */
+/* TABLE */
 .table {
   width: 100%;
   height: 100%;
@@ -471,24 +475,13 @@ border : solid 0px #ffffff;
    height: 34px;
 }
 
-.sim_perf .blue_list {
+.sim_perf_params_form {
+    width: 100%;
     margin: auto;
     background-color: #2B96E8;
     text-align: center;
     padding-bottom: 5px;
     display: table;
-}
-
-@media (min-device-width:320px) {
-    .blue_list {
-        width: 95%;
-    }
-}
-
-@media (min-device-width:960px) {
-    .blue_list {
-        width: 50%;
-    }
 }
 
 .sim_perf .list_title {
@@ -519,6 +512,25 @@ border : solid 0px #ffffff;
     .sim_perf .list_item {
         margin: 3px 0;
     }
+}
+
+.sim_perf_params_table {
+  width: 100%;
+  height: 100%;
+  margin-bottom: 10px;
+  border-spacing: 0px;
+  background-color: transparent; /* background-color added bc
+                                    div was overlapping */
+  text-align: center;
+  font-family: "Helvetica";
+  font-weight: 100;
+  table-layout: fixed;
+}
+
+.sim_perf_param_table_td {
+    vertical-align: top;
+    padding:10px;
+    background: #2B96E8;
 }
 
 .chart_canvas {

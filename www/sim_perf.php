@@ -24,20 +24,32 @@ sec_session_start();
 
             $perf_data = $page->getPerfData();
             $perf_data_by_year = $page->getPerfDataByYear();
-            $label = $page->getPerfScoreLabel($perf_data, 'Overall');
-            $labels_by_year = $page->getPerfScoreLabelsByYear(
+            $perf_label = $page->getPerfScoreLabel(
+                $perf_data,
+                'Sim Performance'
+            );
+            $perf_labels_by_year = $page->getPerfScoreLabelsByYear(
                 $perf_data_by_year
             );
+
+            $bet_data_by_date = $page->getBetCumulativeDataByDate();
+            $bet_label = $page->getBetCumulativeDataByDateLabel();
         ?>
+
         <script type="text/JavaScript">
-            drawChart(
-                <?php echo json_encode('overall'); ?>,
-                <?php echo json_encode($label); ?>,
+            drawSimBetChart(
+                <?php echo json_encode('overall_bets'); ?>,
+                <?php echo json_encode($bet_label); ?>,
+                <?php echo json_encode($bet_data_by_date); ?>
+            );
+            drawSimPerfChart(
+                <?php echo json_encode('overall_perf'); ?>,
+                <?php echo json_encode($perf_label); ?>,
                 <?php echo json_encode($perf_data); ?>
             );
-            drawCharts(
+            drawSimPerfCharts(
                 <?php echo json_encode($perf_data_by_year); ?>,
-                <?php echo json_encode($labels_by_year); ?>
+                <?php echo json_encode($perf_labels_by_year); ?>
             );
         </script>
     </body>

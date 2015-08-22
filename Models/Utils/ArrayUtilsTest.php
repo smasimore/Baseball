@@ -231,17 +231,31 @@ class ArrayUtilsTest extends PHPUnit_Framework_TestCase {
                     'test0' => array('one', 'two'),
                     'test1' => array('three', 'four')
                 ),
+                false,
                 array('one', 'two', 'three', 'four')
-            )
+            ),
+            array(
+                array(
+                    'test0' => array('key1' => 'one', 'key2' => 'two'),
+                    'test1' => array('key3' => 'three', 'key4' => 'four'),
+                ),
+                true,
+                array(
+                    'key1' => 'one',
+                    'key2' => 'two',
+                    'key3' => 'three',
+                    'key4' => 'four',
+                ),
+            ),
         );
     }
 
     /**
      * @dataProvider providerFlatten
      */
-    public function testFlatten($array, $flat_array) {
+    public function testFlatten($array, $keep_keys, $flat_array) {
         $this->assertEquals(
-            ArrayUtils::flatten($array),
+            ArrayUtils::flatten($array, $keep_keys),
             $flat_array
         );
     }

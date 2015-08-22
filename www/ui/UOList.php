@@ -6,7 +6,7 @@ include_once 'UIElement.php';
 class UOList extends UIElement {
 
     private $items;
-    private $itemClass;
+    private $itemClass = 'list_ui';
 
     public function setItems(array $items) {
         $this->items = $items;
@@ -23,7 +23,8 @@ class UOList extends UIElement {
             return;
         }
 
-        $html = $this->class ? "<ul class='$this->class'>" : "<ul>";
+        $class = $this->class ?: 'list_ul';
+        $html = "<ul class='$class list_ul'>";
         foreach ($this->items as $item) {
             $html .= "<li class='$this->itemClass'>$item</li>";
         }

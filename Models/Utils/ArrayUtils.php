@@ -78,15 +78,19 @@ class ArrayUtils {
         return $array;
     }
 
-    public static function flatten($multi_array) {
+    public static function flatten($multi_array, $keep_keys = false) {
         if (!self::isArrayOfArrays($multi_array)) {
             throw new Exception('Must pass in array of arrays.');
         }
 
         $flattened_array = array();
         foreach ($multi_array as $array) {
-            foreach ($array as $value) {
-                $flattened_array[] = $value;
+            foreach ($array as $key => $value) {
+                if ($keep_keys === true) {
+                    $flattened_array[$key] = $value;
+                } else {
+                    $flattened_array[] = $value;
+                }
             }
         }
 

@@ -3,13 +3,20 @@
 
 include_once __DIR__ .'/../Utils/ArrayUtils.php';
 include_once __DIR__ .'/../Constants/SimPerfKeys.php';
+include_once __DIR__ .'/../Bets.php';
 
 class SimPerformanceUtils {
 
-    // Return keys.
+    // Sim perf return keys.
     const NUM_GAMES = 'num_games';
-    const NUM_GAMES_TEAM_WINNER = 'num_games_team_winner';
+    const NUM_GAMES_WINNER = 'num_games_winner';
     const ACTUAL_PCT = 'actual_win_pct';
+
+    const CUMULATIVE_NUM_GAMES = 'cumulative_num_games';
+    const CUMULATIVE_NUM_GAMES_BET = 'cumulative_num_games_bet';
+    const CUMULATIVE_NUM_GAMES_WINNER = 'cumulatiave_num_games_winner';
+    const CUMULATIVE_BET_AMOUNT = 'cumulative_bet_amount';
+    const CUMULATIVE_PAYOUT = 'cumulative_payout';
 
     // Private keys - DON'T USE OUTSIDE OF THIS CLASS.
     const VEGAS_PCT_SUM = 'vegas_pct_sum';
@@ -46,7 +53,7 @@ class SimPerformanceUtils {
         for ($i = self::BIN_MIN; $i < self::BIN_MAX; $i += $bin_size) {
             $perf_data[$i] = array(
                 self::NUM_GAMES => 0,
-                self::NUM_GAMES_TEAM_WINNER => 0,
+                self::NUM_GAMES_WINNER => 0,
                 self::VEGAS_PCT_SUM => 0,
                 self::SIM_PCT_SUM => 0
             );
@@ -59,7 +66,7 @@ class SimPerformanceUtils {
                     if ($vegas_pct_win !== null && $vegas_pct_win >= $i &&
                         $vegas_pct_win < $i + $bin_size) {
                         $perf_data[$i][self::NUM_GAMES] += 1;
-                        $perf_data[$i][self::NUM_GAMES_TEAM_WINNER] +=
+                        $perf_data[$i][self::NUM_GAMES_WINNER] +=
                             $game[SimPerfKeys::HOME_TEAM_WINNER];
                         $perf_data[$i][self::VEGAS_PCT_SUM] +=
                             $game[SimPerfKeys::VEGAS_HOME_PCT];
@@ -77,7 +84,7 @@ class SimPerformanceUtils {
             $return_perf_data[$bin] = array(
                 self::NUM_GAMES => $num_games,
                 self::ACTUAL_PCT => $num_games !== 0
-                    ? $data[self::NUM_GAMES_TEAM_WINNER] / $num_games * 100
+                    ? $data[self::NUM_GAMES_WINNER] / $num_games * 100
                     : null,
                 SimPerfKeys::VEGAS_HOME_PCT => $num_games !== 0
                     ? $data[self::VEGAS_PCT_SUM] / $num_games
@@ -142,6 +149,46 @@ class SimPerformanceUtils {
             $vegas_numerator / $total_games,
             $sim_numerator / $total_games
         );
+    }
+
+    /*
+     * Keyed on any index (e.g. date, sim perc, veg perc, home/away).
+     */
+    public static function calculateBetCumulativeData(array $games_by_index) {
+        $cumulative_num_games = 0;
+        $cumulative_num_games_bet = 0;
+        $cumulative_num_games_winner = 0;
+        $cumulative_bet_amount = 0;
+        $cumulative_payout = 0;
+
+        $cumulative_data_by_index = array();
+        foreach ($games_by_index as $index => $games) {
+            foreach ($games as $game) {
+                $cumulative_num_games++;
+
+                if ($game[Bets::BET_TEAM] !== null) {
+                    $cumulative_num_games_bet++;
+                    $cumulative_bet_amount += $game[Bets::BET_AMOUNT];
+
+                    if ($game[Bets::BET_TEAM_WINNER] === true) {
+                        $cumulative_num_games_winner++;
+                    }
+
+                    $cumulative_payout += $game[Bets::BET_NET_PAYOUT];
+                }
+            }
+
+            $cumulative_data_by_index[$index] = array(
+                self::CUMULATIVE_NUM_GAMES => $cumulative_num_games,
+                self::CUMULATIVE_NUM_GAMES_BET => $cumulative_num_games_bet,
+                self::CUMULATIVE_NUM_GAMES_WINNER =>
+                    $cumulative_num_games_winner,
+                self::CUMULATIVE_BET_AMOUNT => $cumulative_bet_amount,
+                self::CUMULATIVE_PAYOUT => $cumulative_payout,
+            );
+        }
+
+        return $cumulative_data_by_index;
     }
 }
 

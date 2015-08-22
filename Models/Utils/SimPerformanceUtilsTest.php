@@ -1,7 +1,8 @@
 <?php
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
-include_once 'SimPerformanceUtils.php';
+include_once __DIR__ . '/SimPerformanceUtils.php';
+include_once __DIR__ . '/../Bets.php';
 
 class SimPerformanceUtilsTest extends PHPUnit_Framework_TestCase {
 
@@ -344,6 +345,73 @@ class SimPerformanceUtilsTest extends PHPUnit_Framework_TestCase {
             $exp_sim_score
         );
     }
+
+    public function providerCalculateBetCumulativeData() {
+        return array(
+            array(
+                array(
+                    '2014-06-01' => array(
+                        array(
+                            Bets::BET_TEAM => TeamTypes::HOME,
+                            Bets::BET_TEAM_WINNER => true,
+                            Bets::BET_AMOUNT => 100,
+                            Bets::BET_NET_PAYOUT => 100,
+                        ),
+                        array(
+                            Bets::BET_TEAM => TeamTypes::HOME,
+                            Bets::BET_TEAM_WINNER => false,
+                            Bets::BET_AMOUNT => 100,
+                            Bets::BET_NET_PAYOUT => -200,
+                        ),
+                    ),
+                    '2014-06-02' => array(
+                        array(
+                            Bets::BET_TEAM => TeamTypes::HOME,
+                            Bets::BET_TEAM_WINNER => true,
+                            Bets::BET_AMOUNT => 100,
+                            Bets::BET_NET_PAYOUT => 100,
+                        ),
+                        array(
+                            Bets::BET_TEAM => TeamTypes::AWAY,
+                            Bets::BET_TEAM_WINNER => true,
+                            Bets::BET_AMOUNT => 100,
+                            Bets::BET_NET_PAYOUT => 200,
+                        ),
+                    ),
+                ),
+                array(
+                    '2014-06-01' => array(
+                        SimPerformanceUtils::CUMULATIVE_NUM_GAMES => 2,
+                        SimPerformanceUtils::CUMULATIVE_NUM_GAMES_BET => 2,
+                        SimPerformanceUtils::CUMULATIVE_NUM_GAMES_WINNER => 1,
+                        SimPerformanceUtils::CUMULATIVE_BET_AMOUNT => 200,
+                        SimPerformanceUtils::CUMULATIVE_PAYOUT => -100,
+                    ),
+                    '2014-06-02' => array(
+                        SimPerformanceUtils::CUMULATIVE_NUM_GAMES => 4,
+                        SimPerformanceUtils::CUMULATIVE_NUM_GAMES_BET => 4,
+                        SimPerformanceUtils::CUMULATIVE_NUM_GAMES_WINNER => 3,
+                        SimPerformanceUtils::CUMULATIVE_BET_AMOUNT => 400,
+                        SimPerformanceUtils::CUMULATIVE_PAYOUT => 200,
+                    ),
+                ),
+            ),
+        );
+    }
+
+    /**
+     * @dataProvider providerCalculateBetCumulativeData
+     */
+    public function testCalculateBetCumulativeData(
+        $bet_data,
+        $result
+    ) {
+        $this->assertEquals(
+            SimPerformanceUtils::calculateBetCumulativeData($bet_data),
+            $result
+        );
+    }
+
 }
 
 ?>

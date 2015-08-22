@@ -1,10 +1,10 @@
-function drawCharts(data_by_year, labels_by_year) {
+function drawSimPerfCharts(data_by_year, labels_by_year) {
     for (var id in data_by_year) {
-        drawChart(id, labels_by_year[id], data_by_year[id]);
+        drawSimPerfChart('perf_' + id, labels_by_year[id], data_by_year[id]);
     }
 }
 
-function drawChart(id, label, data) {
+function drawSimPerfChart(id, label, data) {
     var actual_values = [];
     var vegas_values = [];
     var sim_values = [];
@@ -93,6 +93,83 @@ function drawChart(id, label, data) {
     });
 }
 
+function drawSimBetChart(id, label, data) {
+    var cumulative_payout = [];
+    var x_values = [];
+
+    for (var date in data) {
+        var date_data = data[date];
+        var net_payout = _roundToHundredth(date_data['cumulative_payout']);
+        var total_bet = _roundToHundredth(date_data['cumulative_bet_amount']);
+        cumulative_payout.push({
+            type: 'Cumulative Payout',
+            y: net_payout,
+            total_bet: total_bet,
+            roi: _roundToHundredth(net_payout / total_bet * 100),
+            perc_games_bet_on: _roundToHundredth(
+                date_data['cumulative_num_games_bet'] /
+                date_data['cumulative_num_games']
+            ),
+            perc_games_won: _roundToHundredth(
+                date_data['cumulatiave_num_games_winner'] /
+                date_data['cumulative_num_games_bet']
+            )
+        });
+
+        x_values.push(date);
+    }
+
+    var num_datapoints = Object.keys(data).length;
+    var min_tick_intervals = num_datapoints / 6;
+
+    var chart = new Highcharts.Chart({
+        chart: {
+            type: 'line',
+            renderTo: id
+        },
+        title: {
+            text: label
+        },
+        xAxis: {
+            categories: x_values,
+            minTickInterval: min_tick_intervals
+        },
+        yAxis: {
+            //min: 0,
+            //max: 100,
+            title: {
+                text: '$$'
+            },
+            plotLines: [{
+                value: 0,
+                width: 1,
+                color: '#808080'
+            }]
+        },
+        tooltip: {
+            formatter: function() {return ' ' + 
+                'Net Gain: $' + _numberWithCommas(this.point.y) + '<br />' +
+                'Total Bet Amount: $' + _numberWithCommas(this.point.total_bet) 
+                    + '<br />' +
+                'ROI: ' + this.point.roi + '% <br />' + 
+                '% Games Bet On: ' + this.point.perc_games_bet_on + '% <br />' +
+                '% Games Won: ' + this.point.perc_games_won + '%';
+            }
+        },
+        series: [
+            {
+                name: 'Net Payout',
+                data: cumulative_payout,
+                turboThreshold: 10000
+            }
+        ]
+    });
+}
+
 function _roundToHundredth(input) {
     return Math.round(input*100)/100;
+}
+
+function _numberWithCommas(x) {
+    return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
