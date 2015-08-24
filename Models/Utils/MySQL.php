@@ -27,9 +27,9 @@ class MySQL {
         }
         foreach ($data as $row) {
             $insert_row = array();
-            foreach ($colheads as $col => $default) {
+            foreach ($colheads as $col => $is_nullable) {
                 if (!array_key_exists($col, $row)) {
-                    if ($default !== null) {
+                    if ($is_nullable) {
                         // Just insert null mysql will handle the rest.
                         $insert_row[] = 'null';
                     } else {
@@ -241,14 +241,18 @@ class MySQL {
             $table
         );
         $data = exe_sql(DATABASE, $sql);
+
         $colheads = array();
         $is_all_nullable = 'YES';
         foreach ($data as $row) {
-            $colheads[$row['COLUMN_NAME']] = $row['COLUMN_DEFAULT'];
+            $accepts_null = $row['IS_NULLABLE'] === 'YES' ||
+                $row['COLUMN_DEFAULT'] !== null;
+            $colheads[$row['COLUMN_NAME']] = $accepts_null;
             $is_all_nullable = $row['IS_NULLABLE'] === 'NO'
                 ? 'NO'
                 : $is_all_nullable;
         }
+
         if (!$colheads) {
             throw New Exception(sprintf(
                 'No Columns In Table %s. Perhaps this is not a real table',

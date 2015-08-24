@@ -106,7 +106,7 @@ class MySQLTest extends PHPUnit_Framework_TestCase {
      * @expectedException Exception
      */
     public function testNoDataForAllCols() {
-        MySQL::insert(MySQL::UNIT_TEST_TABLE, array('id' => 1));
+        MySQL::insert(MySQL::UNIT_TEST_TABLE, array('name' => 'la'));
     }
 
     /**
