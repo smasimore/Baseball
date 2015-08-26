@@ -151,18 +151,19 @@ class SimPerformanceUtils {
         );
     }
 
+    // TODO(smas): Add functionality to group by any key passed in.
     /*
-     * Keyed on any index (e.g. date, sim perc, veg perc, home/away).
+     * Keyed on date.
      */
-    public static function calculateBetCumulativeData(array $games_by_index) {
+    public static function calculateBetCumulativeData(array $games_by_date) {
         $cumulative_num_games = 0;
         $cumulative_num_games_bet = 0;
         $cumulative_num_games_winner = 0;
         $cumulative_bet_amount = 0;
         $cumulative_payout = 0;
 
-        $cumulative_data_by_index = array();
-        foreach ($games_by_index as $index => $games) {
+        $cumulative_data_by_date = array();
+        foreach ($games_by_date as $date => $games) {
             foreach ($games as $game) {
                 $cumulative_num_games++;
 
@@ -178,7 +179,7 @@ class SimPerformanceUtils {
                 }
             }
 
-            $cumulative_data_by_index[$index] = array(
+            $cumulative_data_by_date[$date] = array(
                 self::CUMULATIVE_NUM_GAMES => $cumulative_num_games,
                 self::CUMULATIVE_NUM_GAMES_BET => $cumulative_num_games_bet,
                 self::CUMULATIVE_NUM_GAMES_WINNER =>
@@ -188,7 +189,27 @@ class SimPerformanceUtils {
             );
         }
 
-        return $cumulative_data_by_index;
+        return $cumulative_data_by_date;
+    }
+
+    /*
+     * @param array($season => array($date => array($gameid => array(...))))
+     */
+    public static function calculateBetCumulativeDataByYear(
+        $games_by_year
+    ) {
+        if (!ArrayUtils::isArrayOfArrays($games_by_year)) {
+            throw new Exception('Game data must be array of arrays.');
+        }
+
+        $cumulative_data = array();
+        foreach ($games_by_year as $year => $game_data_by_date) {
+            $cumulative_data[$year] = self::calculateBetCumulativeData(
+                $game_data_by_date
+            );
+        }
+
+        return $cumulative_data;
     }
 }
 

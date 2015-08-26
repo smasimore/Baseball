@@ -51,7 +51,8 @@ class SimPerformancePage extends Page {
 
     private $betData = array();
     private $betDataByYear = array();
-    private $betCumulativeDataByDate;
+    private $betCumulativeData = array();
+    private $betCumulativeDataByYear = array();
 
     final protected function renderPageIfErrors() {
         return true;
@@ -148,6 +149,7 @@ class SimPerformancePage extends Page {
             $charts[] = $this->getChart('overall_bets');
             foreach (array_keys($this->perfDataByYear) as $year) {
                 $charts[] = $this->getChart("perf_$year");
+                $charts[] = $this->getChart("bet_$year");
             }
 
             $chart_table = (new Table())
@@ -256,9 +258,13 @@ class SimPerformancePage extends Page {
                 ->getBetData();
         }
 
-        $this->betData = ArrayUtils::flatten($this->betDataByYear, true);
+        $this->betCumulativeDataByYear =
+            SimPerformanceUtils::calculateBetCumulativeDataByYear(
+                $this->betDataByYear
+            );
 
-        $this->betCumulativeDataByDate =
+        $this->betData = ArrayUtils::flatten($this->betDataByYear, true);
+        $this->betCumulativeData =
             SimPerformanceUtils::calculateBetCumulativeData($this->betData);
     }
 
@@ -440,30 +446,37 @@ class SimPerformancePage extends Page {
         );
     }
 
-    public function getPerfScoreLabelsByYear($data_by_year) {
+    public function getPerfScoreLabelsByYear() {
         $labels_by_year = array();
-        foreach ($data_by_year as $year => $data) {
+        foreach ($this->perfDataByYear as $year => $data) {
             $labels_by_year[$year] = $this->getPerfScoreLabel($data, $year);
         }
 
         return $labels_by_year;
     }
 
-    public function getBetCumulativeDataByDate() {
-        return $this->betCumulativeDataByDate;
+    public function getBetCumulativeData() {
+        return $this->betCumulativeData;
     }
 
-    public function getBetCumulativeDataByDateLabel() {
-        if ($this->betCumulativeDataByDate === null) {
+    public function getBetCumulativeDataByYear() {
+        return $this->betCumulativeDataByYear;
+    }
+
+    public function getBetCumulativeDataLabel(
+        $data,
+        $label
+    ) {
+        if ($data === null) {
             return;
         }
 
-        $last_day = end($this->betCumulativeDataByDate);
+        $last_day = end($data);
 
         $cumulative_bet_amount =
             $last_day[SimPerformanceUtils::CUMULATIVE_BET_AMOUNT];
 
-        $roi = $cumulative_bet_amount !== 0
+        $roi = $cumulative_bet_amount
             ? round(
                 $last_day[SimPerformanceUtils::CUMULATIVE_PAYOUT] /
                     $cumulative_bet_amount * 100,
@@ -471,9 +484,22 @@ class SimPerformancePage extends Page {
             ) : null;
 
         return sprintf(
-            'Bet Performance - ROI: %g%%',
+            '%s - ROI: %g%%',
+            $label,
             $roi
         );
+    }
+
+    public function getBetCumulativeDataLabelByYear() {
+        $labels_by_year = array();
+        foreach ($this->betCumulativeDataByYear as $year => $data) {
+            $labels_by_year[$year] = $this->getBetCumulativeDataLabel(
+                $data,
+                $year
+            );
+        }
+
+        return $labels_by_year;
     }
 }
 ?>

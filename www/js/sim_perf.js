@@ -93,6 +93,12 @@ function drawSimPerfChart(id, label, data) {
     });
 }
 
+function drawSimBetCharts(data_by_year, labels_by_year) {
+    for (var id in data_by_year) {
+        drawSimBetChart('bet_' + id, labels_by_year[id], data_by_year[id]);
+    }
+}
+
 function drawSimBetChart(id, label, data) {
     var cumulative_payout = [];
     var x_values = [];
