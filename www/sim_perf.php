@@ -30,15 +30,17 @@ sec_session_start();
             );
             $perf_labels_by_year = $page->getPerfScoreLabelsByYear();
 
-            $bet_data_by_date = $page->getBetCumulativeData();
+            $bet_data = $page->getBetCumulativeData();
             $bet_label = $page->getBetCumulativeDataLabel(
-                $bet_data_by_date,
+                $bet_data,
                 'Bet Performance'
             );
-            $bet_data_by_date_by_year =
+            $bet_data_by_year =
                 $page->getBetCumulativeDataByYear();
             $bet_labels_by_year =
                 $page->getBetCumulativeDataLabelByYear();
+
+            $bets_data_by_team = $page->getBetCumulativeDataByTeam();
         ?>
 
         <script type="text/JavaScript">
@@ -50,14 +52,23 @@ sec_session_start();
             drawSimBetChart(
                 <?php echo json_encode('overall_bets'); ?>,
                 <?php echo json_encode($bet_label); ?>,
-                <?php echo json_encode($bet_data_by_date); ?>
+                <?php 
+                    echo json_encode(
+                        array('Net Payout' => $bet_data)
+                    ); 
+                ?>
+            );
+            drawSimBetChart(
+                <?php echo json_encode('bets_by_team'); ?>,
+                <?php echo json_encode('Bet Perf By Team Type'); ?>,
+                <?php echo json_encode($bets_data_by_team); ?>
             );
             drawSimPerfCharts(
                 <?php echo json_encode($perf_data_by_year); ?>,
                 <?php echo json_encode($perf_labels_by_year); ?>
             );
             drawSimBetCharts(
-                <?php echo json_encode($bet_data_by_date_by_year); ?>,
+                <?php echo json_encode($bet_data_by_year); ?>,
                 <?php echo json_encode($bet_labels_by_year); ?>
             );
         </script>

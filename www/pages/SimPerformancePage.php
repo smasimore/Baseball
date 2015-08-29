@@ -53,6 +53,7 @@ class SimPerformancePage extends Page {
     private $betDataByYear = array();
     private $betCumulativeData = array();
     private $betCumulativeDataByYear = array();
+    private $betCumulativeDataByTeam = array();
 
     final protected function renderPageIfErrors() {
         return true;
@@ -122,6 +123,15 @@ class SimPerformancePage extends Page {
     }
 
     final protected function renderPage() {
+        $this->renderParamsForm();
+
+        if ($this->gamesBySeasonAndDate) {
+            $this->renderChartTable();
+        }
+
+    }
+
+    private function renderParamsForm() {
         $sim_param_list = $this->getSimParamList();
         $bet_param_list = $this->getBetParamList();
         $submit_button = "<input class='button' type='submit' value='Submit'>";
@@ -143,22 +153,29 @@ class SimPerformancePage extends Page {
                     <div>$submit_button</div>
                 </div>
             </form>";
+    }
 
-        if ($this->gamesBySeasonAndDate) {
-            $charts[] = $this->getChart('overall_perf');
-            $charts[] = $this->getChart('overall_bets');
-            foreach (array_keys($this->perfDataByYear) as $year) {
-                $charts[] = $this->getChart("perf_$year");
-                $charts[] = $this->getChart("bet_$year");
-            }
+    private function renderChartTable() {
+        $overall_charts = array(
+            $this->getChart('overall_perf'),
+            $this->getChart('overall_bets'),
+            $this->getChart('bets_by_team'),
+            $this->getChart('PLACEHOLDER'), // TODO(smas): Replace this with something useful.
+        );
 
-            $chart_table = (new Table())
-                ->setData($charts)
-                ->setColumns(2)
-                ->setClass('topmargin table')
-                ->render();
+        $by_year_charts = array();
+        foreach (array_keys($this->perfDataByYear) as $year) {
+            $by_year_charts[] = $this->getChart("perf_$year");
+            $by_year_charts[] = $this->getChart("bet_$year");
         }
 
+        $charts = array_merge($overall_charts, $by_year_charts);
+
+        return (new Table())
+            ->setData($charts)
+            ->setColumns(2)
+            ->setClass('topmargin table')
+            ->render();
     }
 
     private function genPossibleParams() {
@@ -266,6 +283,21 @@ class SimPerformancePage extends Page {
         $this->betData = ArrayUtils::flatten($this->betDataByYear, true);
         $this->betCumulativeData =
             SimPerformanceUtils::calculateBetCumulativeData($this->betData);
+
+        $cumulative_bet_home = SimPerformanceUtils::calculateBetCumulativeData(
+            $this->betData,
+            Bets::BET_TEAM,
+            TeamTypes::HOME
+        );
+        $cumulative_bet_away = SimPerformanceUtils::calculateBetCumulativeData(
+            $this->betData,
+            Bets::BET_TEAM,
+            TeamTypes::AWAY
+        );
+        $this->betCumulativeDataByTeam = array(
+            'Home' => $cumulative_bet_home,
+            'Away' => $cumulative_bet_away,
+        );
     }
 
     private function getSimParamList() {
@@ -389,6 +421,23 @@ class SimPerformancePage extends Page {
             </div>";
     }
 
+    private function getROI(array $data) {
+        if (!$data) {
+            return null;
+        }
+
+        $last_day = end($data);
+        $cumulative_bet_amount =
+            $last_day[SimPerformanceUtils::CUMULATIVE_BET_AMOUNT];
+
+        return $cumulative_bet_amount
+            ? round(
+                $last_day[SimPerformanceUtils::CUMULATIVE_PAYOUT] /
+                    $cumulative_bet_amount * 100,
+                2
+            ) : null;
+    }
+
     public function setParams($params) {
         // Set default params.
         if (!$params) {
@@ -467,21 +516,7 @@ class SimPerformancePage extends Page {
         $data,
         $label
     ) {
-        if ($data === null) {
-            return;
-        }
-
-        $last_day = end($data);
-
-        $cumulative_bet_amount =
-            $last_day[SimPerformanceUtils::CUMULATIVE_BET_AMOUNT];
-
-        $roi = $cumulative_bet_amount
-            ? round(
-                $last_day[SimPerformanceUtils::CUMULATIVE_PAYOUT] /
-                    $cumulative_bet_amount * 100,
-                2
-            ) : null;
+        $roi = $this->getROI($data);;
 
         return sprintf(
             '%s - ROI: %g%%',
@@ -500,6 +535,10 @@ class SimPerformancePage extends Page {
         }
 
         return $labels_by_year;
+    }
+
+    public function getBetCumulativeDataByTeam() {
+        return $this->betCumulativeDataByTeam;
     }
 }
 ?>

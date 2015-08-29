@@ -151,11 +151,14 @@ class SimPerformanceUtils {
         );
     }
 
-    // TODO(smas): Add functionality to group by any key passed in.
     /*
      * Keyed on date.
      */
-    public static function calculateBetCumulativeData(array $games_by_date) {
+    public static function calculateBetCumulativeData(
+        array $games_by_date,
+        $filter_by_key = null,
+        $filter_by_value = null
+    ) {
         $cumulative_num_games = 0;
         $cumulative_num_games_bet = 0;
         $cumulative_num_games_winner = 0;
@@ -165,6 +168,22 @@ class SimPerformanceUtils {
         $cumulative_data_by_date = array();
         foreach ($games_by_date as $date => $games) {
             foreach ($games as $game) {
+                if ($filter_by_key !== null) {
+                    if (!array_key_exists($filter_by_key, $game)) {
+                        throw new Exception(
+                            sprintf(
+                                '%s must be key in game data.',
+                                $filter_by_key
+                            )
+                        );
+                    }
+
+                    $game_filter_value = idx($game, $filter_by_key);
+                    if ($game_filter_value !== $filter_by_value) {
+                        continue;
+                    }
+                }
+
                 $cumulative_num_games++;
 
                 if ($game[Bets::BET_TEAM] !== null) {
