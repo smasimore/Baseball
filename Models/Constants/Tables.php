@@ -18,6 +18,10 @@ class Tables extends Enum {
     // Retrosheet
     const RETROSHEET_EVENTS = 'events';
     const RETROSHEET_BATTING = 'retrosheet_batting';
+    const HISTORICAL_CAREER_STARTER_PITCHING =
+        'historical_career_starter_pitching';
+    const HISTORICAL_CAREER_STARTER_PITCHING_ADJUSTMENTS =
+        'historical_career_starter_pitching_adjustments';
 }
 
 ?>

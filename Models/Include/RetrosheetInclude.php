@@ -23,6 +23,7 @@ include_once __DIR__ .'/../Utils/RetrosheetParseUtils.php';
 include_once __DIR__ .'/../Constants/Tables.php';
 include_once __DIR__ .'/../Constants/Teams.php';
 include_once __DIR__ .'/../Constants/Batting.php';
+include_once __DIR__ .'/../Constants/StatsYears.php';
 include_once __DIR__ .'/../Constants/RetrosheetConstants.php';
 
 ?>
