@@ -270,24 +270,5 @@ class GamesPage extends Page {
             ->setHeader(array('', 'Home', 'Away'))
             ->getHTML();
     }
-
-    private function getBetsColumns() {
-        return array(
-            'gameid',
-            'game_time',
-            'home',
-            'away',
-            'home_sim',
-            'away_sim',
-            'home_vegas_odds',
-            'away_vegas_odds',
-            'bet_team',
-            'home_score',
-            'away_score',
-            'status',
-            'bet',
-            'payout'
-        );
-    }
 }
 ?>
