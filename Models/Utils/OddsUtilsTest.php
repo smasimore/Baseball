@@ -19,7 +19,7 @@ class OddsUtilsTest extends PHPUnit_Framework_TestCase {
         return array(
             array(100, 300, 300),
             array(100, 100, 100),
-            array(100, -300, 33.33)
+            array(100, -300, 100/3)
         );
     }
 

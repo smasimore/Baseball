@@ -190,7 +190,10 @@ class GamesPage extends Page {
                 ? null
                 : sprintf(
                     '%d (%d%%)',
-                    OddsUtils::convertPctToOdds($bet_team_pct_win),
+                    number_format(
+                        OddsUtils::convertPctToOdds($bet_team_pct_win),
+                        4
+                    ),
                     round($bet_team_pct_win * 100)
                 );
 

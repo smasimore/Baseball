@@ -1,7 +1,7 @@
 <?php
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
-include_once __DIR__ . '/Constants/SimPerfKeys.php';
+include_once __DIR__ . '/Constants/BetsRequiredFields.php';
 include_once __DIR__ . '/Constants/TeamTypes.php';
 include_once __DIR__ . '/Utils/GlobalUtils.php';
 include_once __DIR__ . '/Utils/OddsUtils.php';
@@ -16,35 +16,36 @@ class Bets {
     const BET_SIM_PCT = 'bet_sim_pct';
     const BET_TEAM_WINNER = 'bet_team_winner';
     const BET_NET_PAYOUT = 'bet_net_payout';
+    const BET_PCT_DIFF = 'bet_pct_diff';
 
     // Bet param that can be overridden by setters.
     private $allowHomeBet = true;
     private $allowAwayBet = true;
     private $simVegasPctDiff = 5;
-    private $defaultBetAmount = 100;
+    private $baseBetAmount = 100;
 
     // Class vars.
     private $gameData;
     private $requiredGameDataKeys = array(
-        SimPerfKeys::VEGAS_HOME_ODDS,
-        SimPerfKeys::VEGAS_AWAY_ODDS,
-        SimPerfKeys::VEGAS_HOME_PCT,
-        SimPerfKeys::VEGAS_AWAY_PCT,
-        SimPerfKeys::SIM_HOME_PCT,
-        SimPerfKeys::SIM_AWAY_PCT,
+        BetsRequiredFields::VEGAS_HOME_ODDS,
+        BetsRequiredFields::VEGAS_AWAY_ODDS,
+        BetsRequiredFields::VEGAS_HOME_PCT,
+        BetsRequiredFields::VEGAS_AWAY_PCT,
+        BetsRequiredFields::SIM_HOME_PCT,
+        BetsRequiredFields::SIM_AWAY_PCT,
     );
 
     /*
      * @param array(
      *            <DATE> => array(
      *                <GAMEID> => array(
-     *                    SimPerfKeys::VEGAS_HOME_ODDS => ...,
-     *                    SimPerfKeys::VEGAS_AWAY_ODDS => ...,
-     *                    SimPerfKeys::VEGAS_HOME_PCT => ...,
-     *                    SimPerfKeys::VEGAS_AWAY_PCT => ...,
-     *                    SimPerfKeys::SIM_HOME_PCT => ...,
-     *                    SimPerfKeys::SIM_AWAY_PCT => ...,
-     *                    SimPerfKeys::HOME_TEAM_WINNER => ..., <optional>
+     *                    BetsRequiredFields::VEGAS_HOME_ODDS => ..,
+     *                    BetsRequiredFields::VEGAS_AWAY_ODDS => ..,
+     *                    BetsRequiredFields::VEGAS_HOME_PCT => ..,
+     *                    BetsRequiredFields::VEGAS_AWAY_PCT => ..,
+     *                    BetsRequiredFields::SIM_HOME_PCT => ..,
+     *                    BetsRequiredFields::SIM_AWAY_PCT => ..,
+     *                    BetsRequiredFields::HOME_TEAM_WINNER => .., <optional>
      *                )
      *            )
      *        )
@@ -65,24 +66,25 @@ class Bets {
                 $bet_sim_pct = null;
                 $bet_team_winner = null;
                 $net_payout = null;
+                $bet_pct_diff = null;
 
                 $bet_team = $this->getBetTeam($game);
                 if ($bet_team !== null) {
                     $bet_amount = $this->getBetAmount();
 
                     $bet_odds = $bet_team === TeamTypes::HOME
-                        ? $game[SimPerfKeys::VEGAS_HOME_ODDS]
-                        : $game[SimPerfKeys::VEGAS_AWAY_ODDS];
+                        ? $game[BetsRequiredFields::VEGAS_HOME_ODDS]
+                        : $game[BetsRequiredFields::VEGAS_AWAY_ODDS];
                     $bet_vegas_pct = $bet_team === TeamTypes::HOME
-                        ? $game[SimPerfKeys::VEGAS_HOME_PCT]
-                        : $game[SimPerfKeys::VEGAS_AWAY_PCT];
+                        ? $game[BetsRequiredFields::VEGAS_HOME_PCT]
+                        : $game[BetsRequiredFields::VEGAS_AWAY_PCT];
                     $bet_sim_pct = $bet_team === TeamTypes::HOME
-                        ? $game[SimPerfKeys::SIM_HOME_PCT]
-                        : $game[SimPerfKeys::SIM_AWAY_PCT];
+                        ? $game[BetsRequiredFields::SIM_HOME_PCT]
+                        : $game[BetsRequiredFields::SIM_AWAY_PCT];
 
                     $bet_team_winner = $this->getBetTeamWinner(
                         $bet_team,
-                        idx($game, SimPerfKeys::HOME_TEAM_WINNER)
+                        idx($game, BetsRequiredFields::HOME_TEAM_WINNER)
                     );
 
                     $net_payout = $this->getNetPayout(
@@ -90,6 +92,8 @@ class Bets {
                         $bet_amount,
                         $bet_odds
                     );
+
+                    $bet_pct_diff = $bet_sim_pct - $bet_vegas_pct;
                 }
 
                 $bet_data[$date][$gameid] = array(
@@ -100,6 +104,7 @@ class Bets {
                     self::BET_SIM_PCT => $bet_sim_pct,
                     self::BET_TEAM_WINNER => $bet_team_winner,
                     self::BET_NET_PAYOUT => $net_payout,
+                    self::BET_PCT_DIFF => $bet_pct_diff,
                 );
             }
         }
@@ -108,11 +113,19 @@ class Bets {
     }
 
     public function setAllowHomeBet($allow_home_bet) {
+        if (!is_bool($allow_home_bet)) {
+            throw new Exception('Allow home bet must be true or false.');
+        }
+
         $this->allowHomeBet = $allow_home_bet;
         return $this;
     }
 
     public function setAllowAwayBet($allow_away_bet) {
+        if (!is_bool($allow_away_bet)) {
+            throw new Exception('Allow away bet must be true or false.');
+        }
+
         $this->allowAwayBet = $allow_away_bet;
         return $this;
     }
@@ -123,8 +136,8 @@ class Bets {
         return $this;
     }
 
-    public function setDefaultBetAmount($default_bet_amount) {
-        $this->defaultBetAmount = $default_bet_amount;
+    public function setBaseBetAmount($base_bet_amount) {
+        $this->baseBetAmount = $base_bet_amount;
         return $this;
     }
 
@@ -151,7 +164,9 @@ class Bets {
     private function validatePctInput($input) {
         // Don't accept floats.
         if (!is_int($input)) {
-            throw new Exception(sprintf('%g must be an int.', $input));
+            throw new Exception(
+                sprintf('%g must be an int in Bets pct input.', $input)
+            );
         }
 
         if ($input < 0 || $input > 100) {
@@ -176,8 +191,8 @@ class Bets {
             return false;
         }
 
-        $sim_pct = $game[SimPerfKeys::SIM_HOME_PCT];
-        $veg_pct = $game[SimPerfKeys::VEGAS_HOME_PCT];
+        $sim_pct = $game[BetsRequiredFields::SIM_HOME_PCT];
+        $veg_pct = $game[BetsRequiredFields::VEGAS_HOME_PCT];
 
         return $this->shouldBetTeam($sim_pct, $veg_pct);
     }
@@ -187,8 +202,8 @@ class Bets {
             return false;
         }
 
-        $sim_pct = $game[SimPerfKeys::SIM_AWAY_PCT];
-        $veg_pct = $game[SimPerfKeys::VEGAS_AWAY_PCT];
+        $sim_pct = $game[BetsRequiredFields::SIM_AWAY_PCT];
+        $veg_pct = $game[BetsRequiredFields::VEGAS_AWAY_PCT];
 
         return $this->shouldBetTeam($sim_pct, $veg_pct);
     }
@@ -210,7 +225,7 @@ class Bets {
     }
 
     private function getBetAmount() {
-        return $this->defaultBetAmount;
+        return $this->baseBetAmount;
     }
 
     private function getBetTeamWinner($bet_team, $home_team_winner) {
@@ -241,7 +256,7 @@ class Bets {
         }
 
         if ($bet_team_winner) {
-            return (float)OddsUtils::calculatePayout($bet_amount, $bet_odds, 1);
+            return OddsUtils::calculatePayout($bet_amount, $bet_odds);
         }
 
         // Lost game.

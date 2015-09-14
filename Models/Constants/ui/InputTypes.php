@@ -6,6 +6,8 @@ include_once __DIR__ . '/../Enum.php';
 class InputTypes extends Enum {
 
     const NUMBER = 'number';
+    const CHECKBOX = 'checkbox';
+
 }
 
 ?>

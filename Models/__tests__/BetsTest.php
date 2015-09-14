@@ -8,12 +8,12 @@ class BetsTest extends PHPUnit_Framework_TestCase {
     private $gameData = array(
         '2000-06-01' => array(
             'test_gameid' => array(
-                SimPerfKeys::VEGAS_HOME_ODDS => 100,
-                SimPerfKeys::VEGAS_AWAY_ODDS => 100,
-                SimPerfKeys::VEGAS_HOME_PCT => 50,
-                SimPerfKeys::VEGAS_AWAY_PCT => 50,
-                SimPerfKeys::SIM_HOME_PCT => 50,
-                SimPerfKeys::SIM_AWAY_PCT => 50,
+                BetsRequiredFields::VEGAS_HOME_ODDS => 100,
+                BetsRequiredFields::VEGAS_AWAY_ODDS => 100,
+                BetsRequiredFields::VEGAS_HOME_PCT => 50,
+                BetsRequiredFields::VEGAS_AWAY_PCT => 50,
+                BetsRequiredFields::SIM_HOME_PCT => 50,
+                BetsRequiredFields::SIM_AWAY_PCT => 50,
             ),
         ),
     );
@@ -63,12 +63,12 @@ class BetsTest extends PHPUnit_Framework_TestCase {
                 array(
                     '2000-06-01' => array(
                         'test_gameid' => array(
-                            SimPerfKeys::VEGAS_HOME_ODDS => 100,
-                            SimPerfKeys::VEGAS_AWAY_ODDS => 100,
-                            SimPerfKeys::VEGAS_HOME_PCT => 50,
-                            SimPerfKeys::VEGAS_AWAY_PCT => 50,
-                            SimPerfKeys::SIM_HOME_PCT => 50,
-                            SimPerfKeys::SIM_AWAY_PCT => 50,
+                            BetsRequiredFields::VEGAS_HOME_ODDS => 100,
+                            BetsRequiredFields::VEGAS_AWAY_ODDS => 100,
+                            BetsRequiredFields::VEGAS_HOME_PCT => 50,
+                            BetsRequiredFields::VEGAS_AWAY_PCT => 50,
+                            BetsRequiredFields::SIM_HOME_PCT => 50,
+                            BetsRequiredFields::SIM_AWAY_PCT => 50,
                         ),
                     ),
                 ),
@@ -82,6 +82,7 @@ class BetsTest extends PHPUnit_Framework_TestCase {
                             Bets::BET_SIM_PCT => null,
                             Bets::BET_TEAM_WINNER => null,
                             Bets::BET_NET_PAYOUT => null,
+                            Bets::BET_PCT_DIFF => null,
                         ),
                     ),
                 ),
@@ -94,12 +95,12 @@ class BetsTest extends PHPUnit_Framework_TestCase {
                 array(
                     '2000-06-01' => array(
                         'test_gameid' => array(
-                            SimPerfKeys::VEGAS_HOME_ODDS => 105,
-                            SimPerfKeys::VEGAS_AWAY_ODDS => 100,
-                            SimPerfKeys::VEGAS_HOME_PCT => 50,
-                            SimPerfKeys::VEGAS_AWAY_PCT => 50,
-                            SimPerfKeys::SIM_HOME_PCT => 50,
-                            SimPerfKeys::SIM_AWAY_PCT => 50,
+                            BetsRequiredFields::VEGAS_HOME_ODDS => 105,
+                            BetsRequiredFields::VEGAS_AWAY_ODDS => 100,
+                            BetsRequiredFields::VEGAS_HOME_PCT => 50,
+                            BetsRequiredFields::VEGAS_AWAY_PCT => 50,
+                            BetsRequiredFields::SIM_HOME_PCT => 50,
+                            BetsRequiredFields::SIM_AWAY_PCT => 50,
                         ),
                     ),
                 ),
@@ -113,6 +114,7 @@ class BetsTest extends PHPUnit_Framework_TestCase {
                             Bets::BET_SIM_PCT => 50,
                             Bets::BET_TEAM_WINNER => null,
                             Bets::BET_NET_PAYOUT => null,
+                            Bets::BET_PCT_DIFF => 0,
                         ),
                     ),
                 ),
@@ -125,13 +127,13 @@ class BetsTest extends PHPUnit_Framework_TestCase {
                 array(
                     '2000-06-01' => array(
                         'test_gameid' => array(
-                            SimPerfKeys::VEGAS_HOME_ODDS => -150,
-                            SimPerfKeys::VEGAS_AWAY_ODDS => 130,
-                            SimPerfKeys::VEGAS_HOME_PCT => 55,
-                            SimPerfKeys::VEGAS_AWAY_PCT => 45,
-                            SimPerfKeys::SIM_HOME_PCT => 50,
-                            SimPerfKeys::SIM_AWAY_PCT => 50,
-                            SimPerfKeys::HOME_TEAM_WINNER => '1',
+                            BetsRequiredFields::VEGAS_HOME_ODDS => -150,
+                            BetsRequiredFields::VEGAS_AWAY_ODDS => 130,
+                            BetsRequiredFields::VEGAS_HOME_PCT => 55,
+                            BetsRequiredFields::VEGAS_AWAY_PCT => 45,
+                            BetsRequiredFields::SIM_HOME_PCT => 50,
+                            BetsRequiredFields::SIM_AWAY_PCT => 50,
+                            BetsRequiredFields::HOME_TEAM_WINNER => '1',
                         ),
                     ),
                 ),
@@ -145,6 +147,7 @@ class BetsTest extends PHPUnit_Framework_TestCase {
                             Bets::BET_SIM_PCT => 50,
                             Bets::BET_TEAM_WINNER => 0,
                             Bets::BET_NET_PAYOUT => -50,
+                            Bets::BET_PCT_DIFF => 5,
                         ),
                     ),
                 ),
@@ -157,13 +160,13 @@ class BetsTest extends PHPUnit_Framework_TestCase {
                 array(
                     '2000-06-01' => array(
                         'test_gameid' => array(
-                            SimPerfKeys::VEGAS_HOME_ODDS => -150,
-                            SimPerfKeys::VEGAS_AWAY_ODDS => 130,
-                            SimPerfKeys::VEGAS_HOME_PCT => 55,
-                            SimPerfKeys::VEGAS_AWAY_PCT => 45,
-                            SimPerfKeys::SIM_HOME_PCT => 50,
-                            SimPerfKeys::SIM_AWAY_PCT => 50,
-                            SimPerfKeys::HOME_TEAM_WINNER => '0',
+                            BetsRequiredFields::VEGAS_HOME_ODDS => -150,
+                            BetsRequiredFields::VEGAS_AWAY_ODDS => 130,
+                            BetsRequiredFields::VEGAS_HOME_PCT => 55,
+                            BetsRequiredFields::VEGAS_AWAY_PCT => 45,
+                            BetsRequiredFields::SIM_HOME_PCT => 50,
+                            BetsRequiredFields::SIM_AWAY_PCT => 50,
+                            BetsRequiredFields::HOME_TEAM_WINNER => '0',
                         ),
                     ),
                 ),
@@ -177,6 +180,7 @@ class BetsTest extends PHPUnit_Framework_TestCase {
                             Bets::BET_SIM_PCT => 50,
                             Bets::BET_TEAM_WINNER => true,
                             Bets::BET_NET_PAYOUT => 65.0,
+                            Bets::BET_PCT_DIFF => 5,
                         ),
                     ),
                 ),
@@ -184,6 +188,59 @@ class BetsTest extends PHPUnit_Framework_TestCase {
                 true, // allow away bet
                 5, // sim veg pct diff
                 50, // default bet amount
+            ),
+            // Test variations in bet amount.
+            array(
+                array(
+                    '2000-06-01' => array(
+                        'test_gameid' => array(
+                            BetsRequiredFields::VEGAS_HOME_ODDS => -150,
+                            BetsRequiredFields::VEGAS_AWAY_ODDS => 130,
+                            BetsRequiredFields::VEGAS_HOME_PCT => 55,
+                            BetsRequiredFields::VEGAS_AWAY_PCT => 45,
+                            BetsRequiredFields::SIM_HOME_PCT => 50,
+                            BetsRequiredFields::SIM_AWAY_PCT => 50,
+                            BetsRequiredFields::HOME_TEAM_WINNER => '1',
+                        ),
+                        'test_gameid2' => array(
+                            BetsRequiredFields::VEGAS_HOME_ODDS => -150,
+                            BetsRequiredFields::VEGAS_AWAY_ODDS => 130,
+                            BetsRequiredFields::VEGAS_HOME_PCT => 55,
+                            BetsRequiredFields::VEGAS_AWAY_PCT => 45,
+                            BetsRequiredFields::SIM_HOME_PCT => 50,
+                            BetsRequiredFields::SIM_AWAY_PCT => 50,
+                            BetsRequiredFields::HOME_TEAM_WINNER => '0',
+                        ),
+                    ),
+                ),
+                array(
+                    '2000-06-01' => array(
+                        'test_gameid' => array(
+                            Bets::BET_TEAM => TeamTypes::AWAY,
+                            Bets::BET_AMOUNT => 10000,
+                            Bets::BET_ODDS => 130,
+                            Bets::BET_VEGAS_PCT => 45,
+                            Bets::BET_SIM_PCT => 50,
+                            Bets::BET_TEAM_WINNER => 0,
+                            Bets::BET_NET_PAYOUT => -10000,
+                            Bets::BET_PCT_DIFF => 5,
+                        ),
+                        'test_gameid2' => array(
+                            Bets::BET_TEAM => TeamTypes::AWAY,
+                            Bets::BET_AMOUNT => 10000,
+                            Bets::BET_ODDS => 130,
+                            Bets::BET_VEGAS_PCT => 45,
+                            Bets::BET_SIM_PCT => 50,
+                            Bets::BET_TEAM_WINNER => 1,
+                            Bets::BET_NET_PAYOUT => 13000,
+                            Bets::BET_PCT_DIFF => 5,
+                        ),
+                    ),
+                ),
+                true, // allow home bet
+                true, // allow away bet
+                5, // sim veg pct diff
+                10000, // base bet amount
             ),
         );
     }
@@ -197,13 +254,14 @@ class BetsTest extends PHPUnit_Framework_TestCase {
         $allow_home_bet,
         $allow_away_bet,
         $sim_veg_pct_diff,
-        $default_bet_amount) {
+        $base_bet_amount
+    ) {
         $this->assertEquals(
             (new Bets($game_data))
                 ->setAllowHomeBet($allow_home_bet)
                 ->setAllowAwayBet($allow_away_bet)
                 ->setSimVegasPctDiff($sim_veg_pct_diff)
-                ->setDefaultBetAmount($default_bet_amount)
+                ->setBaseBetAmount($base_bet_amount)
                 ->getBetData(),
             $results
         );

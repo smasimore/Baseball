@@ -63,10 +63,14 @@ class BetsScript extends ScriptWithWrite {
             $away_sim_pct = 1 - $home_sim_pct;
             $home_vegas_odds = $odds_data[$gameid]['home_odds'];
             $away_vegas_odds = $odds_data[$gameid]['away_odds'];
-            $home_vegas_pct =
-                OddsUtils::convertOddsToPct($home_vegas_odds);
-            $away_vegas_pct =
-                OddsUtils::convertOddsToPct($away_vegas_odds);
+            $home_vegas_pct = number_format(
+                OddsUtils::convertOddsToPct($home_vegas_odds),
+                4
+            );
+            $away_vegas_pct = number_format(
+                OddsUtils::convertOddsToPct($away_vegas_odds),
+                4
+            );
 
 
             // TODO(cert) Currently if the cron job doesn't run, etc.

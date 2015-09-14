@@ -108,22 +108,14 @@ function drawSimBetChart(id, label, data) {
         var cumulative_payout = [];
         for (var date in series_data) {
             var date_data = series_data[date];
-            var net_payout = _roundToHundredth(date_data['cumulative_payout']);
-            var total_bet = _roundToHundredth(date_data['cumulative_bet_amount']);
             cumulative_payout.push({
-                type: 'Cumulative Payout',
-                y: net_payout,
-                total_bet: total_bet,
-                roi: _roundToHundredth(net_payout / total_bet * 100),
+                type: series,
+                y: date_data['cumulative_payout'],
+                total_bet: date_data['cumulative_bet_amount'],
+                roi: date_data['roi'],
                 num_games_bet_on: date_data['cumulative_num_games_bet'],
-                perc_games_bet_on: _roundToHundredth(
-                    date_data['cumulative_num_games_bet'] /
-                    date_data['cumulative_num_games'] * 100
-                ),
-                perc_games_won: _roundToHundredth(
-                    date_data['cumulatiave_num_games_winner'] /
-                    date_data['cumulative_num_games_bet'] * 100
-                )
+                perc_games_bet_on: date_data['pct_games_bet_on'],
+                perc_games_won: date_data['pct_games_winner'],
             });
         }
 
@@ -151,8 +143,6 @@ function drawSimBetChart(id, label, data) {
             minTickInterval: min_tick_intervals
         },
         yAxis: {
-            //min: 0,
-            //max: 100,
             title: {
                 text: '$$'
             },
@@ -164,6 +154,7 @@ function drawSimBetChart(id, label, data) {
         },
         tooltip: {
             formatter: function() {return ' ' + 
+                '<b>' + this.point.type + '</b>' + '<br />' +
                 'Net Gain: $' + _numberWithCommas(this.point.y) + '<br />' +
                 'Total Bet Amount: $' + _numberWithCommas(this.point.total_bet) 
                     + '<br />' +

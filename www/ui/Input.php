@@ -21,13 +21,34 @@ class Input extends UIElement {
 
 
         $class = $this->class ?: 'default_input_class';
-        $this->html =
-            "<input
-                class=$class
-                type=$this->type
-                name=$this->name
-                value=$this->value
-            />";
+        switch ($this->type) {
+            case InputTypes::NUMBER:
+                $this->html =
+                    "<input
+                        class=$class
+                        type=$this->type
+                        name=$this->name
+                        value=$this->value
+                    />";
+                break;
+
+            case InputTypes::CHECKBOX:
+                $checked = $this->value === true ? ' checked' : '';
+                $this->html =
+                    "<input
+                        class=$class
+                        type=$this->type
+                        name=$this->name
+                        $checked
+                    />";
+                break;
+
+            default:
+                throw new Exception(sprintf(
+                    '%s is not supported in Input UI element',
+                    $this->type
+                ));
+        }
     }
 
     public function setType($type) {

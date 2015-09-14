@@ -4,7 +4,7 @@
 /*
  * Input keys used for calculating sim and bet perf for sim_perf page.
  */
-class SimPerfKeys {
+class BetsRequiredFields {
 
     const VEGAS_HOME_ODDS = 'vegas_home_odds';
     const VEGAS_AWAY_ODDS = 'vegas_away_odds';

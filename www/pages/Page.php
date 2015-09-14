@@ -69,7 +69,11 @@ abstract class Page {
         try {
             $this->gen();
         } catch (Exception $e) {
-            $this->errors[] = $e->getMessage();
+            $this->errors[] = sprintf(
+                'Message: %s Stack Trace: %s',
+                $e->getMessage(),
+                $e->getTraceAsString()
+            );
         }
 
         list($title, $subtitle) = $this->getHeaderParams();
@@ -111,7 +115,7 @@ abstract class Page {
 
         $errors_list = (new UOList())
             ->setItems($this->errors)
-            ->setItemClass('error_box medium_w');
+            ->setItemClass('error_box');
         $errors_list->render();
     }
 }

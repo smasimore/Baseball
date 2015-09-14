@@ -49,15 +49,21 @@ class UpdateBetsScript extends ScriptWithWrite {
                         $payout = ($bet_amount * -1);
                         break;
                     case $bet_team === $game['home']:
-                        $payout = OddsUtils::calculatePayout(
-                            $bet_amount,
-                            $bets[$gameid]['home_vegas_odds']
+                        $payout = number_format(
+                            OddsUtils::calculatePayout(
+                                $bet_amount,
+                                $bets[$gameid]['home_vegas_odds']
+                            ),
+                            2
                         );
                         break;
                     case $bet_team === $game['away']:
-                        $payout = OddsUtils::calculatePayout(
-                            $bet_amount,
-                            $bets[$gameid]['away_vegas_odds']
+                        $payout = number_format(
+                            OddsUtils::calculatePayout(
+                                $bet_amount,
+                                $bets[$gameid]['away_vegas_odds']
+                            ),
+                            2
                         );
                         break;
                 }

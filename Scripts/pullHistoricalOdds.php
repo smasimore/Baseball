@@ -109,8 +109,10 @@ for ($season = $startYear; $season < 2015; $season++) {
 					$ml_index = $home_away."_odds";
 					$pct_index = $home_away."_pct_win";
 					$team_odds[$game_date][$game_num][$ml_index] = $line;
-					$team_odds[$game_date][$game_num][$pct_index] =
-						OddsUtils::convertOddsToPct($line);
+					$team_odds[$game_date][$game_num][$pct_index] = number_format(
+						OddsUtils::convertOddsToPct($line),
+						4
+					);
 					break;
 			}
 		}
