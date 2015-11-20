@@ -24,6 +24,8 @@ include_once __DIR__ .'/../Constants/Tables.php';
 include_once __DIR__ .'/../Constants/Teams.php';
 include_once __DIR__ .'/../Constants/Batting.php';
 include_once __DIR__ .'/../Constants/StatsYears.php';
+include_once __DIR__ .'/../Constants/StatsTypes.php';
+include_once __DIR__ .'/../Constants/PitcherTypes.php';
 include_once __DIR__ .'/../Constants/RetrosheetConstants.php';
 
 ?>

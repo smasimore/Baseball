@@ -3,11 +3,12 @@
 
 include_once __DIR__ .'/../Traits/THistoricalStatsDataType.php';
 
-final class HistoricalCareerStarterPitchingDataType extends DataType {
+final class HistoricalCareerStarterPitchingAdjustmentsDataType
+    extends DataType {
 
     use THistoricalStatsDataType;
 
     final protected function getTable() {
-        return Tables::HISTORICAL_CAREER_STARTER_PITCHING;
+        return Tables::HISTORICAL_CAREER_STARTER_PITCHING_ADJUSTMENTS;
     }
 }

@@ -3,15 +3,16 @@
 
 include_once __DIR__ .'/../../Models/Include/RetrosheetInclude.php';
 include_once __DIR__ .'/../../Models/Traits/TScriptWithInsert.php';
+include_once __DIR__ .'/../../Models/Traits/TScriptWithStatsYear.php';
 include_once __DIR__ .'/../../Models/DataTypes/HistoricalCareerStarterPitchingDataType.php';
 include_once __DIR__ .'/../Daily/ScriptWithWrite.php';
 
-class HistoricalStartingPitcherAdjustments extends ScriptWithWrite {
+class HistoricalStarterPitchingAdjustments extends ScriptWithWrite {
 
     use TScriptWithInsert;
+    use TScriptWithStatsYear;
 
     private $data;
-    private $statsYear;
     private $statNameToBucket = array(
         Batting::PCT_SINGLE => Batting::HIT,
         Batting::PCT_DOUBLE => Batting::HIT,
@@ -60,11 +61,6 @@ class HistoricalStartingPitcherAdjustments extends ScriptWithWrite {
         }
     }
 
-    public function setStatsYear($stats_year) {
-        $this->statsYear = $stats_year;
-        return $this;
-    }
-
     protected function getWriteData() {
         return $this->data;
     }
@@ -79,14 +75,6 @@ class HistoricalStartingPitcherAdjustments extends ScriptWithWrite {
                     $this->getStatsYear()
                 ));
         }
-    }
-
-    private function getStatsYear() {
-        if ($this->statsYear === null) {
-            throw new Exception('Stats year must be set');
-        }
-
-        return $this->statsYear;
     }
 
     private function getPitcherStats($ds) {
@@ -115,7 +103,7 @@ class HistoricalStartingPitcherAdjustments extends ScriptWithWrite {
             Batting::OUT => 0
         );
         foreach ($split as $stat_name => $stat) {
-            $bucket = idx($this->statNameToBucket, $stat_name);
+            $bucket = Batting::getStatBucket($stat_name);
             if ($bucket === null) {
                 continue;
             }

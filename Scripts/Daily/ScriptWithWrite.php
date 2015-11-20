@@ -23,6 +23,7 @@ abstract class ScriptWithWrite {
             $this->writeData = array();
             $this->gen($ds);
             $this->validateShouldWrite();
+            $this->dropAddPartitions();
             $this->write();
             $this->genPostWriteOperations();
         }
@@ -48,6 +49,28 @@ abstract class ScriptWithWrite {
         }
     }
 
+    private function dropAddPartitions() {
+        $partitions = $this->getPartitions();
+        if ($partitions === null) {
+            return null;
+        }
+        // TODO(cert): Migrate this to new MySQL class.
+        try {
+            drop_partition(DATABASE, Tables::SIM_INPUT, $partitions);
+        // TODO(cert): After migration look for specific exceptions.
+        } catch (Exception $e) {
+            // We are cool if this doesn't exist yet.
+        }
+        add_partition(DATABASE, Tables::SIM_INPUT, $partitions);
+    }
+
+    // Override this in child class if you want to utilize dropAddPartitions().
+    protected function getPartitions() {
+        return null;
+    }
+
+    // Override this in child class if you want to perform any actions after
+    // the write.
     protected function genPostWriteOperations() {
         return null;
     }
@@ -62,17 +85,21 @@ abstract class ScriptWithWrite {
 
     public function setStartDate($ds) {
         $this->startDate = $ds;
+        return $this;
     }
 
     public function setEndDate($ds) {
         $this->endDate = $ds;
+        return $this;
     }
 
     public function setBackfill() {
         $this->backfill = true;
+        return $this;
     }
 
     public function setTest() {
         $this->test = true;
+        return $this;
     }
 }

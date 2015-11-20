@@ -1,23 +1,17 @@
 <?php
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
-ini_set('memory_limit', '-1');
-ini_set('default_socket_timeout', -1);
-ini_set('max_execution_time', -1);
-ini_set('mysqli.connect_timeout', -1);
-ini_set('mysqli.reconnect', '1');
-include_once('/Users/constants.php');
-include_once(HOME_PATH.'Scripts/Include/RetrosheetInclude.php');
+include_once __DIR__ .'/../../Models/Include/RetrosheetInclude.php';
 
 $statsYears = array(
-    RetrosheetStatsYear::SEASON,
-    RetrosheetStatsYear::PREVIOUS,
+    //RetrosheetStatsYear::SEASON,
+    //RetrosheetStatsYear::PREVIOUS,
     RetrosheetStatsYear::CAREER
 );
 $statsType =
     RetrosheetStatsType::BASIC;
     //RetrosheetStatsType::MAGIC;
-$startScript = 1990;
+$startScript = 1999;
 $endScript  = 2014;
 $joeAverage = null;
 
@@ -148,6 +142,10 @@ function fillPitchers($pitcher, $stats, $team, $home_away) {
     );
 }
 
+function addPitcherAdjustments($stats) {
+    print_r($stats); exit();
+}
+
 function fillLineups($lineup, $stats) {
     global $joeAverage;
     $lineup = json_decode($lineup, true);
@@ -166,6 +164,7 @@ function fillLineups($lineup, $stats) {
                 $joeAverage['batter_stats']
             );
         $batter_v_pitcher['hand'] = idx($player, 'hand');
+        $batter_v_pitcher = addPitcherAdjustments($batter_v_pitcher);
         $filled_lineups[$pos] = $batter_v_pitcher;
     }
     return $filled_lineups;
@@ -197,9 +196,11 @@ for ($season = $startScript;
     $joeAverage = RetrosheetParseUtils::getJoeAverageStats($season);
     foreach ($statsYears as $stats_year) {
         $tables = array(
-            'batter' => "historical_$stats_year"."_batting",
-            'starter' => "historical_$stats_year"."_starter_pitching",
-            'reliever' => "historical_$stats_year"."_reliever_pitching"
+            'batter' => sprintf('historical_%s_batting', $stats_year),
+            'starter' => sprintf('historical_%s_starter_pitching', $stats_year),
+            'reliever' => sprintf('historical_%s_reliever_pitching', $stats_year),
+            'starter_adjustment' =>
+                sprintf('historical_%s_starter_pitching_adjustments', $stats_year)
         );
         // Drop and re-add partitions for this season/type/year combo.
         $partitions = array(
@@ -237,7 +238,8 @@ for ($season = $startScript;
                     'season' => array(),
                     'previous' => array(),
                     'career' => array()
-                )
+                ),
+                'starter_adjustment' => array()
             );
             $batting_stats['season'] =
                 pullSeasonData($season, $ds, $tables['batter']);
@@ -245,6 +247,8 @@ for ($season = $startScript;
                 pullSeasonData($season, $ds, $tables['starter']);
             $pitching_stats['reliever']['season'] =
                 pullSeasonData($season, $ds, $tables['reliever']);
+            $pitching_stats['starter_adjustment']['season'] =
+                pullSeasonData($season, $ds, $tables['starter_adjustment']);
 
             if ($stats_year === RetrosheetStatsYear::SEASON) {
                 $batting_stats['previous'] = pullSeasonData(

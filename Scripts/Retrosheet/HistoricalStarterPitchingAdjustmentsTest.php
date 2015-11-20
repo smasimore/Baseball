@@ -1,10 +1,10 @@
 <?php
 // Copyright 2013-Present, Saber Tooth Ventures, LLC
 
-include_once 'HistoricalStartingPitcherAdjustments.php';
+include_once 'HistoricalStarterPitchingAdjustments.php';
 include_once __DIR__ .'/../../Models/Traits/TTestWithPrivateMethod.php';
 
-class HistoricalStartingPitcherAdjustmentsTest
+class HistoricalStarterPitchingAdjustmentsTest
     extends PHPUnit_Framework_TestCase {
 
     use TTestWithPrivateMethod;
@@ -65,7 +65,7 @@ class HistoricalStartingPitcherAdjustmentsTest
      * @dataProvider providerAvgPitcherBuckets
      */
     public function testGetAvgPitcherBuckets($split, $expected) {
-        $retrosheet_obj = new HistoricalStartingPitcherAdjustments();
+        $retrosheet_obj = new HistoricalStarterPitchingAdjustments();
         $data = $this->invokeMethod(
             $retrosheet_obj,
             'getAveragePitcherBucket',
@@ -83,7 +83,7 @@ class HistoricalStartingPitcherAdjustmentsTest
         $split_name,
         $expected
     ) {
-        $retrosheet_obj = new HistoricalStartingPitcherAdjustments();
+        $retrosheet_obj = new HistoricalStarterPitchingAdjustments();
         $data = $this->invokeMethod(
             $retrosheet_obj,
             'getPitcherAdjustments',

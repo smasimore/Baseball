@@ -28,6 +28,21 @@ class Batting extends Enum {
     const WALK = 'walk';
     const OUT = 'out';
     const STRIKEOUT = 'strikeout';
+
+    private static $statNameToBucket = array(
+        self::PCT_SINGLE => self::HIT,
+        self::PCT_DOUBLE => self::HIT,
+        self::PCT_TRIPLE => self::HIT,
+        self::PCT_HOME_RUN => self::HIT,
+        self::PCT_WALK => self::WALK,
+        self::PCT_STRIKEOUT => self::STRIKEOUT,
+        self::PCT_GROUND_OUT => self::OUT,
+        self::PCT_FLY_OUT => self::OUT
+    );
+
+    public static function getStatBucket($stat_name) {
+        return idx(self::$statNameToBucket, $stat_name);
+    }
 }
 
 ?>
