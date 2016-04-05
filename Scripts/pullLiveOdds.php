@@ -158,10 +158,10 @@ foreach ($final_array as $i => $game) {
 	}
 	// Don't insert anything if odds haven't changed.
 	$game_index = $game['home'] . $game['game_date'] . $game['game_time'];
-	$home_odds_same =
-		$game['home_odds'] === $latest_data[$game_index]['home_odds'];
-	$away_odds_same
-		= $game['away_odds'] === $latest_data[$game_index]['away_odds'];
+	$home_odds_same = idx($game, 'home_odds') ===
+		idx($latest_data, idx($game_index, 'home_odds'));
+	$away_odds_same = idx($game, 'away_odds') ===
+		idx($latest_data, idx($game_index, 'away_odds'));
 	if ($home_odds_same && $away_odds_same) {
 		continue;
 	}

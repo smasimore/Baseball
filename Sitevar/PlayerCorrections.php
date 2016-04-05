@@ -139,7 +139,8 @@ class PlayerCorrections {
         31446 => 'kierk01',
         6272 => 'carlj01',
         30291 => 'asenj01',
-        29221 => 'carpd01'
+        29221 => 'carpd01',
+        28820 => 'reyej01'
     );
 
     public static $ambiguousNameTeamMap = array(
@@ -177,6 +178,10 @@ class PlayerCorrections {
             'OAK' => 'younc004',
             'NYY' => 'younc004',
             'NYM' => 'younc004'
+        ),
+        'mattduffy' => array(
+            'SF' => 'duffm01',
+            'HOU' => 'duffm02',
         )
     );
 }

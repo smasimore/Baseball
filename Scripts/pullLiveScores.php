@@ -31,6 +31,13 @@ $game_time = parse_array_clean($source_code, $time_start, $time_end);
 $scores_start = '"score":"';
 $scores_end = '"';
 $scores = parse_array_clean($source_code, $scores_start, $scores_end);
+// TODO(cert) Make this not ugly...I miss lambdas.
+$scores = array_filter(
+	$scores,
+	function($score) { return $score !== 'Score'; }
+);
+// Get original keys back.
+$scores = array_values($scores);
 
 $types_start = '"summary":"';
 $types_end = '"';

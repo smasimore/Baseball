@@ -55,24 +55,26 @@ function pullLineups($month, $day, $ds) {
 	$games = parse_array_clean($source_code, $games_start, $games_end);
 
 	foreach ($games as $game_num => $game) {
-		$time_start = 'time';
+		$time_start = 'time">';
 		$time_end = '</div>';
 		$time_staging = parse_array_clean($game, $time_start, $time_end);
-		$time = format_for_mysql(substr($time_staging[0], 2));
-		$ampm = trim(return_between($time, "_", "_", EXCL));
-		$hour = trim(split_string($time, ":", BEFORE, EXCL));
-		$minute = trim(return_between($time, ":", "_", EXCL));
-		if ($ampm == 'pm' && $hour != 12) {
-        	$hour += 12;
-    	}
-    	if ($hour < 10) {
-        	$hour = "0$hour";
-    	}
-		$time = "$hour:$minute:00";
+		//$time = format_for_mysql(substr($time_staging[0], 2));
+		$time = format_for_mysql($time_staging[0]);
 		if (strpos($time, "elayed")) {
-			$time = "Delayed";
-		} else if (strpos($time, "ppd")) {
-			$time = "Postponed";
+            $time = "Delayed";
+        } else if (strpos($time, "ppd")) {
+            $time = "Postponed";
+        } else {	
+			$ampm = trim(return_between($time, "_", "_", EXCL));
+			$hour = trim(split_string($time, ":", BEFORE, EXCL));
+			$minute = trim(return_between($time, ":", "_", EXCL));
+			if ($ampm == 'pm' && $hour != 12) {
+				$hour += 12;
+			}
+			if ($hour < 10) {
+				$hour = "0$hour";
+			}
+			$time = "$hour:$minute:00";
 		}
 
 		$teams_start = '/team-lineups/';
@@ -109,8 +111,8 @@ function pullLineups($month, $day, $ds) {
 				$pitchers[$j]['first_name'] . '_' . $pitchers[$j]['last_name'];
 		}
 
-		$away_pitcher_data = $pitchers[0];
-		$home_pitcher_data = $pitchers[1];
+		$away_pitcher_data = idx($pitchers, 0);
+		$home_pitcher_data = idx($pitchers, 1);
 
 		$away_pitcher_data['player_id'] = RetrosheetPlayerMappingUtils::getIDFromFirstLast(
 			$away_pitcher_data['first_name'],
@@ -127,12 +129,12 @@ function pullLineups($month, $day, $ds) {
 			'time_est' => $time,
 			'away' => $away_team,
 			'home' => $home_team,
-			'away_pitcher_name' => $away_pitcher_data['player_name'],
-			'away_pitcher_id' => $away_pitcher_data['player_id'],
-			'home_pitcher_name' => $home_pitcher_data['player_name'],
-			'home_pitcher_id' => $home_pitcher_data['player_id'],
-			'away_handedness' => $away_pitcher_data['handedness'],
-			'home_handedness' => $home_pitcher_data['handedness']
+			'away_pitcher_name' => idx($away_pitcher_data, 'player_name'),
+			'away_pitcher_id' => idx($away_pitcher_data, 'player_id'),
+			'home_pitcher_name' => idx($home_pitcher_data, 'player_name'),
+			'home_pitcher_id' => idx($home_pitcher_data, 'player_id'),
+			'away_handedness' => idx($away_pitcher_data, 'handedness'),
+			'home_handedness' => idx($home_pitcher_data, 'handedness')
 		);
 
 		$lineups_start = '"players">';

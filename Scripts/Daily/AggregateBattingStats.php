@@ -68,8 +68,8 @@ class AggregateBattingStats {
                     }
                     $this->finalStats[$player_id][$split] = array_merge(
                         $this->combineStats(
-                            $previous_data[$player_id][$split],
-                            $current_data[$split]
+                            idx($previous_data, idx($player_id, $split)),
+                            idx($current_data, $split)
                         ),
                         array(
                             'season' => $season,

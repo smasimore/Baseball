@@ -10,6 +10,7 @@ $all_players = exe_sql(
 $season = date('Y');
 $insert_array = array();
 $player_array = array();
+$filled_colheads = false;
 $colheads = array();
 
 foreach ($all_players as $i => $player) {
@@ -33,7 +34,7 @@ foreach ($all_players as $i => $player) {
 	$source_code = return_between($source_code, $start_season, $end_season, INCL);
 
 	// Only get colheads the first time around.
-	if ($i === 0) {
+	if (!$filled_colheads) {
 		$colheads = array(
 			'player_id',
 			'player_name',
@@ -57,6 +58,7 @@ foreach ($all_players as $i => $player) {
   	  	    }
   	  		array_push($colheads, $head);
 		}
+		$filled_colheads = true;
 	}
 
 	$stats_start = "<td class=\"textright\">";

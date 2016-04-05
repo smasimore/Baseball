@@ -17,7 +17,7 @@ $colheads = array(
 	'ds'
 );
 
-$season = 2015;
+$season = 2016;
 $players = array();
 for ($id = 1; $id < 2500; $id += 30) {
 	$target = "http://espn.go.com/mlb/stats/batting/_/year/$season/count/".$id."/qualified/false";

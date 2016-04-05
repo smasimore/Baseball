@@ -79,7 +79,7 @@ foreach ($splitMap as $split_name => $split) {
 				// Just pick the first team in this case.
 				$team = split_string($team, '/', BEFORE, EXCL);
 			}
-			$team = Teams::getStandardTeamAbbr($team);
+			$team = $team ? Teams::getStandardTeamAbbr($team) : '';
 			$regular_row = array($player_name, $team);
 			$expanded_row = array();
 			$saber_row = array();
