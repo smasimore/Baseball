@@ -58,18 +58,25 @@ class AggregateBattingStats {
             $joe_average = RetrosheetParseUtils::getJoeAverageStats(2013);
             $espn_batters = ESPNParseUtils::getAllBatters(
                 $ds,
-                $this->testPlayer
+                $this->testPlayer // null if not a test
             );
             foreach ($espn_batters as $player_id => $current_data) {
                 foreach ($splits as $split) {
-                    if (idx($current_data, $split) === null
-                        && idx(idx($previous_data, $player_id), $split) === null) {
+                    $current_split_data = idx($current_data, $split);
+                    $previous_player_data = idx($previous_data, $player_id);
+                    $previous_split_data = $previous_player_data
+                        ? idx($previous_player_data, $split)
+                        : null;
+                    if (
+                        $current_split_data === null &&
+                        $previous_split_data === null
+                    ) {
                         continue;
                     }
                     $this->finalStats[$player_id][$split] = array_merge(
                         $this->combineStats(
-                            idx($previous_data, idx($player_id, $split)),
-                            idx($current_data, $split)
+                            $current_split_data,
+                            $previous_split_data
                         ),
                         array(
                             'season' => $season,

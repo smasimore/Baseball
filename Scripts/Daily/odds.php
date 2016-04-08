@@ -126,6 +126,7 @@ function pullCasinoOdds(
 				$stats_time += 12;
 				break;
 			case ($i == $stats_fav):
+			//TODO(cert) - PHP Notice:  Undefined variable: odds in /Users/baseball/cert/Baseball/Scripts/Daily/odds.php on line 130 and 131
 				if (strpos($data, $home_abbr) === 0) {
 					$stats_stg[$home_abbr][$game_date][$game_time][$casino][$k]['home_odds'] = $odds;
 					$stats_stg[$home_abbr][$game_date][$game_time][$casino][$k]['home_pct_win'] = convertOddsToPct($odds);

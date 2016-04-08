@@ -84,13 +84,13 @@ class ESPNParseUtils {
             }
         }
         foreach ($stats as $split_stats) {
-            $pas = $split_stats['plate_appearances'];
-            $split = $split_stats['split'];
+            $pas = idx($split_stats, 'plate_appearances');
+            $split = idx($split_stats, 'split');
             if ($pas === null || $pas < self::MIN_PLATE_APPEARANCE) {
                 $final_stats[$split] = self::getJoeAverageWaterfall(
                     $pct_stats,
-                    $stats['Total'],
-                    $joe_average[$split]
+                    idx($stats, 'Total'),
+                    idx($joe_average, $split)
                 );
                 continue;
             }
