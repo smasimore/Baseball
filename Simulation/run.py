@@ -6,8 +6,8 @@ weights = {
     StatCategories.B_HOME_AWAY : 1.0,
 }
 
-season_start = 2015
-season_end = 2015
+season_start = 2016
+season_end = 2016
 stats_years = ['career']
 stats_type = 'basic'
 

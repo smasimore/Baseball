@@ -73,8 +73,15 @@ class SimInput {
             //TODO(cert): Figure out pitchers once we update model.
             $pitching_stats = null;
             foreach ($lineups as $lineup) {
-                $gameid = $lineup['home'] . str_replace('-', '', $ds) .
-                    substr($lineup['time_est'], 0, 2);
+                $game_hour = $lineup['time_est'] !== 'Postponed'
+                    ? substr($lineup['time_est'], 0, 2)
+                    : '00';
+                $gameid = sprintf(
+                    '%s%s%s',
+                    $lineup['home'],
+                    str_replace('-', '', $ds),
+                    $game_hour
+                );
                 $rand_bucket = rand(0, 29);
                 // For daily logging, skip any games already written to
                 // sim_input (this won't work for backfills at the moment).
