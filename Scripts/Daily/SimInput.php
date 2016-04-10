@@ -85,7 +85,8 @@ class SimInput {
                 $rand_bucket = rand(0, 29);
                 // For daily logging, skip any games already written to
                 // sim_input (this won't work for backfills at the moment).
-                if (in_array($gameid, $logged_games) &&
+                if (
+                    in_array($gameid, $logged_games) &&
                     $this->testPlayer === null
                 ) {
                     continue;

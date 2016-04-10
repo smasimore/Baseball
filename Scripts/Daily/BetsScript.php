@@ -8,7 +8,7 @@ class BetsScript extends ScriptWithWrite {
     use TScriptWithInsert;
 
     private $pctWinThreshold = 0;
-    private $pctAdvantageThreshold = .05;
+    private $pctAdvantageThreshold = .1;
     private $baseBet = 100;
     private $newBetsInsert;
 
@@ -92,7 +92,9 @@ class BetsScript extends ScriptWithWrite {
             }
             // If a game is in locked bets but there is no bet team we'll
             // want to see if we should bet if the game hasn't started.
-            if ($this->test === false && $bets &&
+            if (
+                $this->test === false &&
+                $bets &&
                 array_key_exists($gameid, $bets)
             ) {
                 if (idx($bets[$gameid], 'bet_team') !== null ||
@@ -176,9 +178,7 @@ class BetsScript extends ScriptWithWrite {
                 $vegas_odds
             );
             echo "$bet_suggestion \n";
-            // TODO(cert) Turn back on e-mails when we have model back in
-            // order.
-            //send_email($bet_suggestion, "");
+            send_email($bet_suggestion, "");
         }
     }
 
