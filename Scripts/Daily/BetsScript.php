@@ -52,7 +52,9 @@ class BetsScript extends ScriptWithWrite {
 
         foreach ($sim_output_data as $gameid => $game) {
             // Skip PPD games.
-            if ($scores_data !== null &&
+            if (
+                $this->test === false &&
+                $scores_data &&
                 $scores_data[$gameid]['status_code'] === GameStatus::POSTPONED
             ) {
                 continue;
@@ -72,20 +74,10 @@ class BetsScript extends ScriptWithWrite {
                 4
             );
 
-
-            // TODO(cert) Currently if the cron job doesn't run, etc.
-            // and a game starts before we add it to the table this will
-            // skip it. Not hi-pri right now since this shouldn't really
-            // happen.
-
-            // Add odds to $newOddsInsert if the game hasn't already started.
-            // If we are backfilling we can include started games.
-            if ($this->backfill === false &&
-                $this->test === false &&
+            // Skip games that are PPD.
+            if ($this->test === false &&
                 $scores_data !== null &&
-                $scores_data[$gameid]['status_code'] !==
-                    GameStatus::NOT_STARTED &&
-                $scores_data[$gameid]['status_code'] !==
+                $scores_data[$gameid]['status_code'] ===
                     GameStatus::POSTPONED
             ) {
                 continue;
@@ -97,10 +89,7 @@ class BetsScript extends ScriptWithWrite {
                 $bets &&
                 array_key_exists($gameid, $bets)
             ) {
-                if (idx($bets[$gameid], 'bet_team') !== null ||
-                    $scores_data[$gameid]['status_code'] ===
-                        GameStatus::POSTPONED
-                ) {
+                if (idx($bets[$gameid], 'bet_team') !== null) {
                     continue;
                 }
             }
@@ -127,9 +116,10 @@ class BetsScript extends ScriptWithWrite {
             );
 
             $bet = $this->calculateBet();
-            // Don't bet on a PPD game.
-            if ($scores_data[$gameid]['status_code'] ===
-                GameStatus::POSTPONED
+            // Don't bet on a game that has already started unless backfilling.
+            if (
+                $this->backfill === false &&
+                $scores_data[$gameid]['status_code'] !== GameStatus::NOT_STARTED
             ) {
                 $this->newBetsInsert[$gameid]['bet_team'] = null;
                 $this->newBetsInsert[$gameid]['bet'] = 0;
